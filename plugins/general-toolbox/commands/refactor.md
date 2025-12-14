@@ -1,0 +1,170 @@
+---
+description: Refactor code in a given path (file or folder) with tests after each step; never modify test files. If no path is provided, scope is the entire codebase.
+argument-hint: [ path ]
+allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), SlashCommand, Task
+---
+
+You are orchestrating a **refactor-only** workflow for this repository.
+
+The user request is:
+
+> $ARGUMENTS
+
+The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase
+**.
+
+You MUST follow the workflow strictly and delegate to the named subagents at each step.
+Do not do a subagent's work in the main agent.
+
+Required subagents:
+
+- plan-creator
+- refactorer
+- code-reviewer
+- acceptance-reviewer
+- docs-updater
+
+## Hard constraints (non-negotiable)
+
+1) **Do not modify test files** (read-only is fine).
+    - You must NOT edit, create, delete, rename, or move any test file.
+    - If a change would require updating tests, STOP and report that tests must be handled via the separate tests
+      command.
+
+   Treat these as “test files/dirs” unless the repo defines stricter rules in CLAUDE.md:
+    - Any path segment: `/test/`, `/tests/`, `/__tests__/`, `/spec/`, `/specs/`, `/cypress/`, `/playwright/`
+    - Filenames containing: `.spec.`, `.test.`
+    - Filenames ending with: `_test.*`, `Test.*`
+    - Anything under a dedicated fixtures directory if the repo treats it as test-only
+
+2) **Behavior-preserving refactor**
+    - Do not change external behavior intentionally.
+    - Prefer small, reversible steps.
+
+3) **Tests after each step**
+    - After **every refactor step** (each plan item that changes code), run the smallest relevant `/run-tests`
+      invocation.
+
+## Preflight (main agent)
+
+1) Determine scope:
+    - If `$ARGUMENTS` is empty: set scope to the repo root (`.`).
+    - Else: set scope to `$ARGUMENTS`.
+
+2) Verify the scope exists:
+    - Use Glob on the chosen scope.
+    - If it does not exist, STOP and report the path is invalid.
+
+3) Verify the repo defines `/run-tests`:
+    - Check for `.claude/commands/run-tests.md` using Glob.
+    - If missing, STOP and tell the user to add a project `/run-tests` command that wraps the repo’s test runner.
+
+4) Establish baseline:
+    - Run a narrow `/run-tests` invocation relevant to the scope (or the smallest reasonable default if broad scope).
+    - If baseline is failing, STOP and report that refactor is blocked until tests are green.
+
+## Workflow
+
+### 1) Clarify & high-level understanding (main agent)
+
+- Restate the scope (path or entire codebase) and what “success” means:
+    - behavior preserved
+    - tests remain green
+    - no test files changed
+- Identify the main refactor goals appropriate to the scope:
+    - readability, structure, coupling, naming, duplication, error-handling hygiene, performance footguns
+- List explicit assumptions (only if needed). Do not guess repo rules if CLAUDE.md defines them.
+
+### 2) Planning (delegate to `plan-creator`)
+
+Invoke `plan-creator` to:
+
+- Inspect the scope and surrounding dependencies.
+- Propose a **small-step refactor plan** (steps should be independently testable).
+- For each step, include:
+    - files to change (must exclude test files)
+    - expected outcome
+    - the smallest relevant `/run-tests` invocation to use after that step
+- Include a “test-file safety” note: how the plan avoids touching tests.
+- If scope is the entire codebase:
+    - Prioritize the top 3–10 highest-value refactors; do not attempt a sweeping rewrite.
+
+Adopt or lightly refine the plan to ensure:
+
+- steps are small
+- each step has a test command
+- no step edits test files
+
+### 3) Refactor (delegate to `refactorer`, tests after each step)
+
+Pass the plan to `refactorer` and require:
+
+For each plan step:
+
+1) Make the minimal behavior-preserving changes.
+2) State what changed (files/functions) and why.
+3) Provide the exact `/run-tests` invocation to run now (smallest scope).
+4) BEFORE moving to the next step, you MUST:
+    - Run `/run-tests ...`
+    - Check changed files with `git diff --name-only`
+    - If any touched file matches “test files/dirs” rules:
+        - Revert those changes immediately (via git) and STOP with a report
+        - Do not proceed further
+
+If tests fail:
+
+- Fix the refactor (or revert) with minimal changes, then re-run the same `/run-tests`.
+- Do not proceed until green.
+
+### 4) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
+
+Invoke `code-reviewer` with:
+
+- the refactor plan
+- what changed (high-level)
+- the test commands run
+
+If code-reviewer reports BLOCKING issues:
+
+- Loop to **Planning**:
+    - `plan-creator` updates the plan to address issues
+    - `refactorer` applies fixes step-by-step with `/run-tests` after each step
+    - re-run code-reviewer
+      Repeat until no blocking issues remain (or the user explicitly accepts trade-offs).
+
+### 5) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
+
+Acceptance criteria for refactor work:
+
+- behavior preserved (as evidenced by tests)
+- no test files changed
+- scope is reasonable for the provided scope (path or entire codebase)
+- code quality improved per stated goals
+
+If acceptance is PARTIAL/FAIL:
+
+- Loop to **Planning**:
+    - `plan-creator` proposes minimal corrective steps
+    - `refactorer` applies them with tests after each step
+    - re-run acceptance-reviewer
+
+### 6) Update Documentation (delegate to `docs-updater`)
+
+Invoke `docs-updater` to update documentation impacted by the refactor, while respecting:
+
+- do not modify test files
+- keep doc changes minimal and accurate
+- update only what is now misleading (paths, module names, usage examples, architecture notes, etc.)
+
+If doc updates include code changes, re-run an appropriate `/run-tests` once afterward.
+
+### 7) Final report (main agent)
+
+Summarize:
+
+- Refactor scope (path or entire codebase) and goals achieved
+- Files changed (explicit list)
+- Confirmation that **no test files were changed** (based on diff checks)
+- Tests run (exact `/run-tests` commands)
+- Key structural improvements
+- Any follow-up refactors deferred (separate tasks)
