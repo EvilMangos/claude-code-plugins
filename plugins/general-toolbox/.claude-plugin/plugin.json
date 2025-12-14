@@ -1,0 +1,6 @@
+{
+  "name": "general-toolbox",
+  "version": "1.0.0",
+  "description": "A single toolbox plugin: commands + subagents + optional hooks",
+  "keywords": ["tdd", "workflow", "qa"]
+}

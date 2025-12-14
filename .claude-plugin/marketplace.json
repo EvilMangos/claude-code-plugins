@@ -1,0 +1,11 @@
+{
+  "name": "evil-mangos-market",
+  "owner": { "name": "EvilMangos" },
+  "plugins": [
+    {
+      "name": "general-toolbox",
+      "source": "./plugins/general-toolbox",
+      "description": "All-in-one workflow commands + subagents + (optional) hooks"
+    }
+  ]
+}
