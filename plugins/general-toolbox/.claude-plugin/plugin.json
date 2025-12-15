@@ -1,6 +1,12 @@
 {
   "name": "general-toolbox",
-  "version": "1.0.0",
-  "description": "A single toolbox plugin: commands + subagents + optional hooks",
-  "keywords": ["tdd", "workflow", "qa"]
+  "version": "1.1.0",
+  "description": "A comprehensive TDD workflow plugin with specialized agents for planning, development, testing, refactoring, code review, and documentation.",
+  "keywords": ["tdd", "workflow", "qa", "code-review", "refactoring", "testing", "documentation"],
+  "author": "Claude Code Plugins",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvilMangos/claude-code-plugins"
+  }
 }

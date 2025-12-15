@@ -1,6 +1,6 @@
 ---
 description: Audit CLAUDE.md against repo reality (everything it mentions).
-allowed-tools: Read, Edit, Bash(git:*), Bash(ls:*), Bash(find:*), Bash(rg:*), Bash(cat:*), Bash(sed:*), Bash(awk:*), SlashCommand
+allowed-tools: Read, Edit, Bash(git:*), Bash(ls:*), Bash(find:*), Bash(rg:*), Bash(cat:*), Bash(sed:*), Bash(awk:*), SlashCommand, Task
 ---
 
 You are running a **CLAUDE.md reality sync** workflow.
@@ -94,11 +94,11 @@ Verification:
 ### 7) .claude ecosystem references (read-only)
 
 - Any mention of subagents/commands/plugins in CLAUDE.md
-- Ensure names match actual files in `.claude/agents` and `.claude/commands`
+- Ensure names match actual files in the project's `.claude/agents` and `.claude/commands`
 
 Verification:
 
-- `find .claude -maxdepth 3 -type f`
+- `find .claude -maxdepth 3 -type f` (in the target project)
 - compare referenced names to actual filenames
 
 ### 8) Links / external references (only if present)

@@ -4,6 +4,9 @@ argument-hint: [ feature-description ]
 allowed-tools: Read, Grep, Glob, Task, SlashCommand
 ---
 
+> **Prerequisite:** This workflow requires a `/run-tests` command defined in the target project's
+> `.claude/commands/run-tests.md` that wraps the project's test runner.
+
 You are orchestrating a multistep **TDD** feature workflow for this repository.
 
 The user request is:
@@ -22,7 +25,7 @@ Required subagents:
 - acceptance-reviewer
 - refactorer
 - code-reviewer
-- docs-updater
+- documentation-updater
 
 ## Preflight (main agent)
 
@@ -178,9 +181,9 @@ This workflow requires a project-defined `/run-tests` slash command.
 - Re-invoke `code-reviewer` after fixes.
 - Repeat until no blocking issues remain, or the user explicitly accepts remaining trade-offs.
 
-### 10) Update documentation (delegate to `docs-updater`)
+### 10) Update documentation (delegate to `documentation-updater`)
 
-- Once code review has no blocking issues, invoke `docs-updater` to update any documentation impacted by the change:
+- Once code review has no blocking issues, invoke `documentation-updater` to update any documentation impacted by the change:
     - README usage examples
     - configuration/env var references
     - architecture notes / module boundaries

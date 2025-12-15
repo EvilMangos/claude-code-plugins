@@ -4,6 +4,9 @@ argument-hint: [ path ]
 allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), SlashCommand, Task
 ---
 
+> **Prerequisite:** This workflow requires a `/run-tests` command defined in the target project's
+> `.claude/commands/run-tests.md` that wraps the project's test runner.
+
 You are orchestrating a **refactor-only** workflow for this repository.
 
 The user request is:
@@ -22,7 +25,7 @@ Required subagents:
 - refactorer
 - code-reviewer
 - acceptance-reviewer
-- docs-updater
+- documentation-updater
 
 ## Hard constraints (non-negotiable)
 
@@ -148,9 +151,9 @@ If acceptance is PARTIAL/FAIL:
     - `refactorer` applies them with tests after each step
     - re-run acceptance-reviewer
 
-### 6) Update Documentation (delegate to `docs-updater`)
+### 6) Update Documentation (delegate to `documentation-updater`)
 
-Invoke `docs-updater` to update documentation impacted by the refactor, while respecting:
+Invoke `documentation-updater` to update documentation impacted by the refactor, while respecting:
 
 - do not modify test files
 - keep doc changes minimal and accurate
