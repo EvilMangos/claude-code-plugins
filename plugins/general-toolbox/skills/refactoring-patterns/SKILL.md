@@ -1,8 +1,9 @@
 ---
 name: refactoring-patterns
 description: >
-  Use when refactoring code, improving design, or restructuring without changing behavior.
-  Common refactoring patterns and safe transformation techniques.
+  This skill should be used when the user asks to "refactor code", "improve design",
+  "restructure without changing behavior", "extract function", "rename variable",
+  "simplify code", or needs guidance on safe transformation techniques.
 ---
 
 # Refactoring Patterns Guide
@@ -179,3 +180,25 @@ After:
 | **Module** (within file) | Dedicated refactor task |
 | **Cross-module** | Planned refactor with tests |
 | **Architecture** | Major initiative with team |
+
+## Additional Resources
+
+### Reference Files
+
+For detailed patterns and techniques, consult:
+- **`references/patterns-catalog.md`** - Extended catalog of refactoring patterns with mechanics and multi-language examples (Extract Function, Move Method, Replace Conditional with Polymorphism, etc.)
+- **`references/code-smells.md`** - Comprehensive guide to identifying code smells (Bloaters, Couplers, Change Preventers) and their refactoring solutions
+
+### Working Examples
+
+Before/after examples in `examples/`:
+- **`extract-function-before.ts`** / **`extract-function-after.ts`** - Demonstrates extracting focused functions from a long method
+- **`replace-conditional-polymorphism-before.ts`** / **`replace-conditional-polymorphism-after.ts`** - Shows replacing type-based switch statements with polymorphic classes
+
+## Related Skills
+
+When evaluating design quality during refactoring, consult the **software-design-principles** skill for:
+- SOLID principles to identify design violations
+- Design patterns to guide transformations
+- Coupling/cohesion metrics to measure improvement
+- Dependency injection patterns for decoupling

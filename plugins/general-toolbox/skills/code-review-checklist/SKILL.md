@@ -1,81 +1,97 @@
 ---
 name: code-review-checklist
 description: >
-  Use when reviewing code changes, evaluating PRs, or checking code quality.
-  Comprehensive checklist for code review covering architecture, readability, tests, and safety.
+  This skill should be used when the user asks to "review code", "review my code",
+  "evaluate PR", "check code quality", "review changes", "give feedback on code",
+  "code review", "review this function", "is this code good", or needs a comprehensive
+  checklist for architecture, readability, tests, and safety.
 ---
 
 # Code Review Checklist
 
-## 1. Architecture & Design
+Systematic approach to reviewing code changes for quality, correctness, and maintainability.
 
-### Dependency Direction
+## Review Workflow
+
+1. **Understand context**: Read PR description, linked issues, and identify the change's purpose
+2. **Scan for scope**: Review file list to understand change boundaries
+3. **Evaluate architecture**: Check design decisions against established patterns
+4. **Assess implementation**: Walk through code for readability, correctness, and edge cases
+5. **Verify testing**: Ensure adequate coverage and test quality
+6. **Check safety**: Look for security, performance, and resource concerns
+7. **Synthesize feedback**: Categorize issues as blocking vs. non-blocking
+
+## Quick Checklist
+
+### Architecture & Design
+
+#### Dependency Direction
 - [ ] Dependencies flow inward (core doesn't depend on infrastructure)
 - [ ] No circular dependencies between modules
 - [ ] Clear module boundaries respected
 
-### Abstraction Quality
+#### Abstraction Quality
 - [ ] Interfaces are minimal and focused
 - [ ] No leaky abstractions exposing implementation details
 - [ ] Appropriate level of abstraction (not over/under-engineered)
 
-### Single Responsibility
+#### Single Responsibility
 - [ ] Each function/method does one thing well
 - [ ] Each module has a clear, focused purpose
 - [ ] Changes are localized (not scattered across unrelated files)
 
-## 2. Readability & Maintainability
+### Readability & Maintainability
 
-### Naming
+#### Naming
 - [ ] Names describe intent, not implementation
 - [ ] Consistent naming conventions with codebase
 - [ ] No abbreviations unless universally understood
 
-### Code Structure
+#### Code Structure
 - [ ] Functions are small and focused
 - [ ] Control flow is straightforward (no deep nesting)
 - [ ] Related code is grouped together
 
-### Clarity
+#### Clarity
 - [ ] No "clever" code when simple alternative exists
 - [ ] Magic numbers/strings are named constants
 - [ ] Complex logic has explanatory comments
 
-## 3. Test Quality
+### Test Quality
 
-### Coverage
+#### Coverage
 - [ ] New behavior has corresponding tests
 - [ ] Edge cases and error paths are tested
 - [ ] Tests are in the correct location/file
 
-### Test Design
+#### Test Design
 - [ ] Tests verify observable behavior, not internals
 - [ ] Assertions are specific and meaningful
 - [ ] Test names describe the scenario and expectation
 
-### Reliability
+#### Reliability
 - [ ] Tests are deterministic (no flakiness)
 - [ ] No dependencies on test execution order
 - [ ] External dependencies are mocked appropriately
 
-## 4. Performance & Safety
+### Performance & Safety
 
-### Performance
+#### Performance
 - [ ] No obvious N+1 query patterns
 - [ ] Hot paths avoid unnecessary allocations
 - [ ] Data structures are appropriate for the access patterns
 
-### Resource Management
+#### Resource Management
 - [ ] Resources are properly closed/cleaned up
 - [ ] No memory leaks (event listeners, subscriptions)
 - [ ] Timeouts are set for external calls
 
-### Error Handling
+#### Error Handling
 - [ ] Errors are handled, not swallowed
 - [ ] Error messages are useful for debugging
 - [ ] Failure modes are graceful
 
-### Security
+#### Security
 - [ ] No injection vulnerabilities (SQL, XSS, command)
 - [ ] Auth checks are present where needed
 - [ ] Sensitive data is not logged/exposed
@@ -115,3 +131,19 @@ Nice to fix but can merge:
 ## Test Feedback
 - [Comments on test quality, coverage, design]
 ```
+
+## Additional Resources
+
+For detailed guidance and examples, consult:
+
+- **`references/review-patterns.md`** - Common review scenarios and how to handle them
+- **`references/security-checklist.md`** - Detailed security review guidance
+- **`examples/sample-review.md`** - Complete example of a well-structured code review
+
+### Related Skills
+
+When evaluating architecture and design quality, consult the **software-design-principles** skill for:
+- SOLID principles to assess design adherence
+- Design patterns to identify appropriate solutions
+- Coupling/cohesion analysis for architectural review
+- Dependency injection evaluation
