@@ -3,7 +3,7 @@ name: tdd-workflow
 description: >
   This skill should be used when the user asks to "follow TDD", "write tests first",
   "use test-driven development", "RED-GREEN-REFACTOR", "test-first approach",
-  "add tests before code", or needs guidance on proper TDD workflow and principles.
+  "add tests before code", or needs guidance on the TDD workflow cycle and principles.
 ---
 
 # TDD Workflow Guide
@@ -36,45 +36,36 @@ Improve code structure **without changing behavior**:
 - If tests fail, revert and try a smaller step
 - Eliminate duplication, improve readability
 
-## Test Quality Principles
+## Phase Transition Rules
 
-### Test Observable Behavior
+### RED → GREEN
+Move to GREEN only when:
+- Test compiles/runs
+- Test fails for the right reason
+- Failure message is clear
 
-**Verify:**
-- Return values and API responses
-- Persisted state changes
-- Emitted events/messages
-- Error conditions
+### GREEN → REFACTOR
+Move to REFACTOR only when:
+- All tests pass
+- Implementation is minimal
+- No known bugs
 
-**Avoid testing:**
-- Internal method calls
-- Private implementation details
-- Exact query strings (unless contractual)
-- Call ordering (unless contractual)
+### REFACTOR → RED (Next Cycle)
+Move to next RED phase only when:
+- All tests still pass
+- Code quality is acceptable
+- No pending refactoring needed
 
-### Coverage Requirements
-
-Cover every behavioral requirement:
-- **Normal paths** - expected inputs produce expected outputs
-- **Edge cases** - boundary values, empty collections, nulls
-- **Error paths** - invalid inputs, failure conditions, timeouts
-
-### Test Independence
-
-- Ensure no dependency on execution order
-- Set up required state within each test
-- Clean up after tests (DB, files, env vars)
-- Use controlled time/randomness for determinism
-
-## Common Anti-Patterns
+## Common TDD Anti-Patterns
 
 | Anti-Pattern | Why It's Problematic |
 |--------------|---------------------|
 | Writing tests after implementation | Loses design benefits of TDD |
 | Testing too much at once | Makes failures hard to diagnose |
-| Over-mocking | Tests pass but don't verify real behavior |
-| Skipping refactor phase | Accumulates technical debt |
+| Skipping RED phase | Tests may match implementation, not requirements |
+| Skipping REFACTOR phase | Accumulates technical debt |
 | Large refactor steps | Hard to identify what broke tests |
+| Adding untested functionality | Violates TDD principles |
 
 ## Additional Resources
 
@@ -82,9 +73,12 @@ Cover every behavioral requirement:
 
 For detailed guidance, consult:
 - **`references/phase-checklists.md`** - Quality checklists for each TDD phase
-- **`references/testing-patterns.md`** - Common testing patterns and examples
 
 ### Examples
 
 Working examples in `examples/`:
-- **`examples/typescript-tdd-example.md`** - Step-by-step TDD walkthrough
+- **`examples/typescript-tdd-example.md`** - Step-by-step TDD walkthrough building from scratch
+
+### Related Skills
+
+For testing patterns, mocking strategies, and test quality guidance, see the `test-best-practices` skill.
