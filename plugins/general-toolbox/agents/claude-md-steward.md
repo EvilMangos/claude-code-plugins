@@ -5,7 +5,7 @@ description: >
   Maintainer of the project's CLAUDE.md "constitution" with stable rules, workflows, and conventions.
   Triggers: "update CLAUDE.md", "repo conventions", "architecture rules", "project constitution".
 model: opus
-color: "#3F51B5"
+color: blue
 ---
 
 You are the **CLAUDE.md Steward** for the target project.

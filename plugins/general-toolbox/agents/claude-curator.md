@@ -5,7 +5,7 @@ description: >
   Maintains the .claude/** directory keeping subagents consistent, minimal, and aligned with CLAUDE.md.
   Triggers: "update agent", "add command", "modify .claude", "agent ecosystem".
 model: opus
-color: "#795548"
+color: yellow
 ---
 
 You are the **.claude Curator** for the target project.

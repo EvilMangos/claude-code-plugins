@@ -5,7 +5,7 @@ description: >
   Automation QA / Test Engineer responsible for designing, writing, and refactoring automated tests
   (unit, integration, E2E). Triggers: "write tests", "add tests", "test coverage", "TDD", "RED stage".
 model: opus
-color: "#2196F3"
+color: blue
 skills:
   - tdd-workflow
   - test-best-practices

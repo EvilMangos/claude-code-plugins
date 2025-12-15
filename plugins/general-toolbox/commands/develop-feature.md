@@ -4,9 +4,6 @@ argument-hint: [ feature-description ]
 allowed-tools: Read, Grep, Glob, Task, SlashCommand
 ---
 
-> **Prerequisite:** This workflow requires a `/run-tests` command defined in the target project's
-> `.claude/commands/run-tests.md` that wraps the project's test runner.
-
 You are orchestrating a multistep **TDD** feature workflow for this repository.
 
 The user request is:
@@ -27,23 +24,9 @@ Required subagents:
 - code-reviewer
 - documentation-updater
 
-## Preflight (main agent)
+## Testing
 
-This workflow requires a project-defined `/run-tests` slash command.
-
-1) Verify it exists:
-
-- Check for `.claude/commands/run-tests.md` using Glob.
-
-2) If missing:
-
-- STOP.
-- Tell the user to create `.claude/commands/run-tests.md` that wraps the repo’s test runner (pytest/jest/go test/etc.).
-- The command must accept optional arguments (path/pattern/flags) and be runnable as `/run-tests <args>`.
-
-3) During this workflow:
-
-- Use `/run-tests <path-or-pattern>` to run tests throughout.
+Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The SessionStart hook verifies this command exists.
 
 ## Workflow
 
@@ -192,19 +175,7 @@ This workflow requires a project-defined `/run-tests` slash command.
 - If documentation changes include any code changes (they usually should not), run an appropriate `/run-tests` once
   afterward.
 
-### 11) Final report (main agent)
-
-Summarize:
-
-- What was implemented
-- Files/modules touched
-- Tests added/updated (with exact `/run-tests` commands to run them)
-- Stabilization gate outcome (Step 6) and the broader command used
-- Acceptance-review verdict and remaining limitations (if any)
-- Refactoring highlights
-- Code-review outcome (remaining non-blocking suggestions)
-- Documentation updates (what changed and where)
-- Follow-up work recommendations (separate tasks)
+The workflow-completion hook will generate the final summary when the workflow completes.
 
 ## Non-negotiable constraints
 

@@ -5,7 +5,7 @@ description: >
   Planning specialist that turns high-level requests into concrete, step-by-step implementation
   and testing plans. Triggers: "plan", "design", "break down", "how should we implement".
 model: opus
-color: "#9C27B0"
+color: magenta
 skills:
   - software-design-principles
 ---
@@ -54,4 +54,4 @@ Respond with:
 4. **Test Strategy**
 5. **Risks / Open Questions**
 
-Do not include code; that is for implementation-focused agents.
+Do not include code snippets, pseudocode, or implementation details. Focus on architecture, data flow, and approach. That is for implementation-focused agents.

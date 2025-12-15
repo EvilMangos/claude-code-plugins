@@ -1,14 +1,25 @@
 ---
 name: acceptance-criteria
 description: >
-  This skill should be used when the user asks to "verify implementation", "check requirements",
-  "validate completeness", "review acceptance criteria", "check if done", "verify changes meet
-  the request", or needs to assess whether changes satisfy the original request instructions.
+  Use this skill when completing any task to verify the implementation satisfies all requirements.
+  Always check that changes fully meet the original request before marking work as done.
+  This is the default verification step for all development tasks.
 ---
 
 # Acceptance Criteria Verification
 
 Verify that implementations fully satisfy all request instructions through systematic review.
+
+## Skill vs Agent Distinction
+
+This skill focuses on **instruction-to-implementation mapping** - verifying that what was asked for is present in the code.
+
+The **acceptance-reviewer** agent uses this skill but adds broader context:
+- Considers the original task, clarifications, and implementation plan
+- Evaluates edge cases and implicit requirements
+- Makes the final "does this meet requirements" decision
+
+Use this skill directly for quick verification; use the agent for comprehensive acceptance review.
 
 ## Core Workflow
 

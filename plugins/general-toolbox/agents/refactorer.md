@@ -5,7 +5,7 @@ description: >
   Refactoring specialist focused on improving design, structure, and readability while preserving behavior.
   Triggers: "refactor", "clean up", "restructure", "reduce duplication", "improve design".
 model: opus
-color: "#FF9800"
+color: yellow
 skills:
   - refactoring-patterns
   - software-design-principles

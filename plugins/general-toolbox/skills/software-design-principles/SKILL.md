@@ -1,12 +1,9 @@
 ---
 name: software-design-principles
 description: >
-  This skill should be used when the user asks about "SOLID principles", "dependency injection",
-  "design patterns", "coupling and cohesion", "clean architecture", "single responsibility",
-  "open closed principle", "liskov substitution", "interface segregation", "dependency inversion",
-  "factory pattern", "strategy pattern", "domain-driven design", "DDD", "bounded context",
-  "aggregate", "entity", "value object", "repository pattern", "domain events",
-  or needs guidance on software design fundamentals.
+  Use this skill when performing code reviews, refactoring, making architectural decisions,
+  or evaluating code quality. Also use when the user asks about SOLID principles, design patterns,
+  coupling/cohesion, clean architecture, domain-driven design, or software design fundamentals.
 ---
 
 # Software Design Principles

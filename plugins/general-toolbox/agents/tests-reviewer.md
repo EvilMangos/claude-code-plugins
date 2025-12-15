@@ -5,7 +5,7 @@ description: >
   Independent reviewer for automated test quality that verifies requirement coverage, correctness, assertion
   strength, and determinism. Triggers: "review tests", "test quality", "are tests good enough", "test gate".
 model: opus
-color: "#00BCD4"
+color: cyan
 skills:
   - test-best-practices
   - tdd-workflow

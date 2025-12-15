@@ -4,9 +4,6 @@ argument-hint: [ path ]
 allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), SlashCommand, Task
 ---
 
-> **Prerequisite:** This workflow requires a `/run-tests` command defined in the target project's
-> `.claude/commands/run-tests.md` that wraps the project's test runner.
-
 You are orchestrating a **refactor-only** workflow for this repository.
 
 The user request is:
@@ -34,11 +31,8 @@ Required subagents:
     - If a change would require updating tests, STOP and report that tests must be handled via the separate tests
       command.
 
-   Treat these as “test files/dirs” unless the repo defines stricter rules in CLAUDE.md:
-    - Any path segment: `/test/`, `/tests/`, `/__tests__/`, `/spec/`, `/specs/`, `/cypress/`, `/playwright/`
-    - Filenames containing: `.spec.`, `.test.`
-    - Filenames ending with: `_test.*`, `Test.*`
-    - Anything under a dedicated fixtures directory if the repo treats it as test-only
+   See `skills/test-best-practices/references/test-file-patterns.md` for complete test file identification patterns.
+   Default patterns include: `/test/`, `/tests/`, `/__tests__/`, files containing `.spec.` or `.test.`, etc.
 
 2) **Behavior-preserving refactor**
     - Do not change external behavior intentionally.
@@ -58,13 +52,10 @@ Required subagents:
     - Use Glob on the chosen scope.
     - If it does not exist, STOP and report the path is invalid.
 
-3) Verify the repo defines `/run-tests`:
-    - Check for `.claude/commands/run-tests.md` using Glob.
-    - If missing, STOP and tell the user to add a project `/run-tests` command that wraps the repo’s test runner.
-
-4) Establish baseline:
+3) Establish baseline:
     - Run a narrow `/run-tests` invocation relevant to the scope (or the smallest reasonable default if broad scope).
     - If baseline is failing, STOP and report that refactor is blocked until tests are green.
+    - The SessionStart hook verifies `/run-tests` exists.
 
 ## Workflow
 
@@ -161,13 +152,4 @@ Invoke `documentation-updater` to update documentation impacted by the refactor,
 
 If doc updates include code changes, re-run an appropriate `/run-tests` once afterward.
 
-### 7) Final report (main agent)
-
-Summarize:
-
-- Refactor scope (path or entire codebase) and goals achieved
-- Files changed (explicit list)
-- Confirmation that **no test files were changed** (based on diff checks)
-- Tests run (exact `/run-tests` commands)
-- Key structural improvements
-- Any follow-up refactors deferred (separate tasks)
+The workflow-completion hook will generate the final summary when the workflow completes.

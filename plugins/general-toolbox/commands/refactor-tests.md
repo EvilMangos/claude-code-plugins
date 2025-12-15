@@ -4,9 +4,6 @@ argument-hint: [ path ]
 allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(find:*), SlashCommand, Task
 ---
 
-> **Prerequisite:** This workflow requires a `/run-tests` command defined in the target project's
-> `.claude/commands/run-tests.md` that wraps the project's test runner.
-
 You are orchestrating a **tests-refactor-only** workflow for this repository.
 
 The user request is:
@@ -45,51 +42,34 @@ Required subagents:
 3) **Tests after each step**
     - After **every refactor step** that changes files, run the smallest relevant `/run-tests` invocation.
 
-### What counts as a “test file/folder”
+### Test File Patterns
 
-Treat these as tests unless the repo defines stricter rules in CLAUDE.md:
+See `skills/test-best-practices/references/test-file-patterns.md` for complete identification patterns.
 
-- Any path segment: `/test/`, `/tests/`, `/__tests__/`, `/spec/`, `/specs/`, `/e2e/`, `/integration/`
-- E2E frameworks: `/cypress/`, `/playwright/`
-- Filenames containing: `.spec.`, `.test.`
-- Filenames ending with: `_test.*`, `Test.*`
-
-### What counts as “test-only support files”
-
-Allowed only if clearly test-only (by path/name) and used by tests:
-
-- Any path segment: `/__mocks__/`, `/mocks/`, `/fixtures/`, `/testdata/`, `/test_utils/`, `/testutils/`,
-  `/test_helpers/`, `/test-helpers/`, `/testing/`
-
-### What counts as “documentation files”
-
-Allowed for Step 6 only:
-
-- `README*`, `CHANGELOG*`, `CLAUDE.md`
-- Anything under `docs/**`
+Key patterns:
+- **Test files**: `/test/`, `/tests/`, `/__tests__/`, files containing `.spec.` or `.test.`
+- **Support files**: `/__mocks__/`, `/fixtures/`, `/testdata/`, `/test_utils/`
+- **Documentation**: `README*`, `CHANGELOG*`, `docs/**` (for Step 6 only)
 
 If a required improvement would need production code changes, STOP and tell the user to use `/refactor` instead.
 
 ## Preflight (main agent)
 
-1) Verify the repo defines `/run-tests`:
+The SessionStart hook verifies `/run-tests` exists.
 
-- Check for `.claude/commands/run-tests.md` using Glob.
-- If missing, STOP and tell the user to add a project `/run-tests` command that wraps the repo’s test runner.
+1) Determine scope:
 
-2) Determine scope:
-
-- If `$ARGUMENTS` is empty: scope = “entire test suite”.
+- If `$ARGUMENTS` is empty: scope = "entire test suite".
 - Else: scope = `$ARGUMENTS`.
 
-3) Validate scope path (if provided):
+2) Validate scope path (if provided):
 
 - Use Glob to confirm the path exists.
 - If it does not exist, STOP and report the path is invalid.
 - If it exists but does NOT look like a test file/folder by the definitions above, STOP and tell the user to use
   `/refactor`.
 
-4) Establish baseline:
+3) Establish baseline:
 
 - Run the smallest reasonable `/run-tests` for the scope:
     - If a path was provided: `/run-tests $ARGUMENTS`
@@ -212,13 +192,4 @@ After doc changes:
 
 - Run an appropriate `/run-tests` once.
 
-### 8) Final report (main agent)
-
-Summarize:
-
-- Scope (path or entire test suite)
-- Files changed (explicit list)
-- Confirmation that **no production code** was changed (based on diff checks)
-- Tests run (exact `/run-tests` commands)
-- Key improvements (readability/determinism/structure)
-- Follow-up suggestions (separate tasks)
+The workflow-completion hook will generate the final summary when the workflow completes.

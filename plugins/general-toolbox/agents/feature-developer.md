@@ -5,7 +5,7 @@ description: >
   Feature developer implementing new behavior in small steps following architecture rules.
   Triggers: "implement", "make tests pass", "GREEN stage", "add feature", "build functionality".
 model: opus
-color: "#4CAF50"
+color: green
 skills: tdd-workflow
 ---
 

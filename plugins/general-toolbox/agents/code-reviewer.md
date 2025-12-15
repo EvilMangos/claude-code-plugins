@@ -5,7 +5,7 @@ description: >
   Senior engineer focused on code quality, architecture alignment, performance, and test robustness.
   Triggers: "review code", "code review", "check quality", "architecture review", "PR review".
 model: opus
-color: "#F44336"
+color: red
 skills:
   - code-review-checklist
   - software-design-principles

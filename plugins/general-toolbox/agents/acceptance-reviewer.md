@@ -5,7 +5,7 @@ description: >
   or validating against the original request. Product/acceptance reviewer that checks whether
   changes satisfy the user's task requirements. Triggers: "does this meet requirements", "acceptance", "validate feature".
 model: opus
-color: "#E91E63"
+color: magenta
 skills: acceptance-criteria
 ---
 

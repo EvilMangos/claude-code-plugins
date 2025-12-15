@@ -11,6 +11,11 @@ description: >
 
 Systematic approach to reviewing code changes for quality, correctness, and maintainability.
 
+## Quick vs Deep Review
+
+For time-constrained or small changes, use the **Quick Review** (5 critical items) in `references/quick-review.md`.
+Use the full checklist below for comprehensive reviews of new features, security-sensitive code, or significant refactors.
+
 ## Review Workflow
 
 1. **Understand context**: Read PR description, linked issues, and identify the change's purpose
@@ -136,6 +141,7 @@ Nice to fix but can merge:
 
 For detailed guidance and examples, consult:
 
+- **`references/quick-review.md`** - 5 critical items for fast, time-constrained reviews
 - **`references/review-patterns.md`** - Common review scenarios and how to handle them
 - **`references/security-checklist.md`** - Detailed security review guidance
 - **`examples/sample-review.md`** - Complete example of a well-structured code review
