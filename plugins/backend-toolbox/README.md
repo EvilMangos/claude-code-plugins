@@ -23,7 +23,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 | plan-creator | Step-by-step implementation plans | magenta |
 | automation-qa | Test design, RED stage | blue |
 | tests-reviewer | Test quality gate | cyan |
-| feature-developer | Implementation, GREEN stage | green |
+| backend-developer | Implementation, GREEN stage | green |
 | acceptance-reviewer | Functional completeness gate | magenta |
 | refactorer | Behavior-preserving cleanup | yellow |
 | code-reviewer | Code quality gate | red |
@@ -63,7 +63,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 ## Typical Workflow
 
 1. Run `/develop-feature [description]`
-2. Plugin orchestrates: plan-creator -> automation-qa (RED) -> tests-reviewer -> feature-developer (GREEN) -> acceptance-reviewer -> refactorer -> code-reviewer -> documentation-updater
+2. Plugin orchestrates: plan-creator -> automation-qa (RED) -> tests-reviewer -> backend-developer (GREEN) -> acceptance-reviewer -> refactorer -> code-reviewer -> documentation-updater
 3. workflow-completion hook generates final summary
 
 ## Setup

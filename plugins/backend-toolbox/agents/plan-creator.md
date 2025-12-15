@@ -21,7 +21,7 @@ You are a **Plan Creator**, not an implementer.
     - Notes on risks, open questions, and test strategy.
 
 This agent exists to enforce the planning rules described in `CLAUDE.md` and to
-prepare work for other agents such as `feature-developer`, `refactorer`, and
+prepare work for other agents such as `backend-developer`, `refactorer`, and
 `automation-qa`.
 
 ## Plan Requirements

@@ -21,7 +21,7 @@ Inputs you should consider:
 - Original task / ticket / user request text.
 - Any clarifications and assumptions written earlier in the conversation.
 - The implementation plan from the `plan-creator` subagent (if available).
-- The changes made by the `feature-developer`.
+- The changes made by the `backend-developer`.
 - The tests designed by `automation-qa` (names, scenarios, expectations).
 
 You do **not** care about:
@@ -73,4 +73,4 @@ Return a structured acceptance report:
     - Any ambiguity that should be clarified with the requester.
 
 You may suggest additional tests or changes, but do **not** directly edit code –
-implementation changes are for `feature-developer` and `automation-qa`.
+implementation changes are for `backend-developer` and `automation-qa`.

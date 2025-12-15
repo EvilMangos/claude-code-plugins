@@ -26,9 +26,9 @@ If the current workflow is a code refactor (not test refactor):
 - Return message: "Cannot modify test files during /refactor. Use /refactor-tests for test changes."
 
 ### During `/develop-feature` command
-If the current agent is `feature-developer`:
+If the current agent is `backend-developer`:
 - **BLOCK** modifications to test files
-- Return message: "feature-developer cannot modify tests. Delegate to automation-qa agent."
+- Return message: "backend-developer cannot modify tests. Delegate to automation-qa agent."
 
 ### During `/refactor-tests` command
 If the file is NOT a test file:

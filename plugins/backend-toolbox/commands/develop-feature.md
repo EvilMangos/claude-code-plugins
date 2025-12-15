@@ -18,7 +18,7 @@ Required subagents:
 - plan-creator
 - automation-qa
 - tests-reviewer
-- feature-developer
+- backend-developer
 - acceptance-reviewer
 - refactorer
 - code-reviewer
@@ -78,14 +78,14 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
     - Re-run `tests-reviewer`
 - Do not proceed to implementation until verdict is PASS.
 
-### 5) TDD — Implementation & GREEN stage (delegate to `feature-developer`)
+### 5) TDD — Implementation & GREEN stage (delegate to `backend-developer`)
 
-- Pass to `feature-developer`:
+- Pass to `backend-developer`:
     - The plan
     - The requirements list
     - The current failing tests and the exact `/run-tests` invocations
-- The `feature-developer` must implement in small, incremental steps.
-- After each small step, the `feature-developer` must:
+- The `backend-developer` must implement in small, incremental steps.
+- After each small step, the `backend-developer` must:
     1) Describe what changed (files, functions)
     2) Specify the smallest relevant `/run-tests` invocation to run now
 - You MUST run that `/run-tests` invocation after each step.
@@ -106,7 +106,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
     2) If verdict is PARTIAL or FAIL, loop using strict TDD:
         - `automation-qa` updates/extends tests (RED)
         - Run `/run-tests` to confirm RED
-        - `feature-developer` makes minimal changes (GREEN; run tests after each step)
+        - `backend-developer` makes minimal changes (GREEN; run tests after each step)
         - Re-run the broader `/run-tests`
         - Re-run `automation-qa` for a new verdict
 - If `automation-qa` cannot be invoked (quota/error), STOP and report the workflow is blocked.
@@ -125,7 +125,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
     - Loop back using strict TDD:
         - `automation-qa` (tests first, RED)
         - run `/run-tests` to confirm RED
-        - `feature-developer` (minimal implementation, GREEN with tests after each step)
+        - `backend-developer` (minimal implementation, GREEN with tests after each step)
         - stabilization gate (Step 6) as needed
         - re-run acceptance review
 
@@ -158,7 +158,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
 - For BLOCKING issues, apply a reflection loop:
     - Functional issue:
         - route to `automation-qa` (tests first, RED) + run `/run-tests`
-        - then `feature-developer` (minimal fix, GREEN with tests after each step)
+        - then `backend-developer` (minimal fix, GREEN with tests after each step)
     - Structural/style/design issue:
         - route to `refactorer` (small refactor) + run `/run-tests` after each step
 - Re-invoke `code-reviewer` after fixes.
