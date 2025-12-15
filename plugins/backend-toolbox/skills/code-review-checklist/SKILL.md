@@ -13,7 +13,7 @@ Systematic approach to reviewing code changes for quality, correctness, and main
 
 ## Quick vs Deep Review
 
-For time-constrained or small changes, use the **Quick Review** (5 critical items) in `references/quick-review.md`.
+For time-constrained or small changes, use the **quick-code-review** skill (5 critical items).
 Use the full checklist below for comprehensive reviews of new features, security-sensitive code, or significant refactors.
 
 ## Review Workflow
@@ -141,12 +141,16 @@ Nice to fix but can merge:
 
 For detailed guidance and examples, consult:
 
-- **`references/quick-review.md`** - 5 critical items for fast, time-constrained reviews
 - **`references/review-patterns.md`** - Common review scenarios and how to handle them
 - **`references/security-checklist.md`** - Detailed security review guidance
 - **`examples/sample-review.md`** - Complete example of a well-structured code review
 
 ### Related Skills
+
+For time-constrained reviews, use the **quick-code-review** skill for:
+- Fast 5-item checklist for small changes
+- Hotfix and configuration review
+- When to escalate to full review
 
 When evaluating architecture and design quality, consult the **software-design-principles** skill for:
 - SOLID principles to assess design adherence

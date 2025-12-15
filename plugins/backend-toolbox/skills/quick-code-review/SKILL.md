@@ -1,6 +1,15 @@
+---
+name: quick-code-review
+description: >
+  This skill should be used when the user asks for a "quick review", "fast review",
+  "quick code check", "hotfix review", "review this small change", "quick feedback",
+  or needs a fast, time-constrained review focusing on 5 critical items: security,
+  correctness, test coverage, breaking changes, and error handling.
+---
+
 # Quick Code Review (5 Critical Items)
 
-Use for small changes, hotfixes, or time-constrained reviews. For comprehensive reviews, use the full checklist in SKILL.md.
+Fast, focused review for small changes, hotfixes, or time-constrained situations.
 
 ## When to Use Quick Review
 
@@ -49,7 +58,7 @@ Use for small changes, hotfixes, or time-constrained reviews. For comprehensive 
 
 ## Quick Review Output Format
 
-```
+```markdown
 ## Quick Review Summary
 
 **Verdict:** APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION
@@ -68,7 +77,7 @@ Use for small changes, hotfixes, or time-constrained reviews. For comprehensive 
 
 ## When to Escalate to Deep Review
 
-Switch to the full checklist when you encounter:
+Switch to the **code-review-checklist** skill when you encounter:
 
 - New features or significant refactors
 - Security-sensitive code (auth, payments, PII handling)
@@ -77,3 +86,11 @@ Switch to the full checklist when you encounter:
 - Complex business logic
 - Multi-service interactions
 - Database migration scripts
+
+### Related Skills
+
+For comprehensive reviews, use the **code-review-checklist** skill which provides:
+- Full architecture and design review
+- Detailed readability assessment
+- Complete test quality evaluation
+- Performance and safety checks
