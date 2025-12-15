@@ -1,4 +1,4 @@
-# General Toolbox Plugin
+# Backend Toolbox Plugin
 
 A comprehensive TDD and code quality framework for Claude Code.
 

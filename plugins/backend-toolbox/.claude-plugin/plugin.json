@@ -1,5 +1,5 @@
 {
-  "name": "general-toolbox",
+  "name": "backend-toolbox",
   "version": "1.1.0",
   "description": "A comprehensive TDD workflow plugin with specialized agents for planning, development, testing, refactoring, code review, and documentation.",
   "keywords": ["tdd", "workflow", "qa", "code-review", "refactoring", "testing", "documentation"],

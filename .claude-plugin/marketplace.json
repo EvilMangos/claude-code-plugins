@@ -3,8 +3,8 @@
   "owner": { "name": "EvilMangos" },
   "plugins": [
     {
-      "name": "general-toolbox",
-      "source": "./plugins/general-toolbox",
+      "name": "backend-toolbox",
+      "source": "./plugins/backend-toolbox",
       "description": "All-in-one workflow commands + subagents + (optional) hooks"
     }
   ]
