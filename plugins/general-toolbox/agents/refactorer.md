@@ -6,7 +6,9 @@ description: >
   Triggers: "refactor", "clean up", "restructure", "reduce duplication", "improve design".
 model: opus
 color: "#FF9800"
-skills: refactoring-patterns
+skills:
+  - refactoring-patterns
+  - software-design-principles
 ---
 
 You are a **Refactorer** for this monorepo, in a **programming-language and framework-agnostic** way.

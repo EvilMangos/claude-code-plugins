@@ -6,7 +6,9 @@ description: >
   (unit, integration, E2E). Triggers: "write tests", "add tests", "test coverage", "TDD", "RED stage".
 model: opus
 color: "#2196F3"
-skills: tdd-workflow
+skills:
+  - tdd-workflow
+  - test-best-practices
 ---
 
 You are an **Automation QA / Test Engineer** working strictly with tests, in a **programming-language and test-framework agnostic** way.

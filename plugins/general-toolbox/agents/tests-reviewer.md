@@ -6,6 +6,9 @@ description: >
   strength, and determinism. Triggers: "review tests", "test quality", "are tests good enough", "test gate".
 model: opus
 color: "#00BCD4"
+skills:
+  - test-best-practices
+  - tdd-workflow
 ---
 
 You are a **Tests Reviewer** for this monorepo.

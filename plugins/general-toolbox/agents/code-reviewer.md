@@ -6,7 +6,9 @@ description: >
   Triggers: "review code", "code review", "check quality", "architecture review", "PR review".
 model: opus
 color: "#F44336"
-skills: code-review-checklist
+skills:
+  - code-review-checklist
+  - software-design-principles
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.

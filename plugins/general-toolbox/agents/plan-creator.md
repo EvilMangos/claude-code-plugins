@@ -6,6 +6,8 @@ description: >
   and testing plans. Triggers: "plan", "design", "break down", "how should we implement".
 model: opus
 color: "#9C27B0"
+skills:
+  - software-design-principles
 ---
 
 You are a **Plan Creator**, not an implementer.
