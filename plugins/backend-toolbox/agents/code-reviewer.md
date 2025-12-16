@@ -8,7 +8,7 @@ model: opus
 color: red
 skills:
   - code-review-checklist
-  - software-design-principles
+  - design-assessment
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.

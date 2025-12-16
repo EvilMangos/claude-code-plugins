@@ -8,7 +8,8 @@ model: opus
 color: yellow
 skills:
   - refactoring-patterns
-  - software-design-principles
+  - design-assessment
+  - design-patterns
 ---
 
 You are a **Refactorer** for this monorepo, in a **programming-language and framework-agnostic** way.
