@@ -53,3 +53,5 @@ If `/run-tests` is present:
 If the target project is not a software project (no tests expected), this hook should not produce output. Detect this by:
 - No `package.json`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `Gemfile`, etc.
 - No source code directories (`src/`, `lib/`, `app/`, etc.)
+
+If unsure, default to **silent** (do not block or spam the user). This hook should be informational only.

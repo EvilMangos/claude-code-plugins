@@ -11,7 +11,7 @@ plugins/
 ```
 
 Each plugin is self-contained with its own:
-- `plugin.json` - Plugin manifest and configuration
+- `.claude-plugin/plugin.json` - Plugin manifest and configuration
 - `README.md` - Plugin-specific documentation
 - `agents/` - Specialized autonomous agents
 - `commands/` - Slash commands for workflows

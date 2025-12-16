@@ -1,7 +1,7 @@
 ---
 description: Develop a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, performance check, security check, refactoring, code review, and documentation updates.
 argument-hint: [ feature-description ]
-allowed-tools: Read, Grep, Glob, Task, SlashCommand
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand
 ---
 
 You are orchestrating a multistep **TDD** feature workflow for this repository.

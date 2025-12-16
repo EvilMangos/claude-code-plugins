@@ -44,9 +44,10 @@ A comprehensive TDD and code quality framework for Claude Code.
 | claude-md-steward | CLAUDE.md maintenance | blue |
 | claude-curator | .claude/** maintenance | yellow |
 
-## Commands (6)
+## Commands (7)
 
 - `/develop-feature` - Full TDD workflow (planning, tests, implementation, review, docs)
+- `/devops-change` - DevOps workflow for CI/CD, Docker, K8s, Terraform changes
 - `/fix-bug` - Structured bug-fixing workflow (reproduction, root cause, TDD, review)
 - `/refactor` - Behavior-preserving refactor with tests after each step
 - `/refactor-tests` - Test-only refactoring (no production code changes)
@@ -92,3 +93,26 @@ A comprehensive TDD and code quality framework for Claude Code.
 1. Install the plugin
 2. Create `/run-tests` command in your project that wraps your test runner
 3. Optionally create CLAUDE.md for project-specific rules
+
+## Installation
+
+Install by copying or symlinking this folder into your Claude Code plugins location, or by referencing it from your project's `.claude/plugins.json` (if you use project-scoped plugin config).
+
+## Hooks (optional)
+
+This plugin includes optional safety/quality-of-life hooks under `hooks/`.
+
+- If you do **not** want hooks, exclude the `hooks/` directory when installing, or disable hooks via your Claude Code/plugin configuration (depending on how you load plugins).
+
+## Safety model
+
+- **Dangerous commands**: `dangerous-command-guard` will warn/block high-risk shell commands and require explicit confirmation before proceeding.
+- **Confirmation format**: when prompted, reply with `CONFIRM: <exact command>` to proceed.
+
+## Compatibility
+
+This plugin ships a `.claude-plugin/plugin.json` intended for publishing/packaging. If your Claude Code runtime expects a different manifest schema, adjust it to match your target environment.
+
+## Releases
+
+See `CHANGELOG.md` for version history.

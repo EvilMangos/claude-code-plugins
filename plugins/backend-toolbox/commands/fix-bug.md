@@ -1,7 +1,7 @@
 ---
 description: Fix a bug using a structured workflow with reproduction, root cause analysis, TDD, implementation, and code review.
 argument-hint: <bug-description>
-allowed-tools: Read, Grep, Glob, Task, SlashCommand
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand
 ---
 
 You are orchestrating a multistep **bug-fixing** workflow for this repository.

@@ -6,6 +6,13 @@ description: >
   strength, and determinism. Triggers: "review tests", "test quality", "are tests good enough", "test gate".
 model: opus
 color: cyan
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
+  - Write
+  - Task
 skills:
   - test-best-practices
   - tdd-workflow

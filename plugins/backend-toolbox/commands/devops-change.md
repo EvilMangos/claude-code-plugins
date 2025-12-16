@@ -1,7 +1,7 @@
 ---
 description: Make DevOps changes (CI/CD, Docker, K8s, Terraform) with planning and review workflow
 argument-hint: [ change-description ]
-allowed-tools: Read, Grep, Glob, Task
+allowed-tools: Read, Edit, Write, Grep, Glob, Task
 ---
 
 You are orchestrating a **DevOps change workflow** for this repository.

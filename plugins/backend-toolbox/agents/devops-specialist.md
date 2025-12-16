@@ -7,6 +7,14 @@ description: >
   "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
 model: opus
 color: blue
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
+  - Write
+  - Bash
+  - Task
 skills:
   - devops-infrastructure-security
 ---

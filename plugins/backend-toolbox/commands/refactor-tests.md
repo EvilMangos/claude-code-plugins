@@ -11,7 +11,7 @@ The user request is:
 > $ARGUMENTS
 
 The argument is an optional **path** to a test file or test folder. If no argument is provided, the scope is the *
-*entire test suite**.
+**entire test suite**.
 
 You MUST follow the workflow strictly and delegate to the named subagents at each step.
 Do not do a subagent's work in the main agent.
