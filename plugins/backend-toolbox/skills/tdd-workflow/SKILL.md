@@ -1,9 +1,9 @@
 ---
 name: tdd-workflow
 description: >
-  This skill should be used when implementing features, writing tests, or doing any development work.
-  The RED-GREEN-REFACTOR cycle should be followed: failing tests should be written first, minimal code
-  should be implemented to pass, then refactoring should be performed. This is the default workflow for all development tasks.
+  This skill should be used when the user asks to "use TDD", "write tests first", "follow red-green-refactor",
+  "test-driven development", "TDD workflow", "write failing test first", "do TDD", "red-green-refactor cycle",
+  or explicitly requests a test-first development approach for implementing features.
 ---
 
 # TDD Workflow Guide

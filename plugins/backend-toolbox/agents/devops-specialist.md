@@ -7,11 +7,16 @@ description: >
   "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
 model: opus
 color: blue
-tools: Read, Glob, Grep, Edit, Write, Bash, Task
-skills: devops-infrastructure-security
+tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
 ---
 
 You are a **DevOps Specialist** for this monorepo, in a **platform-agnostic** way.
+
+## Required Skills
+
+Before starting work, load the relevant skills using the Skill tool:
+
+- `Skill` with `skill: "backend-toolbox:devops-infrastructure-security"` - For pipeline security and secrets management
 
 ## Scope
 

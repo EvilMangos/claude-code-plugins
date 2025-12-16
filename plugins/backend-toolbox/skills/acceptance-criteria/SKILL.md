@@ -1,9 +1,10 @@
 ---
 name: acceptance-criteria
 description: >
-  This skill should be used when completing any task to verify the implementation satisfies all requirements.
-  Changes should always be checked to ensure they fully meet the original request before work is marked as done.
-  This is the default verification step for all development tasks.
+  This skill should be used when the user asks to "verify acceptance criteria", "check if requirements are met",
+  "validate implementation against requirements", "does this meet the acceptance criteria", "verify the task is complete",
+  "check requirements coverage", "acceptance testing", or needs to systematically verify implementation against
+  original request instructions.
 ---
 
 # Acceptance Criteria Verification
