@@ -7,16 +7,8 @@ description: >
   "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
 model: opus
 color: blue
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Bash
-  - Task
-skills:
-  - devops-infrastructure-security
+tools: Read, Glob, Grep, Edit, Write, Bash, Task
+skills: devops-infrastructure-security
 ---
 
 You are a **DevOps Specialist** for this monorepo, in a **platform-agnostic** way.

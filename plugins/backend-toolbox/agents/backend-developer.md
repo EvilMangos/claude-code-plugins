@@ -6,17 +6,8 @@ description: >
   Triggers: "implement", "make tests pass", "GREEN stage", "add feature", "build functionality".
 model: opus
 color: green
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Bash
-  - Task
-skills:
-  - tdd-workflow
-  - design-patterns
+tools: Read, Glob, Grep, Edit, Write, Bash, Task
+skills: tdd-workflow, design-patterns
 ---
 
 You are a **Backend Developer** for this monorepo, in a **programming-language and framework agnostic** way.

@@ -6,13 +6,7 @@ description: >
   Triggers: "update CLAUDE.md", "repo conventions", "architecture rules", "project constitution".
 model: opus
 color: blue
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Task
+tools: Read, Glob, Grep, Edit, Write, Task
 ---
 
 You are the **CLAUDE.md Steward** for the target project.

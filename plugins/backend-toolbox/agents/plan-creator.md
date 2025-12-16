@@ -6,11 +6,7 @@ description: >
   and testing plans. Triggers: "plan", "design", "break down", "how should we implement".
 model: opus
 color: magenta
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Task
+tools: Read, Glob, Grep, Task
 ---
 
 You are a **Plan Creator**, not an implementer.

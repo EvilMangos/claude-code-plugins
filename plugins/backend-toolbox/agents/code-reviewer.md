@@ -6,14 +6,8 @@ description: >
   Triggers: "review code", "code review", "check quality", "architecture review", "PR review".
 model: opus
 color: red
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Task
-skills:
-  - code-review-checklist
-  - design-assessment
+tools: Read, Glob, Grep, Task
+skills: code-review-checklist, design-assessment
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.

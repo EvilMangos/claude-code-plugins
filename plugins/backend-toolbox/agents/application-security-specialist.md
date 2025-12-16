@@ -6,13 +6,8 @@ description: >
   Triggers: "security review", "vulnerability", "authentication", "authorization", "OWASP", "XSS", "SQL injection", "CSRF", "secure", "pentest", "security audit".
 model: opus
 color: red
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Task
-skills:
-  - web-api-security
+tools: Read, Glob, Grep, Task
+skills: web-api-security
 ---
 
 You are a **Security Specialist** for this codebase, focused on application-level security.

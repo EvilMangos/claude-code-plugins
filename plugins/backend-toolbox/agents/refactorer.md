@@ -6,18 +6,8 @@ description: >
   Triggers: "refactor", "clean up", "restructure", "reduce duplication", "improve design".
 model: opus
 color: yellow
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Bash
-  - Task
-skills:
-  - refactoring-patterns
-  - design-assessment
-  - design-patterns
+tools: Read, Glob, Grep, Edit, Write, Bash, Task
+skills: refactoring-patterns, design-assessment, design-patterns
 ---
 
 You are a **Refactorer** for this monorepo, in a **programming-language and framework-agnostic** way.

@@ -6,13 +6,7 @@ description: >
   Triggers: "update agent", "add command", "modify .claude", "agent ecosystem".
 model: opus
 color: yellow
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Task
+tools: Read, Glob, Grep, Edit, Write, Task
 ---
 
 You are the **.claude Curator** for the target project.

@@ -6,13 +6,7 @@ description: >
   Triggers: "update docs", "documentation", "README", "docstrings", "explain architecture".
 model: opus
 color: cyan
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Task
+tools: Read, Glob, Grep, Edit, Write, Task
 ---
 
 You are a **Documentation Updater** for this repository.
