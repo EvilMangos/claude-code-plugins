@@ -76,15 +76,15 @@ User-supplied data sent to an interpreter as part of a command or query.
 
 ### Types of Injection
 
-| Type | Vector | Example |
-|------|--------|---------|
-| SQL | Database queries | `' OR '1'='1` |
-| NoSQL | Document queries | `{"$gt": ""}` |
-| OS Command | Shell execution | `; rm -rf /` |
-| LDAP | Directory queries | `*)(uid=*)` |
-| XPath | XML queries | `' or '1'='1` |
-| ORM | Object queries | Depends on ORM |
-| Expression Language | Template engines | `${7*7}` |
+| Type                | Vector            | Example        |
+|---------------------|-------------------|----------------|
+| SQL                 | Database queries  | `' OR '1'='1`  |
+| NoSQL               | Document queries  | `{"$gt": ""}`  |
+| OS Command          | Shell execution   | `; rm -rf /`   |
+| LDAP                | Directory queries | `*)(uid=*)`    |
+| XPath               | XML queries       | `' or '1'='1`  |
+| ORM                 | Object queries    | Depends on ORM |
+| Expression Language | Template engines  | `${7*7}`       |
 
 ### Detection Checklist
 
@@ -135,7 +135,8 @@ Flaws in design that cannot be fixed by perfect implementation.
 
 ## A05:2021 - Security Misconfiguration
 
-Insecure default configurations, incomplete configurations, open cloud storage, misconfigured HTTP headers, verbose error messages.
+Insecure default configurations, incomplete configurations, open cloud storage, misconfigured HTTP headers, verbose
+error messages.
 
 ### Common Weaknesses
 

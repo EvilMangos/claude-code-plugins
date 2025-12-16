@@ -7,6 +7,7 @@ Side-by-side comparisons of vulnerable and secure implementations for common sec
 ### User Login
 
 **Vulnerable:**
+
 ```
 function login(username, password):
     query = "SELECT * FROM users WHERE username='" + username + "' AND password='" + password + "'"
@@ -15,6 +16,7 @@ function login(username, password):
 ```
 
 **Secure:**
+
 ```
 function login(username, password):
     query = "SELECT * FROM users WHERE username = ? AND password_hash = ?"
@@ -31,6 +33,7 @@ function login(username, password):
 ### Search Functionality
 
 **Vulnerable:**
+
 ```
 function search(term):
     query = "SELECT * FROM products WHERE name LIKE '%" + term + "%'"
@@ -38,6 +41,7 @@ function search(term):
 ```
 
 **Secure:**
+
 ```
 function search(term):
     query = "SELECT * FROM products WHERE name LIKE ?"
@@ -54,7 +58,9 @@ function search(term):
 ### Displaying User Content
 
 **Vulnerable:**
+
 ```html
+
 <div id="comment"></div>
 <script>
     document.getElementById('comment').innerHTML = serverData.userComment
@@ -62,7 +68,9 @@ function search(term):
 ```
 
 **Secure:**
+
 ```html
+
 <div id="comment"></div>
 <script>
     document.getElementById('comment').textContent = serverData.userComment
@@ -77,11 +85,13 @@ function search(term):
 ### URL Handling
 
 **Vulnerable:**
+
 ```html
 <a href="{{ user_provided_url }}">Visit Site</a>
 ```
 
 **Secure:**
+
 ```
 function safe_url(url):
     parsed = parse_url(url)
@@ -99,14 +109,18 @@ function safe_url(url):
 ### JSON in Script Tags
 
 **Vulnerable:**
+
 ```html
+
 <script>
     var userData = {{ user_data | tojson }};
 </script>
 ```
 
 **Secure:**
+
 ```html
+
 <script>
     var userData = {{ user_data | tojson | safe }};
 </script>
@@ -114,7 +128,9 @@ function safe_url(url):
 ```
 
 **Better approach:**
+
 ```html
+
 <div id="data" data-user="{{ user_data | tojson | escape }}"></div>
 <script>
     var userData = JSON.parse(document.getElementById('data').dataset.user);
@@ -128,6 +144,7 @@ function safe_url(url):
 ### Password Storage
 
 **Vulnerable:**
+
 ```
 function create_user(username, password):
     query = "INSERT INTO users (username, password) VALUES (?, ?)"
@@ -135,6 +152,7 @@ function create_user(username, password):
 ```
 
 **Secure:**
+
 ```
 function create_user(username, password):
     hash = bcrypt.hash(password, rounds=12)
@@ -147,12 +165,14 @@ function create_user(username, password):
 ### Password Verification
 
 **Vulnerable:**
+
 ```
 function verify_password(stored_hash, provided_password):
     return stored_hash == hash(provided_password)  # Timing attack!
 ```
 
 **Secure:**
+
 ```
 function verify_password(stored_hash, provided_password):
     return bcrypt.verify(provided_password, stored_hash)  # Constant-time
@@ -165,6 +185,7 @@ function verify_password(stored_hash, provided_password):
 ### Session Management
 
 **Vulnerable:**
+
 ```
 function login_success(user):
     session_id = str(user.id)  # Predictable!
@@ -173,6 +194,7 @@ function login_success(user):
 ```
 
 **Secure:**
+
 ```
 function login_success(user):
     session_id = generate_random_bytes(32).to_hex()
@@ -188,6 +210,7 @@ function login_success(user):
 ### Resource Access (IDOR)
 
 **Vulnerable:**
+
 ```
 # GET /api/documents/123
 function get_document(doc_id):
@@ -195,6 +218,7 @@ function get_document(doc_id):
 ```
 
 **Secure:**
+
 ```
 # GET /api/documents/123
 function get_document(doc_id, current_user):
@@ -209,6 +233,7 @@ function get_document(doc_id, current_user):
 ### Admin Functions
 
 **Vulnerable:**
+
 ```
 # Relies on hidden UI elements for security
 function delete_user(user_id):
@@ -216,6 +241,7 @@ function delete_user(user_id):
 ```
 
 **Secure:**
+
 ```
 function delete_user(user_id, current_user):
     if not current_user.has_role('admin'):
@@ -233,12 +259,14 @@ function delete_user(user_id, current_user):
 ### File Operations
 
 **Vulnerable:**
+
 ```
 function convert_image(filename):
     system("convert " + filename + " output.png")
 ```
 
 **Secure:**
+
 ```
 function convert_image(filename):
     # Use library instead of shell
@@ -254,12 +282,14 @@ function convert_image(filename):
 ### User-Provided URLs
 
 **Vulnerable:**
+
 ```
 function fetch_url(url):
     system("curl " + url + " > output.txt")
 ```
 
 **Secure:**
+
 ```
 function fetch_url(url):
     # Validate URL first
@@ -281,6 +311,7 @@ function fetch_url(url):
 ### State-Changing Operation
 
 **Vulnerable:**
+
 ```
 # POST /api/transfer
 function transfer_money(from_account, to_account, amount):
@@ -289,6 +320,7 @@ function transfer_money(from_account, to_account, amount):
 ```
 
 **Secure:**
+
 ```
 # POST /api/transfer
 function transfer_money(from_account, to_account, amount, csrf_token):
@@ -298,7 +330,9 @@ function transfer_money(from_account, to_account, amount, csrf_token):
 ```
 
 **Form implementation:**
+
 ```html
+
 <form method="POST" action="/api/transfer">
     <input type="hidden" name="csrf_token" value="{{ generate_csrf_token() }}">
     <!-- other fields -->
@@ -312,6 +346,7 @@ function transfer_money(from_account, to_account, amount, csrf_token):
 ### Email Input
 
 **Vulnerable:**
+
 ```
 function update_email(email):
     user.email = email  # No validation
@@ -319,6 +354,7 @@ function update_email(email):
 ```
 
 **Secure:**
+
 ```
 function update_email(email):
     if not is_valid_email(email):
@@ -334,6 +370,7 @@ function update_email(email):
 ### Numeric Input
 
 **Vulnerable:**
+
 ```
 function get_page(page_param):
     page = int(page_param)  # Crashes on non-numeric
@@ -341,6 +378,7 @@ function get_page(page_param):
 ```
 
 **Secure:**
+
 ```
 function get_page(page_param):
     try:
@@ -363,6 +401,7 @@ function get_page(page_param):
 ### Database Errors
 
 **Vulnerable:**
+
 ```
 function get_user(id):
     try:
@@ -372,6 +411,7 @@ function get_user(id):
 ```
 
 **Secure:**
+
 ```
 function get_user(id):
     try:
@@ -388,6 +428,7 @@ function get_user(id):
 ### Image Upload
 
 **Vulnerable:**
+
 ```
 function upload_image(file):
     filename = file.original_name
@@ -396,6 +437,7 @@ function upload_image(file):
 ```
 
 **Secure:**
+
 ```
 function upload_image(file):
     # Generate safe filename
@@ -425,12 +467,14 @@ function upload_image(file):
 ### Response Headers
 
 **Vulnerable:**
+
 ```
 function send_response(data):
     return Response(data)  # No security headers
 ```
 
 **Secure:**
+
 ```
 function send_response(data):
     response = Response(data)
@@ -445,13 +489,13 @@ function send_response(data):
 
 ## Summary Table
 
-| Category | Vulnerable Pattern | Secure Pattern |
-|----------|-------------------|----------------|
-| SQL | String concatenation | Parameterized queries |
-| XSS | innerHTML, raw output | textContent, encoding |
-| Passwords | Plaintext, MD5/SHA1 | bcrypt/Argon2 |
-| Sessions | Sequential IDs | Random 256-bit tokens |
-| Authorization | UI-only controls | Server-side checks |
-| Commands | shell=True, system() | Library calls, arrays |
-| CSRF | No token | Per-session tokens |
-| Files | User-controlled paths | Generated names, validation |
+| Category      | Vulnerable Pattern    | Secure Pattern              |
+|---------------|-----------------------|-----------------------------|
+| SQL           | String concatenation  | Parameterized queries       |
+| XSS           | innerHTML, raw output | textContent, encoding       |
+| Passwords     | Plaintext, MD5/SHA1   | bcrypt/Argon2               |
+| Sessions      | Sequential IDs        | Random 256-bit tokens       |
+| Authorization | UI-only controls      | Server-side checks          |
+| Commands      | shell=True, system()  | Library calls, arrays       |
+| CSRF          | No token              | Per-session tokens          |
+| Files         | User-controlled paths | Generated names, validation |

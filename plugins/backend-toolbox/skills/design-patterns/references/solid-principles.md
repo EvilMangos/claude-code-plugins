@@ -1,6 +1,7 @@
 # SOLID Principles - Detailed Reference
 
-This reference covers the SOLID principles, common violation signals, and refactoring approaches for maintainable designs.
+This reference covers the SOLID principles, common violation signals, and refactoring approaches for maintainable
+designs.
 
 ## Single Responsibility Principle (SRP)
 
@@ -8,7 +9,8 @@ This reference covers the SOLID principles, common violation signals, and refact
 
 ### The Principle
 
-Every module, class, or function should have responsibility over a single part of the functionality. That responsibility should be entirely encapsulated by the class.
+Every module, class, or function should have responsibility over a single part of the functionality. That responsibility
+should be entirely encapsulated by the class.
 
 ### Identifying Violations
 
@@ -95,7 +97,8 @@ class WelcomeEmailSender {
 
 ### The Principle
 
-Design modules that can have their behavior extended without modifying their source code. New functionality should be added by writing new code, not changing existing code.
+Design modules that can have their behavior extended without modifying their source code. New functionality should be
+added by writing new code, not changing existing code.
 
 ### Identifying Violations
 
@@ -178,7 +181,8 @@ function calculateArea(shape: Shape): number {
 
 ### The Principle
 
-If S is a subtype of T, then objects of type T can be replaced with objects of type S without altering any desirable properties of the program. Subtypes must honor the contracts of their base types.
+If S is a subtype of T, then objects of type T can be replaced with objects of type S without altering any desirable
+properties of the program. Subtypes must honor the contracts of their base types.
 
 ### Identifying Violations
 
@@ -273,7 +277,8 @@ Subtypes must:
 
 ### The Principle
 
-Many specific interfaces are better than one general-purpose interface. Split large interfaces into smaller, more focused ones so that clients only need to know about methods relevant to them.
+Many specific interfaces are better than one general-purpose interface. Split large interfaces into smaller, more
+focused ones so that clients only need to know about methods relevant to them.
 
 ### Identifying Violations
 

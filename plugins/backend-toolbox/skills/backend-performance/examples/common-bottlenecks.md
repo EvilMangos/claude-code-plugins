@@ -71,11 +71,11 @@ SELECT * FROM orders WHERE user_id = 123 AND status = 'pending';
 # Blocks on each external call sequentially
 def process_order(order):
     # Each call blocks - total time is sum of all calls
-    payment = payment_service.charge(order)      # 200ms
-    inventory.reserve(order.items)               # 150ms
-    email_service.send_confirmation(order)       # 300ms
-    analytics.track("order_placed", order)       # 100ms
-    return {"status": "success"}                 # Total: 750ms
+    payment = payment_service.charge(order)  # 200ms
+    inventory.reserve(order.items)  # 150ms
+    email_service.send_confirmation(order)  # 300ms
+    analytics.track("order_placed", order)  # 100ms
+    return {"status": "success"}  # Total: 750ms
 ```
 
 ### After (Async + Background Jobs)
@@ -85,15 +85,15 @@ def process_order(order):
 async def process_order(order):
     # Only critical operations in request path
     payment, inventory = await asyncio.gather(
-        payment_service.charge(order),           # 200ms
-        inventory.reserve(order.items)           # 150ms (parallel)
-    )                                            # Total: 200ms (parallel)
+        payment_service.charge(order),  # 200ms
+        inventory.reserve(order.items)  # 150ms (parallel)
+    )  # Total: 200ms (parallel)
 
     # Non-critical operations in background
     background_queue.enqueue("send_order_email", order.id)
     background_queue.enqueue("track_analytics", "order_placed", order.id)
 
-    return {"status": "success"}                 # Total: ~200ms
+    return {"status": "success"}  # Total: ~200ms
 ```
 
 ---
@@ -131,6 +131,7 @@ def get_dashboard_stats(user_id):
     stats = db.query("""...""", user_id)  # 500ms
     cache.set(cache_key, stats, ttl=300)  # Cache for 5 minutes
     return stats
+
 
 # Invalidate on order changes
 def on_order_created(order):
@@ -183,6 +184,7 @@ def get_products():
 # Cache grows indefinitely - memory leak
 _cache = {}
 
+
 def get_user(user_id):
     if user_id not in _cache:
         _cache[user_id] = db.query("SELECT * FROM users WHERE id = ?", user_id)
@@ -197,13 +199,16 @@ def get_user(user_id):
 from functools import lru_cache
 from cachetools import TTLCache
 
+
 # Option 1: LRU with max size
 @lru_cache(maxsize=1000)
 def get_user(user_id):
     return db.query("SELECT * FROM users WHERE id = ?", user_id)
 
+
 # Option 2: TTL + max size
 _cache = TTLCache(maxsize=1000, ttl=300)
+
 
 def get_user(user_id):
     if user_id not in _cache:
@@ -237,6 +242,7 @@ pool = database.create_pool(
     max_size=20,
     timeout=10
 )
+
 
 def get_data():
     # Reuses connection from pool
@@ -282,13 +288,13 @@ def export_users():
 
 ## Summary
 
-| Bottleneck | Key Fix | Typical Improvement |
-|------------|---------|---------------------|
-| N+1 queries | Batch/eager load | 10-100x fewer queries |
-| Missing index | Add appropriate index | 10-1000x faster queries |
-| Sync external calls | Async + background jobs | 2-5x faster response |
-| Uncached computation | Add caching layer | 100-1000x faster (hits) |
-| Large payloads | Pagination + field selection | 10-100x smaller response |
-| Memory leak | Bounded cache with TTL | Stable memory usage |
-| Connection overhead | Connection pooling | 50-100ms saved per request |
-| Loop serialization | Streaming response | Faster time-to-first-byte |
+| Bottleneck           | Key Fix                      | Typical Improvement        |
+|----------------------|------------------------------|----------------------------|
+| N+1 queries          | Batch/eager load             | 10-100x fewer queries      |
+| Missing index        | Add appropriate index        | 10-1000x faster queries    |
+| Sync external calls  | Async + background jobs      | 2-5x faster response       |
+| Uncached computation | Add caching layer            | 100-1000x faster (hits)    |
+| Large payloads       | Pagination + field selection | 10-100x smaller response   |
+| Memory leak          | Bounded cache with TTL       | Stable memory usage        |
+| Connection overhead  | Connection pooling           | 50-100ms saved per request |
+| Loop serialization   | Streaming response           | Faster time-to-first-byte  |

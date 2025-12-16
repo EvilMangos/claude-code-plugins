@@ -13,6 +13,7 @@ description: >
 **Refactoring changes structure, not behavior.**
 
 Every refactor must:
+
 1. Start with passing tests
 2. Make one small change
 3. Run tests to verify behavior unchanged
@@ -21,18 +22,21 @@ Every refactor must:
 ## Safe Refactoring Process
 
 ### Before Starting
+
 - [ ] All tests pass (establish baseline)
 - [ ] Understand current behavior from tests and usage
 - [ ] Identify what must NOT change (public APIs, contracts)
 - [ ] Plan small, reversible steps
 
 ### During Refactoring
+
 - [ ] One change at a time
 - [ ] Run tests after every step
 - [ ] If tests fail, revert immediately
 - [ ] Commit working states frequently
 
 ### After Completing
+
 - [ ] All tests still pass
 - [ ] No behavior changes
 - [ ] Code is demonstrably improved
@@ -40,6 +44,7 @@ Every refactor must:
 ## Common Refactoring Patterns
 
 ### Extract Function/Method
+
 **When:** Code block does a distinct thing or is duplicated
 
 ```
@@ -60,6 +65,7 @@ After:
 ```
 
 ### Extract Variable
+
 **When:** Complex expression is hard to understand
 
 ```
@@ -72,6 +78,7 @@ After:
 ```
 
 ### Inline Function/Variable
+
 **When:** Abstraction adds no clarity
 
 ```
@@ -84,6 +91,7 @@ After:
 ```
 
 ### Rename
+
 **When:** Name doesn't describe purpose
 
 ```
@@ -95,9 +103,11 @@ After:
 ```
 
 ### Move Function/Field
+
 **When:** Function/field belongs to different module
 
 Steps:
+
 1. Copy to new location
 2. Update all callers to use new location
 3. Run tests
@@ -105,6 +115,7 @@ Steps:
 5. Run tests again
 
 ### Replace Conditional with Polymorphism
+
 **When:** Switch/if chains based on type
 
 ```
@@ -126,15 +137,18 @@ After:
 ```
 
 ### Extract Interface
+
 **When:** Multiple implementations share common contract
 
 Steps:
+
 1. Identify common methods/properties
 2. Create interface with those signatures
 3. Have implementations declare interface
 4. Update consumers to use interface type
 
 ### Decompose Conditional
+
 **When:** Complex conditional logic
 
 ```
@@ -154,50 +168,61 @@ After:
 ## Anti-Patterns to Avoid
 
 ### Big Bang Refactoring
+
 - Changing many things at once
 - Hard to identify what broke tests
 - Difficult to revert
 
 ### Refactoring Without Tests
+
 - No way to verify behavior unchanged
 - High risk of introducing bugs
 
 ### Refactoring During Feature Work
+
 - Mixes concerns in commits
 - Makes code review harder
 - Should be separate commits/PRs
 
 ### Gold Plating
+
 - Refactoring beyond what's needed
 - Adding features during refactor
 - Over-abstracting for hypothetical futures
 
 ## Refactoring Scope Decisions
 
-| Scope | When Appropriate |
-|-------|------------------|
-| **Local** (within function) | During any work |
-| **Module** (within file) | Dedicated refactor task |
-| **Cross-module** | Planned refactor with tests |
-| **Architecture** | Major initiative with team |
+| Scope                       | When Appropriate            |
+|-----------------------------|-----------------------------|
+| **Local** (within function) | During any work             |
+| **Module** (within file)    | Dedicated refactor task     |
+| **Cross-module**            | Planned refactor with tests |
+| **Architecture**            | Major initiative with team  |
 
 ## Additional Resources
 
 ### Reference Files
 
 For detailed patterns and techniques, consult:
-- **`references/patterns-catalog.md`** - Extended catalog of refactoring patterns with mechanics and multi-language examples (Extract Function, Move Method, Replace Conditional with Polymorphism, etc.)
-- **`references/code-smells.md`** - Comprehensive guide to identifying code smells (Bloaters, Couplers, Change Preventers) and their refactoring solutions
+
+- **`references/patterns-catalog.md`** - Extended catalog of refactoring patterns with mechanics and multi-language
+  examples (Extract Function, Move Method, Replace Conditional with Polymorphism, etc.)
+- **`references/code-smells.md`** - Comprehensive guide to identifying code smells (Bloaters, Couplers, Change
+  Preventers) and their refactoring solutions
 
 ### Working Examples
 
 Before/after examples in `examples/`:
-- **`extract-function-before.ts`** / **`extract-function-after.ts`** - Demonstrates extracting focused functions from a long method
-- **`replace-conditional-polymorphism-before.ts`** / **`replace-conditional-polymorphism-after.ts`** - Shows replacing type-based switch statements with polymorphic classes
+
+- **`extract-function-before.ts`** / **`extract-function-after.ts`** - Demonstrates extracting focused functions from a
+  long method
+- **`replace-conditional-polymorphism-before.ts`** / **`replace-conditional-polymorphism-after.ts`** - Shows replacing
+  type-based switch statements with polymorphic classes
 
 ## Related Skills
 
 When evaluating design quality during refactoring, consult the **software-design-principles** skill for:
+
 - SOLID principles to identify design violations
 - Design patterns to guide transformations
 - Coupling/cohesion metrics to measure improvement

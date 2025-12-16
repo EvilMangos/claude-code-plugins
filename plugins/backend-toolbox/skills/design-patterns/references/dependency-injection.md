@@ -4,7 +4,8 @@ This reference covers dependency injection concepts, injection patterns, contain
 
 ## What is Dependency Injection?
 
-Dependency Injection (DI) is a technique where objects receive their dependencies from external sources rather than creating them internally. It's the practical application of the Dependency Inversion Principle (DIP).
+Dependency Injection (DI) is a technique where objects receive their dependencies from external sources rather than
+creating them internally. It's the practical application of the Dependency Inversion Principle (DIP).
 
 **Without DI:**
 
@@ -665,14 +666,14 @@ class Service {
 ## Summary
 
 | Pattern               | When to Use                            |
-| --------------------- | -------------------------------------- |
+|-----------------------|----------------------------------------|
 | Constructor Injection | Required dependencies (default choice) |
 | Setter Injection      | Optional dependencies                  |
 | Method Injection      | Per-call varying dependencies          |
 | Factory Injection     | Complex/contextual creation            |
 
 | Lifetime  | When to Use                 |
-| --------- | --------------------------- |
+|-----------|-----------------------------|
 | Singleton | Stateless, shared resources |
 | Transient | Stateful, per-use instances |
 | Scoped    | Per-request, unit of work   |

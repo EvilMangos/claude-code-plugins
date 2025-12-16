@@ -18,31 +18,31 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 ### Core Workflow
 
-| Agent | Role | Color |
-|-------|------|-------|
-| plan-creator | Step-by-step implementation plans | magenta |
-| automation-qa | Test design, RED stage | blue |
-| tests-reviewer | Test quality gate | cyan |
-| backend-developer | Implementation, GREEN stage | green |
-| acceptance-reviewer | Functional completeness gate | magenta |
-| refactorer | Behavior-preserving cleanup | yellow |
-| code-reviewer | Code quality gate | red |
-| documentation-updater | Doc sync | cyan |
+| Agent                 | Role                              | Color   |
+|-----------------------|-----------------------------------|---------|
+| plan-creator          | Step-by-step implementation plans | magenta |
+| automation-qa         | Test design, RED stage            | blue    |
+| tests-reviewer        | Test quality gate                 | cyan    |
+| backend-developer     | Implementation, GREEN stage       | green   |
+| acceptance-reviewer   | Functional completeness gate      | magenta |
+| refactorer            | Behavior-preserving cleanup       | yellow  |
+| code-reviewer         | Code quality gate                 | red     |
+| documentation-updater | Doc sync                          | cyan    |
 
 ### Specialists
 
-| Agent                           | Role | Color |
-|---------------------------------|------|-------|
-| application-security-specialist | Vulnerability assessment, secure coding | red |
-| performance-specialist          | Bottleneck analysis, optimization | yellow |
-| devops-specialist               | CI/CD, Docker, Kubernetes, deployment | blue |
+| Agent                           | Role                                    | Color  |
+|---------------------------------|-----------------------------------------|--------|
+| application-security-specialist | Vulnerability assessment, secure coding | red    |
+| performance-specialist          | Bottleneck analysis, optimization       | yellow |
+| devops-specialist               | CI/CD, Docker, Kubernetes, deployment   | blue   |
 
 ### Support
 
-| Agent | Role | Color |
-|-------|------|-------|
-| claude-md-steward | CLAUDE.md maintenance | blue |
-| claude-curator | .claude/** maintenance | yellow |
+| Agent             | Role                   | Color  |
+|-------------------|------------------------|--------|
+| claude-md-steward | CLAUDE.md maintenance  | blue   |
+| claude-curator    | .claude/** maintenance | yellow |
 
 ## Commands (7)
 
@@ -57,10 +57,12 @@ A comprehensive TDD and code quality framework for Claude Code.
 ## Skills (12)
 
 ### Testing & TDD
+
 - **test-best-practices** - Behavior-focused testing, mocking, anti-patterns
 - **tdd-workflow** - RED-GREEN-REFACTOR cycle, phase transitions
 
 ### Code Quality
+
 - **refactoring-patterns** - Safe refactoring process, common patterns
 - **design-patterns** - SOLID, DDD, dependency injection, design patterns
 - **design-assessment** - Coupling/cohesion analysis, code smells
@@ -69,6 +71,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **acceptance-criteria** - Requirement verification, completeness checking
 
 ### Security & Performance
+
 - **web-api-security** - OWASP Top 10, injection patterns, secure coding
 - **devops-infrastructure-security** - Secrets management, container hardening
 - **backend-performance** - Database optimization, caching patterns
@@ -85,7 +88,8 @@ A comprehensive TDD and code quality framework for Claude Code.
 ## Typical Workflow
 
 1. Run `/develop-feature [description]` or `/fix-bug [description]`
-2. Plugin orchestrates: plan-creator -> automation-qa (RED) -> tests-reviewer -> backend-developer (GREEN) -> acceptance-reviewer -> refactorer -> code-reviewer -> documentation-updater
+2. Plugin orchestrates: plan-creator -> automation-qa (RED) -> tests-reviewer -> backend-developer (GREEN) ->
+   acceptance-reviewer -> refactorer -> code-reviewer -> documentation-updater
 3. workflow-completion hook generates final summary
 
 ## Setup
@@ -96,22 +100,26 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 ## Installation
 
-Install by copying or symlinking this folder into your Claude Code plugins location, or by referencing it from your project's `.claude/plugins.json` (if you use project-scoped plugin config).
+Install by copying or symlinking this folder into your Claude Code plugins location, or by referencing it from your
+project's `.claude/plugins.json` (if you use project-scoped plugin config).
 
 ## Hooks (optional)
 
 This plugin includes optional safety/quality-of-life hooks under `hooks/`.
 
-- If you do **not** want hooks, exclude the `hooks/` directory when installing, or disable hooks via your Claude Code/plugin configuration (depending on how you load plugins).
+- If you do **not** want hooks, exclude the `hooks/` directory when installing, or disable hooks via your Claude
+  Code/plugin configuration (depending on how you load plugins).
 
 ## Safety model
 
-- **Dangerous commands**: `dangerous-command-guard` will warn/block high-risk shell commands and require explicit confirmation before proceeding.
+- **Dangerous commands**: `dangerous-command-guard` will warn/block high-risk shell commands and require explicit
+  confirmation before proceeding.
 - **Confirmation format**: when prompted, reply with `CONFIRM: <exact command>` to proceed.
 
 ## Compatibility
 
-This plugin ships a `.claude-plugin/plugin.json` intended for publishing/packaging. If your Claude Code runtime expects a different manifest schema, adjust it to match your target environment.
+This plugin ships a `.claude-plugin/plugin.json` intended for publishing/packaging. If your Claude Code runtime expects
+a different manifest schema, adjust it to match your target environment.
 
 ## Releases
 

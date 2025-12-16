@@ -144,30 +144,30 @@ class OrderService {
 
 ### Creational Patterns
 
-| Pattern | Use When | Example |
-|---------|----------|---------|
-| **Factory Method** | Object creation varies by context | `createPaymentProcessor(type)` |
-| **Abstract Factory** | Families of related objects | UI component factories (Material, Bootstrap) |
-| **Builder** | Complex object, many optional params | `QueryBuilder().select().from().where()` |
-| **Singleton** | Exactly one instance needed | Configuration (prefer DI instead) |
+| Pattern              | Use When                             | Example                                      |
+|----------------------|--------------------------------------|----------------------------------------------|
+| **Factory Method**   | Object creation varies by context    | `createPaymentProcessor(type)`               |
+| **Abstract Factory** | Families of related objects          | UI component factories (Material, Bootstrap) |
+| **Builder**          | Complex object, many optional params | `QueryBuilder().select().from().where()`     |
+| **Singleton**        | Exactly one instance needed          | Configuration (prefer DI instead)            |
 
 ### Structural Patterns
 
-| Pattern | Use When | Example |
-|---------|----------|---------|
-| **Adapter** | Make incompatible interfaces work | Wrapping legacy/third-party APIs |
-| **Decorator** | Add behavior without modifying class | Logging, caching, validation wrappers |
-| **Facade** | Simplify complex subsystem | `VideoPlayer.play()` hiding decode/render/audio |
-| **Composite** | Tree/hierarchy structures | File system (files and folders) |
+| Pattern       | Use When                             | Example                                         |
+|---------------|--------------------------------------|-------------------------------------------------|
+| **Adapter**   | Make incompatible interfaces work    | Wrapping legacy/third-party APIs                |
+| **Decorator** | Add behavior without modifying class | Logging, caching, validation wrappers           |
+| **Facade**    | Simplify complex subsystem           | `VideoPlayer.play()` hiding decode/render/audio |
+| **Composite** | Tree/hierarchy structures            | File system (files and folders)                 |
 
 ### Behavioral Patterns
 
-| Pattern | Use When | Example |
-|---------|----------|---------|
-| **Strategy** | Swappable algorithms at runtime | Sorting strategies, payment methods |
-| **Observer** | Notify multiple objects of changes | Event emitters, pub/sub |
-| **Command** | Encapsulate operations (undo/queue) | Text editor commands, job queues |
-| **State** | Behavior varies by internal state | Order status transitions |
+| Pattern      | Use When                            | Example                             |
+|--------------|-------------------------------------|-------------------------------------|
+| **Strategy** | Swappable algorithms at runtime     | Sorting strategies, payment methods |
+| **Observer** | Notify multiple objects of changes  | Event emitters, pub/sub             |
+| **Command**  | Encapsulate operations (undo/queue) | Text editor commands, job queues    |
+| **State**    | Behavior varies by internal state   | Order status transitions            |
 
 ## Domain-Driven Design Patterns
 
@@ -178,34 +178,34 @@ class OrderService {
 
 ### Tactical Patterns
 
-| Pattern | What It Is | When to Use |
-|---------|------------|-------------|
-| **Entity** | Object with identity (equality by ID) | Things that have lifecycle, change over time |
-| **Value Object** | Immutable, equality by attributes | Money, Address, DateRange, typed IDs |
-| **Aggregate** | Cluster with root entity, transactional boundary | Order with LineItems |
-| **Repository** | Collection-like interface for aggregates | `OrderRepository.findById()` |
-| **Domain Service** | Logic that doesn't fit in entities | Cross-aggregate operations |
-| **Domain Event** | Record of something that happened | `OrderSubmitted`, `PaymentReceived` |
-| **Factory** | Complex object creation | `OrderFactory.createFromCart()` |
+| Pattern            | What It Is                                       | When to Use                                  |
+|--------------------|--------------------------------------------------|----------------------------------------------|
+| **Entity**         | Object with identity (equality by ID)            | Things that have lifecycle, change over time |
+| **Value Object**   | Immutable, equality by attributes                | Money, Address, DateRange, typed IDs         |
+| **Aggregate**      | Cluster with root entity, transactional boundary | Order with LineItems                         |
+| **Repository**     | Collection-like interface for aggregates         | `OrderRepository.findById()`                 |
+| **Domain Service** | Logic that doesn't fit in entities               | Cross-aggregate operations                   |
+| **Domain Event**   | Record of something that happened                | `OrderSubmitted`, `PaymentReceived`          |
+| **Factory**        | Complex object creation                          | `OrderFactory.createFromCart()`              |
 
 ### Strategic Patterns
 
-| Pattern | Purpose |
-|---------|---------|
-| **Bounded Context** | Boundary where a domain model applies |
-| **Ubiquitous Language** | Shared vocabulary in code and conversation |
+| Pattern                   | Purpose                                         |
+|---------------------------|-------------------------------------------------|
+| **Bounded Context**       | Boundary where a domain model applies           |
+| **Ubiquitous Language**   | Shared vocabulary in code and conversation      |
 | **Anti-Corruption Layer** | Translates between external and internal models |
-| **Context Mapping** | Relationships between bounded contexts |
+| **Context Mapping**       | Relationships between bounded contexts          |
 
 ## Dependency Injection Patterns
 
 ### Injection Types
 
-| Type | When to Use |
-|------|-------------|
+| Type                      | When to Use                            |
+|---------------------------|----------------------------------------|
 | **Constructor Injection** | Required dependencies (default choice) |
-| **Setter Injection** | Optional dependencies |
-| **Method Injection** | Per-call varying dependencies |
+| **Setter Injection**      | Optional dependencies                  |
+| **Method Injection**      | Per-call varying dependencies          |
 
 ### Best Practices
 
@@ -233,28 +233,28 @@ class OrderService {
 
 ### Lifetimes
 
-| Lifetime | When to Use |
-|----------|-------------|
+| Lifetime      | When to Use                                  |
+|---------------|----------------------------------------------|
 | **Singleton** | Stateless services, connection pools, config |
-| **Transient** | Stateful services, per-use instances |
-| **Scoped** | Per-request services, unit of work |
+| **Transient** | Stateful services, per-use instances         |
+| **Scoped**    | Per-request services, unit of work           |
 
 ## Pattern Selection Guide
 
-| Problem | Consider Pattern |
-|---------|------------------|
-| Object creation is complex | Factory, Builder |
-| Need single instance | Singleton (prefer DI) |
-| Incompatible interfaces | Adapter |
-| Add responsibilities dynamically | Decorator |
-| Simplify complex subsystem | Facade |
-| Tree/hierarchy structures | Composite |
-| Swappable algorithms | Strategy |
-| Notify multiple objects of changes | Observer |
-| Undo/redo, queuing operations | Command |
-| Behavior varies by state | State |
-| Complex domain logic | DDD Tactical Patterns |
-| Large system with multiple teams | Bounded Contexts |
+| Problem                            | Consider Pattern      |
+|------------------------------------|-----------------------|
+| Object creation is complex         | Factory, Builder      |
+| Need single instance               | Singleton (prefer DI) |
+| Incompatible interfaces            | Adapter               |
+| Add responsibilities dynamically   | Decorator             |
+| Simplify complex subsystem         | Facade                |
+| Tree/hierarchy structures          | Composite             |
+| Swappable algorithms               | Strategy              |
+| Notify multiple objects of changes | Observer              |
+| Undo/redo, queuing operations      | Command               |
+| Behavior varies by state           | State                 |
+| Complex domain logic               | DDD Tactical Patterns |
+| Large system with multiple teams   | Bounded Contexts      |
 
 ## Additional Resources
 
@@ -268,6 +268,7 @@ For detailed explanations and code examples:
 ### Related Skills
 
 When assessing code quality, consult the **design-assessment** skill for:
+
 - Code smell identification
 - Coupling/cohesion metrics
 - SOLID violation signals

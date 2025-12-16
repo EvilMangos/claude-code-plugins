@@ -1,6 +1,7 @@
 # Design Patterns - Comprehensive Reference
 
-This reference covers creational, structural, and behavioral design patterns, with selection guidance for common problems.
+This reference covers creational, structural, and behavioral design patterns, with selection guidance for common
+problems.
 
 ## Creational Patterns
 
@@ -755,7 +756,7 @@ class Order {
 ## Pattern Selection Guide
 
 | Problem                            | Consider Pattern      |
-| ---------------------------------- | --------------------- |
+|------------------------------------|-----------------------|
 | Object creation is complex         | Factory, Builder      |
 | Need single instance               | Singleton (prefer DI) |
 | Incompatible interfaces            | Adapter               |
@@ -767,4 +768,5 @@ class Order {
 | Undo/redo, queuing operations      | Command               |
 | Behavior varies by state           | State                 |
 
-For Domain-Driven Design patterns (Entity, Value Object, Aggregate, Repository, Domain Service, Domain Event, Specification, Bounded Context, Anti-Corruption Layer), see **`references/domain-driven-design.md`**.
+For Domain-Driven Design patterns (Entity, Value Object, Aggregate, Repository, Domain Service, Domain Event,
+Specification, Bounded Context, Anti-Corruption Layer), see **`references/domain-driven-design.md`**.

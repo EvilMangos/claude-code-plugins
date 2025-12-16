@@ -22,13 +22,13 @@ This template is used when acceptance review findings are reported.
 
 1. **[Gap Title]**
 
-   - **Type**: Missing | Incomplete | Different | Assumption
-   - **Requested**: [What the request asked for]
-   - **Implemented**: [What was actually done]
-   - **Impact**: [How this affects meeting the request]
+    - **Type**: Missing | Incomplete | Different | Assumption
+    - **Requested**: [What the request asked for]
+    - **Implemented**: [What was actually done]
+    - **Impact**: [How this affects meeting the request]
 
 2. **[Another Gap]**
-   - ...
+    - ...
 
 ### Assumptions Made
 
@@ -73,7 +73,7 @@ The following condensed template can be used for smaller reviews:
 ## Verdict Definitions
 
 | Verdict     | Meaning                                 | Action                             |
-| ----------- | --------------------------------------- | ---------------------------------- |
+|-------------|-----------------------------------------|------------------------------------|
 | **PASS**    | All instructions from request satisfied | Complete                           |
 | **PARTIAL** | Most instructions met, some gaps remain | Address gaps or confirm acceptable |
 | **FAIL**    | Critical instructions not satisfied     | Must address before proceeding     |

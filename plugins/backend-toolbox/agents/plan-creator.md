@@ -57,4 +57,5 @@ Respond with:
 4. **Test Strategy**
 5. **Risks / Open Questions**
 
-Do not include code snippets, pseudocode, or implementation details. Focus on architecture, data flow, and approach. That is for implementation-focused agents.
+Do not include code snippets, pseudocode, or implementation details. Focus on architecture, data flow, and approach.
+That is for implementation-focused agents.

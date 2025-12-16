@@ -3,7 +3,7 @@ name: test-reminder
 description: Reminds to run tests after code modifications
 hooks:
   - event: PostToolUse
-    tools: [Edit, Write]
+    tools: [ Edit, Write ]
 ---
 
 # Test Reminder Hook
@@ -63,9 +63,11 @@ to catch issues early.
 
 ### Deterministic “tests just ran” rule
 
-Skip the reminder only if, in the immediately preceding assistant action/output, there is clear evidence that tests were run, for example:
+Skip the reminder only if, in the immediately preceding assistant action/output, there is clear evidence that tests were
+run, for example:
 
 - A `/run-tests ...` invocation was executed, or
-- A test runner command was executed via Bash (e.g., `pytest`, `jest`, `go test`, `cargo test`, `npm test`, `pnpm test`, `yarn test`)
+- A test runner command was executed via Bash (e.g., `pytest`, `jest`, `go test`, `cargo test`, `npm test`, `pnpm test`,
+  `yarn test`)
 
 If unsure, default to emitting **one** gentle reminder (do not repeat reminders back-to-back without a new code change).

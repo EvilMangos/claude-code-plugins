@@ -9,6 +9,7 @@ Comprehensive catalog of refactoring patterns with detailed explanations, mechan
 **Motivation:** Turn a code fragment into a function with a name that explains its purpose.
 
 **Mechanics:**
+
 1. Create a new function named after what it does (not how)
 2. Copy the extracted code into the new function
 3. Scan for local variables - pass as parameters or extract as needed
@@ -16,6 +17,7 @@ Comprehensive catalog of refactoring patterns with detailed explanations, mechan
 5. Test
 
 **Example - TypeScript:**
+
 ```typescript
 // Before
 function printOwing(invoice: Invoice) {
@@ -57,6 +59,7 @@ function printDetails(invoice: Invoice, outstanding: number) {
 ```
 
 **Example - Python:**
+
 ```python
 # Before
 def print_owing(invoice):
@@ -72,19 +75,23 @@ def print_owing(invoice):
     print(f"name: {invoice.customer}")
     print(f"amount: {outstanding}")
 
+
 # After
 def print_owing(invoice):
     print_banner()
     outstanding = calculate_outstanding(invoice)
     print_details(invoice, outstanding)
 
+
 def print_banner():
     print("***********************")
     print("**** Customer Owes ****")
     print("***********************")
 
+
 def calculate_outstanding(invoice):
     return sum(o.amount for o in invoice.orders)
+
 
 def print_details(invoice, outstanding):
     print(f"name: {invoice.customer}")
@@ -96,6 +103,7 @@ def print_details(invoice, outstanding):
 **Motivation:** Remove unnecessary indirection when function body is as clear as its name.
 
 **Mechanics:**
+
 1. Check function is not polymorphic (not overridden in subclasses)
 2. Find all call sites
 3. Replace each call with function body
@@ -103,6 +111,7 @@ def print_details(invoice, outstanding):
 5. Remove function definition
 
 **Example:**
+
 ```typescript
 // Before
 function getRating(driver: Driver): number {
@@ -124,12 +133,14 @@ function getRating(driver: Driver): number {
 **Motivation:** Break down complex expressions into named parts for clarity.
 
 **Mechanics:**
+
 1. Ensure expression has no side effects
 2. Declare immutable variable, set to expression result
 3. Replace original expression with variable reference
 4. Test
 
 **Example:**
+
 ```typescript
 // Before
 function price(order: Order): number {
@@ -152,6 +163,7 @@ function price(order: Order): number {
 **Motivation:** Remove variable when it adds no clarity over the expression.
 
 **Example:**
+
 ```typescript
 // Before
 const basePrice = order.basePrice;
@@ -168,6 +180,7 @@ return order.basePrice > 1000;
 **Motivation:** Place function with the data it uses most, or with functions it calls most.
 
 **Mechanics:**
+
 1. Examine what current context the function uses
 2. Consider if function should move with related functions
 3. Check for polymorphism in source class
@@ -179,6 +192,7 @@ return order.basePrice > 1000;
 9. Test
 
 **Example:**
+
 ```typescript
 // Before - function in Account class uses too much from AccountType
 class Account {
@@ -239,6 +253,7 @@ class AccountType {
 **Motivation:** Move data closer to the code that uses it most.
 
 **Mechanics:**
+
 1. Ensure field is encapsulated (getter/setter)
 2. Create field and accessors in target
 3. Redirect source accessors to target
@@ -250,6 +265,7 @@ class AccountType {
 **Motivation:** Consolidate repeated code that always accompanies a function call.
 
 **Example:**
+
 ```typescript
 // Before
 result.push(`<p>title: ${person.photo.title}</p>`);
@@ -279,6 +295,7 @@ function photoData(photo: Photo): string[] {
 **Motivation:** When function does too much and callers need different behavior.
 
 **Mechanics:**
+
 1. Extract statements to move into new function
 2. Inline extracted function into all callers
 3. Remove extracted function
@@ -290,6 +307,7 @@ function photoData(photo: Photo): string[] {
 **Motivation:** Separate variables that are assigned more than once for different purposes.
 
 **Example:**
+
 ```typescript
 // Before
 let temp = 2 * (height + width);
@@ -309,6 +327,7 @@ console.log(area);
 **Motivation:** Remove mutable state by calculating values on demand.
 
 **Example:**
+
 ```typescript
 // Before
 class ProductionPlan {
@@ -342,6 +361,7 @@ class ProductionPlan {
 **Motivation:** Give meaning to literal values.
 
 **Example:**
+
 ```typescript
 // Before
 function potentialEnergy(mass: number, height: number): number {
@@ -363,6 +383,7 @@ function potentialEnergy(mass: number, height: number): number {
 **Motivation:** Extract condition and branches into clearly named functions.
 
 **Example:**
+
 ```typescript
 // Before
 if (date < SUMMER_START || date > SUMMER_END) {
@@ -396,6 +417,7 @@ function winterCharge(quantity: number): number {
 **Motivation:** Combine conditionals with same outcome into single check.
 
 **Example:**
+
 ```typescript
 // Before
 function disabilityAmount(employee: Employee): number {
@@ -423,6 +445,7 @@ function isNotEligibleForDisability(employee: Employee): boolean {
 **Motivation:** Use early returns to reduce nesting and highlight special cases.
 
 **Example:**
+
 ```typescript
 // Before
 function payAmount(employee: Employee): Money {
@@ -452,6 +475,7 @@ function payAmount(employee: Employee): Money {
 **Motivation:** Replace type-based conditionals with polymorphic dispatch.
 
 **Mechanics:**
+
 1. Create class hierarchy if none exists
 2. Use factory to return appropriate subclass
 3. Move conditional logic to superclass as default
@@ -459,6 +483,7 @@ function payAmount(employee: Employee): Money {
 5. Remove conditional from superclass
 
 **Example:**
+
 ```typescript
 // Before
 function plumage(bird: Bird): string {
@@ -508,6 +533,7 @@ function createBird(data: BirdData): Bird {
 **Motivation:** Replace null checks with polymorphic behavior.
 
 **Example:**
+
 ```typescript
 // Before
 if (customer === null) {
@@ -536,6 +562,7 @@ customerName = customer.name; // Works for both Customer and UnknownCustomer
 **Motivation:** Functions should either return a value OR change state, not both.
 
 **Example:**
+
 ```typescript
 // Before
 function alertForMiscreant(people: string[]): string {
@@ -570,6 +597,7 @@ function alertForMiscreant(people: string[]): void {
 **Motivation:** Combine similar functions that differ only by literal values.
 
 **Example:**
+
 ```typescript
 // Before
 function tenPercentRaise(person: Person) {
@@ -591,6 +619,7 @@ function raise(person: Person, factor: number) {
 **Motivation:** Remove parameter when receiver can calculate it.
 
 **Example:**
+
 ```typescript
 // Before
 class Order {
@@ -634,6 +663,7 @@ class Order {
 **Motivation:** Replace boolean flags with explicit functions.
 
 **Example:**
+
 ```typescript
 // Before
 function setDimension(name: string, value: number, isMetric: boolean) {
@@ -669,6 +699,7 @@ function setDimensionInInches(name: string, value: number) {
 **Motivation:** Inheritance relationship is inappropriate (violates LSP).
 
 **Example:**
+
 ```typescript
 // Before - Stack inherits from List but shouldn't expose all List methods
 class Stack<T> extends List<T> {
@@ -698,6 +729,7 @@ This pattern replaces a class hierarchy with composition, using delegates to var
 **Motivation:** Make data structures mutable only through controlled interface.
 
 **Example:**
+
 ```typescript
 // Before
 const organization = { name: 'Acme', country: 'US' };
@@ -724,6 +756,7 @@ class Organization {
 **Motivation:** Prevent uncontrolled modification of collections.
 
 **Example:**
+
 ```typescript
 // Before
 class Person {
@@ -757,6 +790,7 @@ class Person {
 **Motivation:** Reduce coupling by hiding implementation objects.
 
 **Example:**
+
 ```typescript
 // Before - Client knows about Department
 manager = person.department.manager;

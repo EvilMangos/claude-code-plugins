@@ -73,7 +73,8 @@ Strategy:
 
 Comment template:
 
-> This PR is quite large. Could we split it into [suggested split]? If not, I'll review it in stages focusing on [area] first.
+> This PR is quite large. Could we split it into [suggested split]? If not, I'll review it in stages focusing on [area]
+> first.
 
 ### Disagreement on Approach
 
@@ -86,7 +87,8 @@ Strategy:
 
 Comment template:
 
-> I see why you chose [approach]. I'm wondering about [alternative] because [reasoning]. What do you think about the trade-offs here?
+> I see why you chose [approach]. I'm wondering about [alternative] because [reasoning]. What do you think about the
+> trade-offs here?
 
 ### Repeated Issues
 
@@ -99,7 +101,8 @@ Strategy:
 
 Comment template:
 
-> I've noticed [pattern] in a few places. This often leads to [problem]. Consider [solution]. We might want to add a lint rule for this.
+> I've noticed [pattern] in a few places. This often leads to [problem]. Consider [solution]. We might want to add a
+> lint rule for this.
 
 ### Junior Developer Code
 
@@ -119,7 +122,7 @@ Comment template:
 ### Phrasing That Works
 
 | Instead of...       | Try...                                |
-| ------------------- | ------------------------------------- |
+|---------------------|---------------------------------------|
 | "This is wrong"     | "This might cause [issue] because..." |
 | "You should..."     | "Consider..." or "What about..."      |
 | "Why didn't you..." | "I'm curious about the choice to..."  |

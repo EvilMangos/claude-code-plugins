@@ -9,7 +9,8 @@ description: >
 
 # Web & API Security
 
-Concise checklists for preventing common web application vulnerabilities. Focus on the OWASP Top 10 and practical secure coding patterns.
+Concise checklists for preventing common web application vulnerabilities. Focus on the OWASP Top 10 and practical secure
+coding patterns.
 
 ## Quick Security Review Checklist
 
@@ -29,17 +30,20 @@ Before deploying any web application or API, verify these critical items:
 ### SQL Injection
 
 **Prevention checklist:**
+
 - [ ] Use parameterized queries or prepared statements exclusively
 - [ ] Never concatenate user input into SQL strings
 - [ ] Apply least-privilege database permissions
 - [ ] Validate input types (expect integer? reject strings)
 
 **Vulnerable pattern:**
+
 ```
 query = "SELECT * FROM users WHERE id = " + userId
 ```
 
 **Secure pattern:**
+
 ```
 query = "SELECT * FROM users WHERE id = ?"
 execute(query, [userId])
@@ -48,6 +52,7 @@ execute(query, [userId])
 ### NoSQL Injection
 
 **Prevention checklist:**
+
 - [ ] Validate input types strictly (string vs object)
 - [ ] Reject unexpected operators in query objects
 - [ ] Sanitize keys, not just values
@@ -56,6 +61,7 @@ execute(query, [userId])
 ### Command Injection
 
 **Prevention checklist:**
+
 - [ ] Avoid shell execution with user input entirely
 - [ ] Use language-native APIs instead of shell commands
 - [ ] If shell required: whitelist allowed values, never sanitize
@@ -64,6 +70,7 @@ execute(query, [userId])
 ### XSS (Cross-Site Scripting)
 
 **Prevention checklist:**
+
 - [ ] Encode all output based on context (HTML, JS, URL, CSS)
 - [ ] Use framework's built-in escaping (don't disable it)
 - [ ] Implement Content-Security-Policy header
@@ -84,6 +91,7 @@ execute(query, [userId])
 ### Password Handling
 
 **Checklist:**
+
 - [ ] Hash passwords with bcrypt, scrypt, or Argon2
 - [ ] Never store plaintext or reversibly encrypted passwords
 - [ ] Enforce minimum password complexity
@@ -93,6 +101,7 @@ execute(query, [userId])
 ### Session Management
 
 **Checklist:**
+
 - [ ] Generate cryptographically random session IDs (min 128 bits)
 - [ ] Regenerate session ID after authentication
 - [ ] Set appropriate session timeout
@@ -102,6 +111,7 @@ execute(query, [userId])
 ### Token Security (JWT/API Keys)
 
 **Checklist:**
+
 - [ ] Use strong signing algorithms (RS256 or ES256, not HS256 with weak secret)
 - [ ] Set reasonable expiration times
 - [ ] Validate all claims (issuer, audience, expiration)
@@ -127,12 +137,14 @@ execute(query, [userId])
 ## CSRF Protection
 
 **Checklist:**
+
 - [ ] Use anti-CSRF tokens for state-changing operations
 - [ ] Verify `Origin` and `Referer` headers
 - [ ] Use `SameSite` cookie attribute (Strict or Lax)
 - [ ] Require re-authentication for sensitive actions
 
 **Implementation pattern:**
+
 1. Generate unique token per session
 2. Include token in forms/requests
 3. Validate token server-side before processing
@@ -142,14 +154,14 @@ execute(query, [userId])
 
 Configure these HTTP security headers:
 
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `Content-Security-Policy` | Restrict sources | Prevent XSS, injection |
-| `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing |
-| `X-Frame-Options` | `DENY` or `SAMEORIGIN` | Prevent clickjacking |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Force HTTPS |
-| `X-XSS-Protection` | `1; mode=block` | Legacy XSS filter |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Control referrer info |
+| Header                      | Value                                 | Purpose                |
+|-----------------------------|---------------------------------------|------------------------|
+| `Content-Security-Policy`   | Restrict sources                      | Prevent XSS, injection |
+| `X-Content-Type-Options`    | `nosniff`                             | Prevent MIME sniffing  |
+| `X-Frame-Options`           | `DENY` or `SAMEORIGIN`                | Prevent clickjacking   |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Force HTTPS            |
+| `X-XSS-Protection`          | `1; mode=block`                       | Legacy XSS filter      |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`     | Control referrer info  |
 
 ## Input Validation
 
@@ -205,5 +217,6 @@ For detailed patterns and examples, consult:
 ### Related Skills
 
 When reviewing code for security issues, also consider:
+
 - **code-review-checklist** - General code review with security section
 - **test-best-practices** - Testing security-critical code paths

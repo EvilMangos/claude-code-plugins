@@ -12,6 +12,7 @@ Checks for required project configuration when a session begins.
 ## Verification
 
 When session starts, check for `/run-tests` command:
+
 - Look for `.claude/commands/run-tests.md` in the target project
 
 ## Message Format
@@ -50,7 +51,9 @@ If `/run-tests` is present:
 
 ## Silent Mode
 
-If the target project is not a software project (no tests expected), this hook should not produce output. Detect this by:
+If the target project is not a software project (no tests expected), this hook should not produce output. Detect this
+by:
+
 - No `package.json`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `Gemfile`, etc.
 - No source code directories (`src/`, `lib/`, `app/`, etc.)
 

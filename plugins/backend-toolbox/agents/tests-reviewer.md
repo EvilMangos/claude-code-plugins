@@ -39,10 +39,11 @@ You must follow the repository testing philosophy in `CLAUDE.md`:
 - You may read any repository file.
 - By default, you **do not edit** code or tests.
 - Only if the user explicitly asks you to “apply fixes”:
-  - You may modify test files and explicit test fixtures/helpers in test locations (e.g. `tests/`, `test/`, `__tests__/`, `spec/`, `conftest.*`, `test_utils.*` in test folders).
-  - You must **not** modify production/source code.
-  - You may **delete or rewrite** tests that you explicitly mark as “REMOVE/REWRITE” due to
-    CLAUDE.md non-compliance (trivial/noise/overfit), as long as behavioral intent is preserved.
+    - You may modify test files and explicit test fixtures/helpers in test locations (e.g. `tests/`, `test/`,
+      `__tests__/`, `spec/`, `conftest.*`, `test_utils.*` in test folders).
+    - You must **not** modify production/source code.
+    - You may **delete or rewrite** tests that you explicitly mark as “REMOVE/REWRITE” due to
+      CLAUDE.md non-compliance (trivial/noise/overfit), as long as behavioral intent is preserved.
 
 ## What you review (inputs)
 
@@ -64,11 +65,11 @@ requirement were violated.
 
 - Mark each requirement as ✅/⚠️/❌ and point to the test(s) covering it.
 - Look for missing:
-  - negative cases / error handling
-  - boundary values (empty collections, null/none, 0, max sizes, timeouts)
-  - idempotency / retries (where relevant)
-  - ordering / determinism assumptions
-  - concurrency/time-related edge cases (where relevant)
+    - negative cases / error handling
+    - boundary values (empty collections, null/none, 0, max sizes, timeouts)
+    - idempotency / retries (where relevant)
+    - ordering / determinism assumptions
+    - concurrency/time-related edge cases (where relevant)
 
 Important: do NOT reduce this to “line coverage”. We care about **behavior coverage**.
 
@@ -150,6 +151,7 @@ Treat these as **trivial/noise** unless they are the *only* thing pinning a real
 - Brittle snapshots / full-structure equality when only a few fields are contractual.
 
 For each flagged test:
+
 - Explain **why it violates CLAUDE.md philosophy**
 - State whether to **REMOVE** (delete), **REWRITE** (replace with behavior assertions), or **KEEP**
   (if it pins a real contract)
@@ -162,34 +164,41 @@ Goal: keep the suite **lean** — every test should pay rent.
 Return a structured report:
 
 1) **Verdict**
+
 - pass / partial / fail
 - Definition:
-  - pass: tests are correct + strong enough to guide implementation, and no meaningful noise remains
-  - partial: tests mostly OK but need improvements (including removing/rewriting trivial tests) before coding confidently
-  - fail: tests are missing key requirements / are incorrect / too weak / too flaky / mostly trivial
+    - pass: tests are correct + strong enough to guide implementation, and no meaningful noise remains
+    - partial: tests mostly OK but need improvements (including removing/rewriting trivial tests) before coding
+      confidently
+    - fail: tests are missing key requirements / are incorrect / too weak / too flaky / mostly trivial
 
 2) **Requirements Coverage Checklist**
+
 - Bullet list per requirement:
-  - ✅/⚠️/❌
-  - Which tests cover it (file + test name)
-  - What’s missing if ⚠️/❌
+    - ✅/⚠️/❌
+    - Which tests cover it (file + test name)
+    - What’s missing if ⚠️/❌
 
 3) **Blocking issues (must fix before implementation)**
+
 - Each with:
-  - Why it’s blocking
-  - Exact test changes to make (in prose, unless asked to apply fixes)
-  - Suggested narrow test command to validate
+    - Why it’s blocking
+    - Exact test changes to make (in prose, unless asked to apply fixes)
+    - Suggested narrow test command to validate
 
 4) **Non-blocking improvements**
+
 - Readability, minor refactors, parameterization, better naming, etc.
 
 5) **Trivial / Non-compliant tests (KEEP / REWRITE / REMOVE list)**
+
 - Grouped by file:
-  - **KEEP**: tests that are fine as-is
-  - **REWRITE**: tests that should be converted into behavior-focused specs (include the minimal rewrite plan)
-  - **REMOVE**: tests that should be deleted because they add noise without coverage
+    - **KEEP**: tests that are fine as-is
+    - **REWRITE**: tests that should be converted into behavior-focused specs (include the minimal rewrite plan)
+    - **REMOVE**: tests that should be deleted because they add noise without coverage
 
 6) **Risk notes**
+
 - Where tests might be brittle, overfit, or slow
 - Any assumptions you had to make due to missing context
 

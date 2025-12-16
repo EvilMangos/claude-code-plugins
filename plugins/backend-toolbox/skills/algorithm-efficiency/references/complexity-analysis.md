@@ -6,7 +6,8 @@ Detailed guidance on analyzing time and space complexity of algorithms.
 
 ### Definition
 
-Big O describes the upper bound of an algorithm's growth rate as input size approaches infinity. It captures the worst-case scenario, ignoring constants and lower-order terms.
+Big O describes the upper bound of an algorithm's growth rate as input size approaches infinity. It captures the
+worst-case scenario, ignoring constants and lower-order terms.
 
 ### Rules for Analysis
 
@@ -18,35 +19,36 @@ Big O describes the upper bound of an algorithm's growth rate as input size appr
 
 ### Common Complexity Classes
 
-| Class | Growth | Example |
-|-------|--------|---------|
-| O(1) | Constant | Doesn't grow with input |
-| O(log n) | Logarithmic | Halves problem each step |
-| O(n) | Linear | Proportional to input |
+| Class      | Growth       | Example                             |
+|------------|--------------|-------------------------------------|
+| O(1)       | Constant     | Doesn't grow with input             |
+| O(log n)   | Logarithmic  | Halves problem each step            |
+| O(n)       | Linear       | Proportional to input               |
 | O(n log n) | Linearithmic | Divide and conquer with linear work |
-| O(n²) | Quadratic | Nested iteration over input |
-| O(n³) | Cubic | Triple nested iteration |
-| O(2ⁿ) | Exponential | Doubles each additional input |
-| O(n!) | Factorial | All permutations |
+| O(n²)      | Quadratic    | Nested iteration over input         |
+| O(n³)      | Cubic        | Triple nested iteration             |
+| O(2ⁿ)      | Exponential  | Doubles each additional input       |
+| O(n!)      | Factorial    | All permutations                    |
 
 ### Practical Size Limits
 
-| Complexity | Max n (1 second) |
-|------------|------------------|
-| O(n!) | ~10 |
-| O(2ⁿ) | ~25 |
-| O(n³) | ~500 |
-| O(n²) | ~10,000 |
-| O(n log n) | ~10,000,000 |
-| O(n) | ~100,000,000 |
-| O(log n) | Practically unlimited |
-| O(1) | Unlimited |
+| Complexity | Max n (1 second)      |
+|------------|-----------------------|
+| O(n!)      | ~10                   |
+| O(2ⁿ)      | ~25                   |
+| O(n³)      | ~500                  |
+| O(n²)      | ~10,000               |
+| O(n log n) | ~10,000,000           |
+| O(n)       | ~100,000,000          |
+| O(log n)   | Practically unlimited |
+| O(1)       | Unlimited             |
 
 ## Analysis Techniques
 
 ### Loop Analysis
 
 **Single loop:**
+
 ```
 for i in range(n):     # O(n)
     operation()        # O(1)
@@ -54,6 +56,7 @@ for i in range(n):     # O(n)
 ```
 
 **Nested loops:**
+
 ```
 for i in range(n):         # O(n)
     for j in range(m):     # O(m)
@@ -62,6 +65,7 @@ for i in range(n):         # O(n)
 ```
 
 **Loop with varying iterations:**
+
 ```
 for i in range(n):         # O(n)
     for j in range(i):     # O(i) varies
@@ -70,6 +74,7 @@ for i in range(n):         # O(n)
 ```
 
 **Loop with logarithmic iterations:**
+
 ```
 i = n
 while i > 0:               # O(log n)
@@ -81,6 +86,7 @@ while i > 0:               # O(log n)
 ### Recursive Analysis
 
 **Linear recursion:**
+
 ```
 def factorial(n):
     if n <= 1:
@@ -91,6 +97,7 @@ def factorial(n):
 ```
 
 **Binary recursion:**
+
 ```
 def fib(n):
     if n <= 1:
@@ -101,6 +108,7 @@ def fib(n):
 ```
 
 **Divide and conquer:**
+
 ```
 def merge_sort(arr):
     if len(arr) <= 1:
@@ -117,13 +125,14 @@ def merge_sort(arr):
 
 For recurrences of form T(n) = aT(n/b) + O(nᵈ):
 
-| Condition | Complexity |
-|-----------|------------|
-| d > log_b(a) | O(nᵈ) |
-| d = log_b(a) | O(nᵈ log n) |
+| Condition    | Complexity      |
+|--------------|-----------------|
+| d > log_b(a) | O(nᵈ)           |
+| d = log_b(a) | O(nᵈ log n)     |
 | d < log_b(a) | O(n^(log_b(a))) |
 
 **Examples:**
+
 - Merge sort: T(n) = 2T(n/2) + O(n) → a=2, b=2, d=1 → log₂(2)=1=d → O(n log n)
 - Binary search: T(n) = T(n/2) + O(1) → a=1, b=2, d=0 → log₂(1)=0=d → O(log n)
 
@@ -131,13 +140,15 @@ For recurrences of form T(n) = aT(n/b) + O(nᵈ):
 
 ### Definition
 
-Amortized analysis considers the average performance over a sequence of operations, even if individual operations may be expensive.
+Amortized analysis considers the average performance over a sequence of operations, even if individual operations may be
+expensive.
 
 ### Dynamic Array Example
 
 **Single append:** O(1) typically, O(n) when resize needed
 
 **Amortized analysis:**
+
 - Array doubles when full
 - n insertions: cost = 1 + 1 + ... + 1 + (resize costs)
 - Resize costs: 1 + 2 + 4 + 8 + ... + n = 2n - 1
@@ -148,9 +159,9 @@ Amortized analysis considers the average performance over a sequence of operatio
 
 | Data Structure | Operation | Worst Case | Amortized |
 |----------------|-----------|------------|-----------|
-| Dynamic array | Append | O(n) | O(1) |
-| Hash table | Insert | O(n) | O(1) |
-| Splay tree | Access | O(n) | O(log n) |
+| Dynamic array  | Append    | O(n)       | O(1)      |
+| Hash table     | Insert    | O(n)       | O(1)      |
+| Splay tree     | Access    | O(n)       | O(log n)  |
 
 ## Space Complexity
 
@@ -162,16 +173,17 @@ Recursive calls use stack space:
 def recursive(n):
     if n == 0:
         return
-    recursive(n-1)
+    recursive(n - 1)
 # Space: O(n) stack frames
 ```
 
 **Tail recursion (if optimized):**
+
 ```python
 def tail_recursive(n, acc=0):
     if n == 0:
         return acc
-    return tail_recursive(n-1, acc+n)
+    return tail_recursive(n - 1, acc + n)
 # Space: O(1) if tail-call optimized (not in Python)
 ```
 
@@ -181,11 +193,13 @@ def tail_recursive(n, acc=0):
 - **Total space:** Input + auxiliary
 
 **Example - Merge sort:**
+
 - Input: O(n)
 - Auxiliary: O(n) for temporary arrays
 - Total: O(n)
 
 **Example - In-place quicksort:**
+
 - Input: O(n)
 - Auxiliary: O(log n) for recursion stack
 - Total: O(n)
@@ -194,31 +208,31 @@ def tail_recursive(n, acc=0):
 
 ### String Operations
 
-| Operation | Complexity |
-|-----------|------------|
-| Concatenation | O(m + n) - creates new string |
-| Substring check | O(n × m) naive, O(n + m) with KMP |
-| Repeated concat in loop | O(n²) total for n concats |
+| Operation               | Complexity                        |
+|-------------------------|-----------------------------------|
+| Concatenation           | O(m + n) - creates new string     |
+| Substring check         | O(n × m) naive, O(n + m) with KMP |
+| Repeated concat in loop | O(n²) total for n concats         |
 
 ### Collection Operations
 
-| Operation | List | Dict/Set |
-|-----------|------|----------|
-| Index access | O(1) | N/A |
-| Membership test | O(n) | O(1) avg |
-| Insert at end | O(1) amort | O(1) avg |
-| Insert at start | O(n) | N/A |
-| Delete by value | O(n) | O(1) avg |
+| Operation       | List       | Dict/Set |
+|-----------------|------------|----------|
+| Index access    | O(1)       | N/A      |
+| Membership test | O(n)       | O(1) avg |
+| Insert at end   | O(1) amort | O(1) avg |
+| Insert at start | O(n)       | N/A      |
+| Delete by value | O(n)       | O(1) avg |
 
 ### Built-in Functions
 
-| Function | Complexity |
-|----------|------------|
-| len() | O(1) |
-| min(), max() | O(n) |
-| sum() | O(n) |
-| sorted() | O(n log n) |
-| in (list) | O(n) |
+| Function      | Complexity   |
+|---------------|--------------|
+| len()         | O(1)         |
+| min(), max()  | O(n)         |
+| sum()         | O(n)         |
+| sorted()      | O(n log n)   |
+| in (list)     | O(n)         |
 | in (set/dict) | O(1) average |
 
 ## Analysis Checklist
@@ -237,6 +251,7 @@ When analyzing an algorithm:
 ## Common Patterns
 
 ### Two Pointers: O(n)
+
 ```
 left, right = 0, len(arr) - 1
 while left < right:
@@ -245,6 +260,7 @@ while left < right:
 ```
 
 ### Sliding Window: O(n)
+
 ```
 for right in range(len(arr)):
     # expand window
@@ -254,6 +270,7 @@ for right in range(len(arr)):
 ```
 
 ### Binary Search: O(log n)
+
 ```
 while left <= right:
     mid = (left + right) // 2
@@ -266,6 +283,7 @@ while left <= right:
 ```
 
 ### Divide and Conquer: O(n log n)
+
 ```
 def solve(problem):
     if base_case:

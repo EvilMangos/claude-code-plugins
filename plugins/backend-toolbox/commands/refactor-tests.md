@@ -47,6 +47,7 @@ Required subagents:
 See `skills/test-best-practices/references/test-file-patterns.md` for complete identification patterns.
 
 Key patterns:
+
 - **Test files**: `/test/`, `/tests/`, `/__tests__/`, files containing `.spec.` or `.test.`
 - **Support files**: `/__mocks__/`, `/fixtures/`, `/testdata/`, `/test_utils/`
 - **Documentation**: `README*`, `CHANGELOG*`, `docs/**` (for Step 6 only)

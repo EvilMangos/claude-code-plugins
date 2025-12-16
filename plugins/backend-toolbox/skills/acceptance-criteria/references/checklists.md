@@ -13,6 +13,7 @@ A checklist is provided for verifying that all request instructions have been sa
 ## Instruction Mapping
 
 For each instruction, the following should be performed:
+
 - [ ] Where it is implemented in the code should be identified
 - [ ] The file and location (`file:line`) should be noted
 - [ ] Status should be determined: Done / Partial / Missing
@@ -20,6 +21,7 @@ For each instruction, the following should be performed:
 ## Completeness Verification
 
 For each instruction, the following should be verified:
+
 - [ ] The functionality is present
 - [ ] Behavior matches what was specified in the request
 - [ ] All aspects of the instruction are covered

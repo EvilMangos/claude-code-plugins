@@ -64,14 +64,17 @@ Fast, focused review for small changes, hotfixes, or time-constrained situations
 **Verdict:** APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION
 
 ### Critical Issues (if any)
+
 - [blocking issue 1]
 - [blocking issue 2]
 
 ### Suggestions (non-blocking)
+
 - [suggestion 1]
 - [suggestion 2]
 
 ### Notes
+
 - [any context or assumptions]
 ```
 
@@ -90,6 +93,7 @@ Switch to the **code-review-checklist** skill when you encounter:
 ### Related Skills
 
 For comprehensive reviews, use the **code-review-checklist** skill which provides:
+
 - Full architecture and design review
 - Detailed readability assessment
 - Complete test quality evaluation

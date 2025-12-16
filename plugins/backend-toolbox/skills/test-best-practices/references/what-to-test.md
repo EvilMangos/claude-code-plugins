@@ -11,6 +11,7 @@ Test Value = (Bug Risk × Impact) - (Writing Cost + Maintenance Cost)
 ```
 
 High-value tests target code that:
+
 - Has complex logic or many branches
 - Handles money, security, or critical data
 - Is frequently modified
@@ -248,14 +249,14 @@ describe('processString', () => {
 
 ### When to Mock
 
-| Scenario | Mock? | Reason |
-|----------|-------|--------|
-| Database calls | Yes | Slow, stateful, external |
-| HTTP APIs | Yes | Unreliable, slow, external |
-| File system | Maybe | Mock for unit, real for integration |
-| Time/Date | Yes | Non-deterministic |
-| Internal classes | No | Test real behavior |
-| Pure functions | No | Deterministic, fast |
+| Scenario         | Mock? | Reason                              |
+|------------------|-------|-------------------------------------|
+| Database calls   | Yes   | Slow, stateful, external            |
+| HTTP APIs        | Yes   | Unreliable, slow, external          |
+| File system      | Maybe | Mock for unit, real for integration |
+| Time/Date        | Yes   | Non-deterministic                   |
+| Internal classes | No    | Test real behavior                  |
+| Pure functions   | No    | Deterministic, fast                 |
 
 ### Mock Boundaries, Not Internals
 
@@ -301,13 +302,13 @@ it('calls all methods', () => {
 
 ### Coverage Goals by Code Type
 
-| Code Type | Target Coverage | Notes |
-|-----------|-----------------|-------|
-| Business logic | 90-100% | Critical paths fully covered |
-| Utilities/helpers | 80-90% | Common cases + key edge cases |
-| API handlers | 70-80% | Happy path + error handling |
-| Configuration | 0-20% | Only if complex logic |
-| Generated code | 0% | Don't test generated code |
+| Code Type         | Target Coverage | Notes                         |
+|-------------------|-----------------|-------------------------------|
+| Business logic    | 90-100%         | Critical paths fully covered  |
+| Utilities/helpers | 80-90%          | Common cases + key edge cases |
+| API handlers      | 70-80%          | Happy path + error handling   |
+| Configuration     | 0-20%           | Only if complex logic         |
+| Generated code    | 0%              | Don't test generated code     |
 
 ## Testing Existing Code
 

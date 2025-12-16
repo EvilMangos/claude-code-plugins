@@ -12,9 +12,11 @@ Verify that implementations fully satisfy all request instructions through syste
 
 ## Skill vs Agent Distinction
 
-This skill focuses on **instruction-to-implementation mapping** - verifying that what was asked for is present in the code.
+This skill focuses on **instruction-to-implementation mapping** - verifying that what was asked for is present in the
+code.
 
 The **acceptance-reviewer** agent uses this skill but adds broader context:
+
 - Considers the original task, clarifications, and implementation plan
 - Evaluates edge cases and implicit requirements
 - Makes the final "does this meet requirements" decision
@@ -32,20 +34,26 @@ Use this skill directly for quick verification; use the agent for comprehensive 
 ## Step 1: Extract Instructions
 
 ### Explicit Instructions
+
 Parse the original request for direct statements:
+
 - Feature requests: "Add a button that..."
 - Behavioral requirements: "The system should..."
 - Constraints: "Must work on mobile", "Should support X"
 - Specific details: exact values, formats, behaviors mentioned
 
 ### Implicit Instructions
+
 Identify unstated but clearly expected behaviors:
+
 - Consistency with how the request was framed
 - Obvious edge cases mentioned or implied
 - Behaviors that logically follow from the request
 
 ### Ambiguous Areas
+
 Flag vague terms that need clarification:
+
 - "Fast" → What's the threshold?
 - "User-friendly" → What specific behaviors?
 - "Similar to X" → Which aspects exactly?
@@ -54,11 +62,12 @@ Flag vague terms that need clarification:
 
 Create an instruction mapping table:
 
-| # | Instruction | Status | Implementation | Notes |
-|---|-------------|--------|----------------|-------|
-| 1 | [From request] | ✅/⚠️/❌ | `file:line` | [Details] |
+| # | Instruction    | Status | Implementation | Notes     |
+|---|----------------|--------|----------------|-----------|
+| 1 | [From request] | ✅/⚠️/❌ | `file:line`    | [Details] |
 
 Status indicators:
+
 - ✅ **Done** - Fully implemented as requested
 - ⚠️ **Partial** - Implemented but incomplete or different from request
 - ❌ **Missing** - Not implemented
@@ -67,25 +76,26 @@ Status indicators:
 
 For each instruction, verify:
 
-| Check | Question |
-|-------|----------|
-| **Presence** | Is the functionality present in the code? |
-| **Correctness** | Does it behave as requested? |
+| Check            | Question                                    |
+|------------------|---------------------------------------------|
+| **Presence**     | Is the functionality present in the code?   |
+| **Correctness**  | Does it behave as requested?                |
 | **Completeness** | Are all aspects of the instruction covered? |
-| **Consistency** | Does it match the intent of the request? |
+| **Consistency**  | Does it match the intent of the request?    |
 
 ## Step 4: Identify Gaps
 
 Categorize each gap:
 
-| Gap Type | Description |
-|----------|-------------|
-| **Missing** | Instruction not implemented at all |
-| **Incomplete** | Only part of the instruction implemented |
-| **Different** | Implemented differently than requested |
+| Gap Type       | Description                                    |
+|----------------|------------------------------------------------|
+| **Missing**    | Instruction not implemented at all             |
+| **Incomplete** | Only part of the instruction implemented       |
+| **Different**  | Implemented differently than requested         |
 | **Assumption** | Implementation made assumptions not in request |
 
 For each gap, note:
+
 - What was requested vs what was implemented
 - Impact on meeting the user's needs
 
@@ -93,11 +103,11 @@ For each gap, note:
 
 Conclude with a clear verdict:
 
-| Verdict | Meaning |
-|---------|---------|
-| **PASS** | All instructions satisfied |
+| Verdict     | Meaning                                 |
+|-------------|-----------------------------------------|
+| **PASS**    | All instructions satisfied              |
 | **PARTIAL** | Most instructions met, some gaps remain |
-| **FAIL** | Critical instructions not satisfied |
+| **FAIL**    | Critical instructions not satisfied     |
 
 ## Quick Checklist
 
@@ -110,8 +120,10 @@ Conclude with a clear verdict:
 ## Additional Resources
 
 ### Reference Files
+
 - **`references/checklists.md`** - Detailed verification checklist
 - **`references/report-template.md`** - Report templates
 
 ### Examples
+
 - **`examples/review-example.md`** - Complete acceptance review example

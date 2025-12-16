@@ -6,22 +6,24 @@ Comprehensive guide to managing secrets securely across development, CI/CD, and 
 
 Understanding where secrets should live at each stage:
 
-| Stage | Storage | Access Pattern |
-|-------|---------|----------------|
-| Development | Local vault, env files (gitignored) | Developer machine only |
-| CI/CD | Platform secrets (GitHub, GitLab, etc.) | Pipeline jobs only |
-| Production | Dedicated secrets manager | Runtime injection |
+| Stage       | Storage                                 | Access Pattern         |
+|-------------|-----------------------------------------|------------------------|
+| Development | Local vault, env files (gitignored)     | Developer machine only |
+| CI/CD       | Platform secrets (GitHub, GitLab, etc.) | Pipeline jobs only     |
+| Production  | Dedicated secrets manager               | Runtime injection      |
 
 ## Secret Types and Handling
 
 ### API Keys and Tokens
 
 **Characteristics:**
+
 - Usually long-lived
 - Often have broad permissions
 - Frequently rotated less than they should be
 
 **Best practices:**
+
 - Create separate keys per environment
 - Use scoped keys with minimum permissions
 - Set up expiration where supported
@@ -30,11 +32,13 @@ Understanding where secrets should live at each stage:
 ### Database Credentials
 
 **Characteristics:**
+
 - Direct access to sensitive data
 - Often shared across multiple services
 - Critical blast radius if compromised
 
 **Best practices:**
+
 - Use connection poolers with credential rotation
 - Implement per-service database users
 - Prefer IAM authentication where available
@@ -43,11 +47,13 @@ Understanding where secrets should live at each stage:
 ### Encryption Keys
 
 **Characteristics:**
+
 - Loss means data loss
 - Exposure means data exposure
 - Require special backup procedures
 
 **Best practices:**
+
 - Use managed key services (KMS)
 - Implement key rotation policies
 - Maintain key escrow for recovery
@@ -58,6 +64,7 @@ Understanding where secrets should live at each stage:
 ### Development Environment
 
 **DO:**
+
 ```
 # .env.example (committed, no real values)
 DATABASE_URL=postgres://user:password@localhost:5432/dev
@@ -69,6 +76,7 @@ API_KEY=sk_test_abc123
 ```
 
 **DON'T:**
+
 ```
 # Committed to repo
 config.py:
@@ -76,6 +84,7 @@ config.py:
 ```
 
 **Gitignore essentials:**
+
 ```gitignore
 .env
 .env.local
@@ -88,6 +97,7 @@ secrets/
 ### CI/CD Environment
 
 **GitHub Actions pattern:**
+
 ```yaml
 jobs:
   deploy:
@@ -102,6 +112,7 @@ jobs:
 ```
 
 **Secret scoping:**
+
 ```
 Organization secrets: Cross-repo utilities (rarely used)
 Repository secrets: Default for most secrets
@@ -111,6 +122,7 @@ Environment secrets: Production/staging separation
 ### Production Environment
 
 **Application pattern:**
+
 ```python
 # Don't do this
 DATABASE_URL = "postgres://user:hardcoded@db.example.com/prod"
@@ -122,6 +134,7 @@ if not DATABASE_URL:
 ```
 
 **Kubernetes secrets pattern:**
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -185,18 +198,19 @@ spec:
 
 ### Rotation Triggers
 
-| Trigger | Response Time |
-|---------|---------------|
-| Scheduled rotation | Per policy (30-90 days) |
-| Personnel change | Within 24 hours |
-| Suspected compromise | Immediately |
-| Security audit finding | Per severity |
+| Trigger                | Response Time           |
+|------------------------|-------------------------|
+| Scheduled rotation     | Per policy (30-90 days) |
+| Personnel change       | Within 24 hours         |
+| Suspected compromise   | Immediately             |
+| Security audit finding | Per severity            |
 
 ## Secret Detection and Prevention
 
 ### Pre-commit Checks
 
 **Patterns to detect:**
+
 ```
 # API keys
 sk_live_[a-zA-Z0-9]{24}
@@ -225,6 +239,7 @@ api_key\s*=\s*['"][^'"]+['"]
 7. **Document** - Record incident for post-mortem
 
 **Git history cleaning:**
+
 ```bash
 # Using BFG Repo-Cleaner
 java -jar bfg.jar --replace-text secrets.txt repo.git
@@ -239,17 +254,18 @@ git filter-repo --replace-text expressions.txt
 
 ### When to Use Each
 
-| Scenario | Recommended Tool |
-|----------|-----------------|
+| Scenario                   | Recommended Tool                                    |
+|----------------------------|-----------------------------------------------------|
 | Cloud-native, single cloud | Cloud provider's native (AWS Secrets Manager, etc.) |
-| Multi-cloud or hybrid | HashiCorp Vault |
-| Kubernetes-native | External Secrets Operator + backend |
-| Simple applications | Platform secrets (GitHub, Vercel, etc.) |
-| Local development | dotenv with .env.local (gitignored) |
+| Multi-cloud or hybrid      | HashiCorp Vault                                     |
+| Kubernetes-native          | External Secrets Operator + backend                 |
+| Simple applications        | Platform secrets (GitHub, Vercel, etc.)             |
+| Local development          | dotenv with .env.local (gitignored)                 |
 
 ### Access Patterns
 
 **Service-to-service:**
+
 ```
 1. Application starts
 2. Uses instance role/service account to authenticate
@@ -259,6 +275,7 @@ git filter-repo --replace-text expressions.txt
 ```
 
 **Human access:**
+
 ```
 1. Engineer authenticates (SSO, MFA)
 2. Requests access to secret
@@ -272,6 +289,7 @@ git filter-repo --replace-text expressions.txt
 ### Audit Logging Requirements
 
 Log these events:
+
 - Secret creation, modification, deletion
 - Secret access (read operations)
 - Failed access attempts
@@ -281,6 +299,7 @@ Log these events:
 ### Access Review Process
 
 **Quarterly review checklist:**
+
 - [ ] Remove access for departed personnel
 - [ ] Verify service accounts still needed
 - [ ] Check for overly broad permissions
@@ -289,13 +308,13 @@ Log these events:
 
 ### Compliance Considerations
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Encryption at rest | Use secrets manager with KMS |
-| Encryption in transit | TLS for all secret retrieval |
-| Access control | IAM policies, RBAC |
-| Audit trail | Enable access logging |
-| Separation of duties | Require approval for production |
+| Requirement           | Implementation                  |
+|-----------------------|---------------------------------|
+| Encryption at rest    | Use secrets manager with KMS    |
+| Encryption in transit | TLS for all secret retrieval    |
+| Access control        | IAM policies, RBAC              |
+| Audit trail           | Enable access logging           |
+| Separation of duties  | Require approval for production |
 
 ## Emergency Procedures
 

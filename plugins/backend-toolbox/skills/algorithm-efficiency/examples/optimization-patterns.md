@@ -53,7 +53,7 @@ def match_orders_to_users(orders, users):
 def match_orders_to_users(orders, users):
     user_map = {user.id: user for user in users}  # O(m)
     results = []
-    for order in orders:                           # O(n)
+    for order in orders:  # O(n)
         user = user_map.get(order.user_id)
         if user:
             results.append((order, user))
@@ -130,6 +130,7 @@ def top_k(items, k):
 
 ```python
 import heapq
+
 
 def top_k(items, k):
     return heapq.nlargest(k, items)  # O(n log k)
@@ -266,8 +267,10 @@ def count_all(items):
 ```python
 from collections import Counter
 
+
 def count_all(items):
     return Counter(items)  # Single pass
+
 
 # Or manually:
 def count_all(items):
@@ -320,7 +323,7 @@ def find_in_sorted(arr, target):
 def max_sum_subarray(arr, k):
     max_sum = float('-inf')
     for i in range(len(arr) - k + 1):
-        current_sum = sum(arr[i:i+k])  # O(k) each
+        current_sum = sum(arr[i:i + k])  # O(k) each
         max_sum = max(max_sum, current_sum)
     return max_sum
 ```
@@ -349,15 +352,15 @@ def max_sum_subarray(arr, k):
 
 ## Summary Table
 
-| Pattern | Before | After | Improvement |
-|---------|--------|-------|-------------|
-| List to set membership | O(n) lookup | O(1) lookup | n× faster lookups |
-| Nested to hash join | O(n×m) | O(n+m) | Dramatic for large sets |
-| String concatenation | O(n²) | O(n) | n× faster |
-| Min + max separately | O(2n) | O(n) | 2× fewer iterations |
-| Sort for top-k | O(n log n) | O(n log k) | Faster when k << n |
-| Recursive fib | O(2ⁿ) | O(n) | Exponentially faster |
-| Two sum nested | O(n²) | O(n) | n× faster |
-| Duplicate removal | O(n²) | O(n) | n× faster |
-| Linear vs binary search | O(n) | O(log n) | Exponentially faster |
-| Nested vs sliding window | O(n×k) | O(n) | k× faster |
+| Pattern                  | Before      | After       | Improvement             |
+|--------------------------|-------------|-------------|-------------------------|
+| List to set membership   | O(n) lookup | O(1) lookup | n× faster lookups       |
+| Nested to hash join      | O(n×m)      | O(n+m)      | Dramatic for large sets |
+| String concatenation     | O(n²)       | O(n)        | n× faster               |
+| Min + max separately     | O(2n)       | O(n)        | 2× fewer iterations     |
+| Sort for top-k           | O(n log n)  | O(n log k)  | Faster when k << n      |
+| Recursive fib            | O(2ⁿ)       | O(n)        | Exponentially faster    |
+| Two sum nested           | O(n²)       | O(n)        | n× faster               |
+| Duplicate removal        | O(n²)       | O(n)        | n× faster               |
+| Linear vs binary search  | O(n)        | O(log n)    | Exponentially faster    |
+| Nested vs sliding window | O(n×k)      | O(n)        | k× faster               |

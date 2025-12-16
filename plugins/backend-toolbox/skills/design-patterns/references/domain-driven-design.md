@@ -1,8 +1,10 @@
 # Domain-Driven Design (DDD) - Comprehensive Reference
 
-This reference covers strategic and tactical Domain-Driven Design patterns for modeling complex business domains and defining boundaries.
+This reference covers strategic and tactical Domain-Driven Design patterns for modeling complex business domains and
+defining boundaries.
 
-Domain-Driven Design is an approach to software development that centers the design on the core business domain. It provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling domain logic).
+Domain-Driven Design is an approach to software development that centers the design on the core business domain. It
+provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling domain logic).
 
 ## When to Use DDD
 
@@ -30,7 +32,8 @@ Strategic patterns help organize large systems and define boundaries between dif
 
 ### Bounded Context
 
-A bounded context is a boundary within which a particular domain model is defined and applicable. Different contexts may have different models for the same real-world concept.
+A bounded context is a boundary within which a particular domain model is defined and applicable. Different contexts may
+have different models for the same real-world concept.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -106,7 +109,7 @@ class OrderFulfillmentService {
 Defines relationships between bounded contexts.
 
 | Pattern                   | Description                                     | When to Use                                 |
-| ------------------------- | ----------------------------------------------- | ------------------------------------------- |
+|---------------------------|-------------------------------------------------|---------------------------------------------|
 | **Shared Kernel**         | Two contexts share a subset of the model        | Tightly coupled teams, shared core concepts |
 | **Customer-Supplier**     | Upstream context provides what downstream needs | Clear dependency direction                  |
 | **Conformist**            | Downstream adopts upstream's model as-is        | No influence over upstream                  |
@@ -414,7 +417,8 @@ class OrderId {
 
 ### Aggregate
 
-A cluster of entities and value objects with a defined boundary, treated as a single unit. One entity is the aggregate root.
+A cluster of entities and value objects with a defined boundary, treated as a single unit. One entity is the aggregate
+root.
 
 ```typescript
 // Order is the Aggregate Root
@@ -1231,7 +1235,7 @@ class SubmitOrderHandler {
 ## Pattern Selection Guide
 
 | Problem                               | Consider Pattern      |
-| ------------------------------------- | --------------------- |
+|---------------------------------------|-----------------------|
 | Complex domain logic                  | DDD Tactical Patterns |
 | Large system with multiple teams      | Bounded Contexts      |
 | Identity matters over time            | Entity                |

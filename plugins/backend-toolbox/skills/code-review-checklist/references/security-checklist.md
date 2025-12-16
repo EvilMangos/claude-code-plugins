@@ -74,6 +74,7 @@ os.system(f"convert {user_file} output.png")
 
 # GOOD: Use library APIs
 from PIL import Image
+
 Image.open(validated_path).save("output.png")
 ```
 

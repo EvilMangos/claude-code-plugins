@@ -9,18 +9,21 @@ Code that has grown too large and unwieldy.
 ### Long Method
 
 **Symptoms:**
+
 - Method spans more than 20-30 lines
 - Multiple levels of abstraction mixed together
 - Comments needed to explain sections
 - Scrolling required to see entire method
 
 **Refactorings:**
+
 - **Extract Function** - Pull out cohesive blocks
 - **Replace Temp with Query** - Remove temporary variables
 - **Introduce Parameter Object** - Reduce parameter count
 - **Decompose Conditional** - Extract complex conditions
 
 **Example:**
+
 ```typescript
 // Smell: Long method with mixed concerns
 function processOrder(order: Order) {
@@ -73,17 +76,20 @@ function processOrder(order: Order): ProcessedOrder {
 ### Large Class
 
 **Symptoms:**
+
 - Class has many instance variables (>7-10)
 - Class has many methods (>15-20)
 - Class name includes "Manager", "Processor", "Handler" doing many things
 - Changes to class for multiple unrelated reasons
 
 **Refactorings:**
+
 - **Extract Class** - Create new class for subset of fields/methods
 - **Extract Subclass** - When variations suggest inheritance
 - **Extract Interface** - Define contracts for groups of methods
 
 **Example:**
+
 ```typescript
 // Smell: Class doing too many things
 class UserManager {
@@ -133,16 +139,19 @@ class UserReportingService {
 ### Long Parameter List
 
 **Symptoms:**
+
 - Function takes more than 3-4 parameters
 - Parameters are often passed together as a group
 - Adding new features requires adding more parameters
 
 **Refactorings:**
+
 - **Introduce Parameter Object** - Group related parameters
 - **Preserve Whole Object** - Pass object instead of extracting values
 - **Replace Parameter with Query** - Let function get value itself
 
 **Example:**
+
 ```typescript
 // Smell: Too many parameters
 function createUser(
@@ -182,16 +191,19 @@ function createUser(name: UserName, contact: ContactInfo, address: Address) { }
 ### Primitive Obsession
 
 **Symptoms:**
+
 - Using primitives for domain concepts (string for email, number for money)
 - Validation logic scattered across codebase
 - Special values have implicit meaning (status = 1 means "active")
 
 **Refactorings:**
+
 - **Replace Primitive with Object** - Create value objects
 - **Replace Type Code with Subclasses** - Use polymorphism
 - **Replace Type Code with State/Strategy** - Use patterns
 
 **Example:**
+
 ```typescript
 // Smell: Primitives everywhere
 function createTransaction(
@@ -249,15 +261,18 @@ function createTransaction(
 ### Data Clumps
 
 **Symptoms:**
+
 - Same group of fields appears in multiple classes
 - Same group of parameters appears in multiple functions
 - Changing one field often requires changing others in the group
 
 **Refactorings:**
+
 - **Extract Class** - Create class for the clump
 - **Introduce Parameter Object** - Group parameters
 
 **Example:**
+
 ```typescript
 // Smell: Same fields appear together
 class Customer {
@@ -308,16 +323,19 @@ Code that doesn't properly use OO features.
 ### Switch Statements
 
 **Symptoms:**
+
 - Switch or if-else chains based on type/status
 - Same switch appears in multiple places
 - Adding new type requires changes in many places
 
 **Refactorings:**
+
 - **Replace Conditional with Polymorphism**
 - **Replace Type Code with Subclasses**
 - **Replace Type Code with State/Strategy**
 
 **Example:**
+
 ```typescript
 // Smell: Type-based switch
 function calculateArea(shape: Shape): number {
@@ -356,16 +374,19 @@ class Rectangle implements Shape {
 ### Refused Bequest
 
 **Symptoms:**
+
 - Subclass doesn't use most inherited methods
 - Subclass overrides methods to throw exceptions
 - Subclass ignores or disables parent behavior
 
 **Refactorings:**
+
 - **Replace Superclass with Delegate** - Use composition
 - **Push Down Method/Field** - Move to subclasses that need it
 - **Extract Superclass** - Create new common parent
 
 **Example:**
+
 ```typescript
 // Smell: Bird that can't fly
 class Bird {
@@ -406,15 +427,18 @@ class Penguin implements Animal {
 ### Parallel Inheritance Hierarchies
 
 **Symptoms:**
+
 - Creating a subclass in one hierarchy requires creating one in another
 - Two hierarchies mirror each other
 - Changes in one hierarchy require changes in the other
 
 **Refactorings:**
+
 - **Move Method/Field** - Consolidate into single hierarchy
 - **Replace Inheritance with Delegation**
 
 **Example:**
+
 ```typescript
 // Smell: Parallel hierarchies
 class Employee { }
@@ -450,14 +474,17 @@ Patterns that make changes difficult.
 ### Divergent Change
 
 **Symptoms:**
+
 - One class is changed for many different reasons
 - Different types of changes affect different parts of the class
 - Class has multiple axes of change
 
 **Refactorings:**
+
 - **Extract Class** - Split by reason for change
 
 **Example:**
+
 ```typescript
 // Smell: Class changed for different reasons
 class Report {
@@ -492,15 +519,18 @@ class ReportFormatter {
 ### Shotgun Surgery
 
 **Symptoms:**
+
 - Single change requires edits to many classes
 - Related functionality is scattered
 - Easy to miss a spot when making changes
 
 **Refactorings:**
+
 - **Move Method/Field** - Consolidate related code
 - **Inline Class** - Merge overly distributed classes
 
 **Example:**
+
 ```typescript
 // Smell: Adding new field requires changes everywhere
 // In User.ts
@@ -551,15 +581,18 @@ Code that creates excessive coupling between classes.
 ### Feature Envy
 
 **Symptoms:**
+
 - Method uses more features of another class than its own
 - Method spends most of its time accessing another object's data
 - Method would require fewer parameters if moved
 
 **Refactorings:**
+
 - **Move Method** - Put method with the data it uses
 - **Extract Method** - Extract the envious portion, then move it
 
 **Example:**
+
 ```typescript
 // Smell: Method uses other class's data
 class Order {
@@ -607,11 +640,13 @@ class Order {
 ### Inappropriate Intimacy
 
 **Symptoms:**
+
 - Classes access each other's private fields/methods
 - Bidirectional dependencies between classes
 - Classes know too much about each other's implementation
 
 **Refactorings:**
+
 - **Move Method/Field** - Reduce sharing
 - **Extract Class** - Create intermediary
 - **Hide Delegate** - Add indirection
@@ -620,16 +655,19 @@ class Order {
 ### Message Chains
 
 **Symptoms:**
+
 - Long chains of method calls: `a.getB().getC().getD().doSomething()`
 - Client depends on navigation structure
 - Changes to intermediate structure break clients
 
 **Refactorings:**
+
 - **Hide Delegate** - Add wrapper methods
 - **Extract Method** - Isolate chain usage
 - **Move Method** - Put code closer to the data
 
 **Example:**
+
 ```typescript
 // Smell: Long navigation chain
 function getManagerName(person: Person): string {
@@ -661,15 +699,18 @@ function getManagerName(person: Person): string {
 ### Middle Man
 
 **Symptoms:**
+
 - Class delegates most of its work to another class
 - Many methods just forward calls
 - Class adds no value beyond delegation
 
 **Refactorings:**
+
 - **Remove Middle Man** - Have clients call delegate directly
 - **Inline Method** - Remove pure delegation methods
 
 **Example:**
+
 ```typescript
 // Smell: Person delegates everything
 class Person {
@@ -699,23 +740,27 @@ Code that serves no purpose.
 ### Dead Code
 
 **Symptoms:**
+
 - Unreachable code after return/throw
 - Unused variables, parameters, or imports
 - Methods never called
 - Commented-out code
 
 **Refactorings:**
+
 - Delete it. Version control has the history.
 
 ### Speculative Generality
 
 **Symptoms:**
+
 - Abstract classes with only one subclass
 - Parameters/methods for "future use"
 - Complex design patterns for simple problems
 - Comments explaining what this "will be used for"
 
 **Refactorings:**
+
 - **Collapse Hierarchy** - Remove unnecessary abstraction
 - **Inline Class** - Remove unused classes
 - **Remove Parameter** - Remove unused parameters
@@ -723,17 +768,20 @@ Code that serves no purpose.
 ### Duplicate Code
 
 **Symptoms:**
+
 - Same code structure in multiple places
 - Copy-pasted code with minor variations
 - Similar algorithms with different data types
 
 **Refactorings:**
+
 - **Extract Method** - Pull common code into function
 - **Extract Class** - For duplicate code across classes
 - **Pull Up Method** - For duplicate code in siblings
 - **Form Template Method** - For similar algorithms with variations
 
 **Example:**
+
 ```typescript
 // Smell: Duplicated validation
 function validateUser(user: User) {
@@ -766,16 +814,16 @@ function validateOrder(order: Order) {
 
 ## Quick Reference Table
 
-| Smell | Key Indicator | Primary Fix |
-|-------|---------------|-------------|
-| Long Method | >20-30 lines | Extract Function |
-| Large Class | >15 methods, >10 fields | Extract Class |
-| Long Parameter List | >3-4 params | Introduce Parameter Object |
-| Primitive Obsession | Strings for domain concepts | Replace with Value Object |
-| Data Clumps | Same fields grouped | Extract Class |
-| Switch Statements | Type-based conditionals | Replace with Polymorphism |
-| Feature Envy | Uses other class's data | Move Method |
-| Message Chains | a.b().c().d() | Hide Delegate |
-| Duplicate Code | Copy-paste | Extract Method |
-| Dead Code | Unused code | Delete |
-| Speculative Generality | "Future use" | Inline/Collapse |
+| Smell                  | Key Indicator               | Primary Fix                |
+|------------------------|-----------------------------|----------------------------|
+| Long Method            | >20-30 lines                | Extract Function           |
+| Large Class            | >15 methods, >10 fields     | Extract Class              |
+| Long Parameter List    | >3-4 params                 | Introduce Parameter Object |
+| Primitive Obsession    | Strings for domain concepts | Replace with Value Object  |
+| Data Clumps            | Same fields grouped         | Extract Class              |
+| Switch Statements      | Type-based conditionals     | Replace with Polymorphism  |
+| Feature Envy           | Uses other class's data     | Move Method                |
+| Message Chains         | a.b().c().d()               | Hide Delegate              |
+| Duplicate Code         | Copy-paste                  | Extract Method             |
+| Dead Code              | Unused code                 | Delete                     |
+| Speculative Generality | "Future use"                | Inline/Collapse            |

@@ -1,6 +1,7 @@
 # Claude Code Plugins
 
-A collection of plugins for Claude Code that extend its capabilities with specialized agents, commands, skills, and hooks.
+A collection of plugins for Claude Code that extend its capabilities with specialized agents, commands, skills, and
+hooks.
 
 ## Repository Structure
 
@@ -11,6 +12,7 @@ plugins/
 ```
 
 Each plugin is self-contained with its own:
+
 - `.claude-plugin/plugin.json` - Plugin manifest and configuration
 - `README.md` - Plugin-specific documentation
 - `agents/` - Specialized autonomous agents
@@ -20,13 +22,14 @@ Each plugin is self-contained with its own:
 
 ## Available Plugins
 
-| Plugin | Description |
-|--------|-------------|
+| Plugin                                      | Description                                         |
+|---------------------------------------------|-----------------------------------------------------|
 | [backend-toolbox](plugins/backend-toolbox/) | TDD workflow, code quality, and backend development |
 
 ## Installation
 
-Copy or symlink the desired plugin directory to your Claude Code plugins location, or reference it in your project's `.claude/plugins.json`.
+Copy or symlink the desired plugin directory to your Claude Code plugins location, or reference it in your project's
+`.claude/plugins.json`.
 
 ## Contributing
 

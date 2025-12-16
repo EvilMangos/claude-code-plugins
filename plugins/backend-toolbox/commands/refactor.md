@@ -10,7 +10,8 @@ The user request is:
 
 > $ARGUMENTS
 
-The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase**.
+The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase
+**.
 
 You MUST follow the workflow strictly and delegate to the named subagents at each step.
 Do not do a subagent's work in the main agent.

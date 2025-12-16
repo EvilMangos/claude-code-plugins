@@ -3,7 +3,7 @@ name: dangerous-command-guard
 description: Guards against potentially dangerous bash commands
 hooks:
   - event: PreToolUse
-    tools: [Bash]
+    tools: [ Bash ]
 ---
 
 # Dangerous Command Guard Hook
@@ -29,21 +29,27 @@ If the user confirms, re-run the exact command unchanged.
 ## Blocked Patterns
 
 ### Git Destructive Operations
+
 Block these unless user explicitly confirms:
+
 - `git push --force` or `git push -f` - **ALWAYS WARN**
-- `git push --force` or `git push -f` to `main` or `master` - **BLOCK** (pattern: `git push.*--force.*(main|master)` or `git push.*-f.*(main|master)`)
+- `git push --force` or `git push -f` to `main` or `master` - **BLOCK** (pattern: `git push.*--force.*(main|master)` or
+  `git push.*-f.*(main|master)`)
 - `git reset --hard` (without recent commit reference)
 - `git clean -fd` or `git clean -fdx`
 - `git checkout .` (discards all changes)
 - `git filter-branch` / `git filter-repo` - **WARN** (history rewrite)
 - `git rebase --onto` / large interactive rebases - **WARN** (history rewrite)
 
-Message for force push to main/master: "Force pushing to main/master is destructive and affects other developers. Use a feature branch instead."
+Message for force push to main/master: "Force pushing to main/master is destructive and affects other developers. Use a
+feature branch instead."
 
 Message for other destructive operations: "This is a destructive git operation. Please confirm you want to proceed."
 
 ### File System Dangers
+
 Block or warn for:
+
 - `rm -rf /` or `rm -rf /*` - **ALWAYS BLOCK**
 - `rm -rf --no-preserve-root` - **ALWAYS BLOCK**
 - `rm -rf ~` - **WARN** (can wipe user home)
@@ -60,21 +66,25 @@ Message: "This command could cause significant damage. Please review carefully."
 - `dd` writing to raw devices (examples: `/dev/disk*`) - **ALWAYS BLOCK**
 - `mkfs*` / `diskutil eraseDisk` - **ALWAYS BLOCK**
 
-Message: "This command can irreversibly destroy disk data. Refuse unless the user explicitly confirms and understands the target device."
+Message: "This command can irreversibly destroy disk data. Refuse unless the user explicitly confirms and understands
+the target device."
 
 ### Remote Code Execution Footguns
 
 - `curl ... | sh` / `wget ... | sh` / piping downloads into shells - **ALWAYS WARN**
 - `bash -c "$(curl ...)"` and similar - **ALWAYS WARN**
 
-Message: "Piping remote content into a shell is a common supply-chain/RCE risk. Prefer downloading, inspecting, then executing."
+Message: "Piping remote content into a shell is a common supply-chain/RCE risk. Prefer downloading, inspecting, then
+executing."
 
 ### Fork Bomb / Resource Exhaustion
 
 - Common fork bomb patterns (example: `:(){ :|:& };:`) - **ALWAYS BLOCK**
 
 ### Database Operations
+
 Warn for:
+
 - `DROP DATABASE`
 - `DROP SCHEMA`
 - `DROP TABLE`
@@ -92,14 +102,17 @@ Message for CASCADE operations: "This cascading operation could affect multiple 
 ### Secrets / Credential Exfiltration (warn)
 
 Warn if a command appears to read common credential locations:
+
 - `cat ~/.ssh/*`, `cat ~/.aws/*`, `cat ~/.config/*` (credential-like files)
 - macOS Keychain access (`security find-*password*`) - **WARN**
 
-Message: "This command may expose secrets/credentials. Avoid pasting secret contents into chat/logs. Prefer redaction or referencing env var names."
+Message: "This command may expose secrets/credentials. Avoid pasting secret contents into chat/logs. Prefer redaction or
+referencing env var names."
 
 ## Allowed Patterns
 
 These are generally safe and should not be blocked:
+
 - `git status`, `git log`, `git diff`
 - `git add`, `git commit`
 - `git push` (without --force to non-protected branches)
@@ -110,6 +123,7 @@ These are generally safe and should not be blocked:
 ## Response Format
 
 When blocking:
+
 ```
 BLOCKED: [reason]
 Command: [the command]
@@ -119,6 +133,7 @@ To proceed: reply with `CONFIRM: <exact command>`
 ```
 
 When warning:
+
 ```
 WARNING: [reason]
 Command: [the command]

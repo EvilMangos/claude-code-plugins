@@ -10,7 +10,8 @@ description: >
 
 # Algorithm & Code Efficiency
 
-Principles and checklists for writing efficient code. Focus on time/space complexity, data structure selection, and common optimization patterns.
+Principles and checklists for writing efficient code. Focus on time/space complexity, data structure selection, and
+common optimization patterns.
 
 ## Code Efficiency Review Checklist
 
@@ -24,15 +25,15 @@ Before optimizing, verify the actual bottleneck:
 
 ## Time Complexity Quick Reference
 
-| Complexity | Name | Example Operations |
-|------------|------|-------------------|
-| O(1) | Constant | Hash lookup, array index access |
-| O(log n) | Logarithmic | Binary search, balanced tree operations |
-| O(n) | Linear | Single loop, linear search |
-| O(n log n) | Linearithmic | Efficient sorting (merge, quick, heap) |
-| O(n²) | Quadratic | Nested loops, bubble sort |
-| O(2ⁿ) | Exponential | Recursive fibonacci, subsets |
-| O(n!) | Factorial | Permutations, brute force TSP |
+| Complexity | Name         | Example Operations                      |
+|------------|--------------|-----------------------------------------|
+| O(1)       | Constant     | Hash lookup, array index access         |
+| O(log n)   | Logarithmic  | Binary search, balanced tree operations |
+| O(n)       | Linear       | Single loop, linear search              |
+| O(n log n) | Linearithmic | Efficient sorting (merge, quick, heap)  |
+| O(n²)      | Quadratic    | Nested loops, bubble sort               |
+| O(2ⁿ)      | Exponential  | Recursive fibonacci, subsets            |
+| O(n!)      | Factorial    | Permutations, brute force TSP           |
 
 ### Complexity Analysis Checklist
 
@@ -54,27 +55,27 @@ Before optimizing, verify the actual bottleneck:
 
 ### Data Structure Decision Guide
 
-| Need | Best Choice | Time Complexity |
-|------|-------------|-----------------|
-| Fast lookup by key | Hash map/dict | O(1) average |
-| Fast lookup by value | Hash set | O(1) average |
-| Ordered iteration | Sorted array, tree | O(n), O(n) |
-| Fast min/max | Heap/priority queue | O(log n) |
-| FIFO order | Queue | O(1) |
-| LIFO order | Stack | O(1) |
-| Range queries | Balanced tree, segment tree | O(log n) |
-| Membership testing | Set | O(1) average |
-| Frequent insertions | Linked list, dynamic array | O(1) amortized |
+| Need                 | Best Choice                 | Time Complexity |
+|----------------------|-----------------------------|-----------------|
+| Fast lookup by key   | Hash map/dict               | O(1) average    |
+| Fast lookup by value | Hash set                    | O(1) average    |
+| Ordered iteration    | Sorted array, tree          | O(n), O(n)      |
+| Fast min/max         | Heap/priority queue         | O(log n)        |
+| FIFO order           | Queue                       | O(1)            |
+| LIFO order           | Stack                       | O(1)            |
+| Range queries        | Balanced tree, segment tree | O(log n)        |
+| Membership testing   | Set                         | O(1) average    |
+| Frequent insertions  | Linked list, dynamic array  | O(1) amortized  |
 
 ### Common Mistakes
 
-| Mistake | Problem | Solution |
-|---------|---------|----------|
-| Array for frequent lookups | O(n) search | Use hash map O(1) |
-| Linear search in loop | O(n²) total | Pre-build lookup map |
-| Repeated string concat | O(n²) for n concats | Use string builder |
-| Sorting for min/max | O(n log n) | Use single pass O(n) |
-| Array shift operations | O(n) per shift | Use queue/deque |
+| Mistake                    | Problem             | Solution             |
+|----------------------------|---------------------|----------------------|
+| Array for frequent lookups | O(n) search         | Use hash map O(1)    |
+| Linear search in loop      | O(n²) total         | Pre-build lookup map |
+| Repeated string concat     | O(n²) for n concats | Use string builder   |
+| Sorting for min/max        | O(n log n)          | Use single pass O(n) |
+| Array shift operations     | O(n) per shift      | Use queue/deque      |
 
 ## Loop Optimization
 
@@ -89,6 +90,7 @@ Before optimizing, verify the actual bottleneck:
 ### Common Loop Anti-Patterns
 
 **Unnecessary repeated computation:**
+
 ```
 # Bad: len() called every iteration
 for i in range(len(items)):
@@ -100,6 +102,7 @@ for item in items:
 ```
 
 **Nested loops creating O(n²):**
+
 ```
 # Bad: O(n*m) lookup in nested loop
 for order in orders:
@@ -116,6 +119,7 @@ for order in orders:
 ```
 
 **Multiple passes when one suffices:**
+
 ```
 # Bad: three passes through data
 total = sum(values)
@@ -142,8 +146,11 @@ for v in values:
 ### Memoization Patterns
 
 **Simple memoization:**
+
 ```python
 cache = {}
+
+
 def expensive_function(n):
     if n in cache:
         return cache[n]
@@ -153,13 +160,14 @@ def expensive_function(n):
 ```
 
 **Recursive with memoization (dynamic programming):**
+
 ```python
 def fib(n, memo={}):
     if n in memo:
         return memo[n]
     if n <= 1:
         return n
-    memo[n] = fib(n-1, memo) + fib(n-2, memo)
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
     return memo[n]
 ```
 
@@ -182,11 +190,11 @@ def fib(n, memo={}):
 
 ### Space-Time Tradeoffs
 
-| Approach | Space | Time | Use When |
-|----------|-------|------|----------|
-| Store all | O(n) | O(1) lookup | Memory available, frequent access |
-| Compute on demand | O(1) | O(n) compute | Memory constrained, rare access |
-| Cache recent | O(k) | O(1) hit, O(n) miss | Hot subset pattern |
+| Approach          | Space | Time                | Use When                          |
+|-------------------|-------|---------------------|-----------------------------------|
+| Store all         | O(n)  | O(1) lookup         | Memory available, frequent access |
+| Compute on demand | O(1)  | O(n) compute        | Memory constrained, rare access   |
+| Cache recent      | O(k)  | O(1) hit, O(n) miss | Hot subset pattern                |
 
 ## String Operations
 
@@ -200,6 +208,7 @@ def fib(n, memo={}):
 ### String Anti-Patterns
 
 **Repeated concatenation:**
+
 ```
 # Bad: O(n²) - creates new string each iteration
 result = ""
@@ -211,6 +220,7 @@ result = "".join(strings)
 ```
 
 **Unnecessary regex:**
+
 ```
 # Bad: regex overhead for simple check
 if re.match(r'^prefix', text):
@@ -231,6 +241,7 @@ if text.startswith('prefix'):
 ### Common Collection Mistakes
 
 **Membership test with list:**
+
 ```
 # Bad: O(n) per check
 if item in large_list:
@@ -241,6 +252,7 @@ if item in large_set:
 ```
 
 **Growing array without pre-allocation:**
+
 ```
 # Acceptable: dynamic growth
 result = []
@@ -260,15 +272,16 @@ result = [compute(i) for i in range(n)]
 
 ### Sorting
 
-| Algorithm | Average | Worst | Space | Use When |
-|-----------|---------|-------|-------|----------|
-| Quick sort | O(n log n) | O(n²) | O(log n) | General purpose |
-| Merge sort | O(n log n) | O(n log n) | O(n) | Stable sort needed |
-| Heap sort | O(n log n) | O(n log n) | O(1) | Memory constrained |
-| Counting sort | O(n+k) | O(n+k) | O(k) | Small integer range |
-| Built-in sort | O(n log n) | O(n log n) | O(n) | Default choice |
+| Algorithm     | Average    | Worst      | Space    | Use When            |
+|---------------|------------|------------|----------|---------------------|
+| Quick sort    | O(n log n) | O(n²)      | O(log n) | General purpose     |
+| Merge sort    | O(n log n) | O(n log n) | O(n)     | Stable sort needed  |
+| Heap sort     | O(n log n) | O(n log n) | O(1)     | Memory constrained  |
+| Counting sort | O(n+k)     | O(n+k)     | O(k)     | Small integer range |
+| Built-in sort | O(n log n) | O(n log n) | O(n)     | Default choice      |
 
 **Sorting checklist:**
+
 - [ ] Use built-in sort unless specific algorithm needed
 - [ ] Consider partial sort if only need top-k elements
 - [ ] Check if data has properties allowing faster sort
@@ -276,12 +289,12 @@ result = [compute(i) for i in range(n)]
 
 ### Searching
 
-| Algorithm | Time | Requirement |
-|-----------|------|-------------|
-| Linear search | O(n) | None |
-| Binary search | O(log n) | Sorted data |
-| Hash lookup | O(1) average | Hash map |
-| Tree search | O(log n) | Balanced tree |
+| Algorithm     | Time         | Requirement   |
+|---------------|--------------|---------------|
+| Linear search | O(n)         | None          |
+| Binary search | O(log n)     | Sorted data   |
+| Hash lookup   | O(1) average | Hash map      |
+| Tree search   | O(log n)     | Balanced tree |
 
 ## Quick Wins Checklist
 
@@ -301,16 +314,19 @@ High-impact optimizations to check first:
 ### Reference Files
 
 For detailed patterns and techniques, consult:
+
 - **`references/complexity-analysis.md`** - Deep dive on Big O analysis, amortized complexity, and analysis techniques
 - **`references/data-structures.md`** - Comprehensive guide to data structure selection and implementation tradeoffs
 
 ### Examples
 
 Working examples in `examples/`:
+
 - **`examples/optimization-patterns.md`** - Before/after code patterns for common inefficiencies
 
 ### Related Skills
 
 When addressing code efficiency, also consider:
+
 - **backend-performance** - Server-side and database performance
 - **refactoring-patterns** - Code quality improvements that may impact performance

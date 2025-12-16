@@ -19,12 +19,14 @@ Guidance for writing effective, maintainable tests that verify behavior without 
 Focus tests on what the code does, not how it does it:
 
 **Verify:**
+
 - Return values and outputs
 - State changes (database, files, external systems)
 - Emitted events or messages
 - Error conditions and exceptions
 
 **Avoid testing:**
+
 - Private methods or internal helpers
 - Exact implementation details (call order, internal state)
 - Framework internals or library behavior
@@ -32,6 +34,7 @@ Focus tests on what the code does, not how it does it:
 ### What to Test vs What to Skip
 
 **Always test:**
+
 - Business logic and calculations
 - Input validation and error handling
 - Edge cases and boundary conditions
@@ -39,6 +42,7 @@ Focus tests on what the code does, not how it does it:
 - State transitions and workflows
 
 **Skip testing:**
+
 - Simple getters/setters with no logic
 - Framework-provided functionality
 - Third-party library internals
@@ -48,6 +52,7 @@ Focus tests on what the code does, not how it does it:
 ### Coverage Requirements
 
 Cover every behavioral requirement:
+
 - **Normal paths** - expected inputs produce expected outputs
 - **Edge cases** - boundary values, empty collections, nulls
 - **Error paths** - invalid inputs, failure conditions, timeouts
@@ -91,6 +96,7 @@ test_calculate_total_with_empty_cart_returns_zero
 ### When to Mock
 
 **Mock external boundaries:**
+
 - Database connections
 - HTTP/API calls
 - File system operations
@@ -98,16 +104,17 @@ test_calculate_total_with_empty_cart_returns_zero
 - Third-party services
 
 **Avoid mocking:**
+
 - Internal classes and helpers
 - Simple data transformations
 - Code under test itself
 
 ### Mock Types
 
-| Type | Purpose | Use Case |
-|------|---------|----------|
-| **Stub** | Return predefined values | Need controlled return values |
-| **Mock** | Verify interactions | Verify method was called correctly |
+| Type     | Purpose                   | Use Case                            |
+|----------|---------------------------|-------------------------------------|
+| **Stub** | Return predefined values  | Need controlled return values       |
+| **Mock** | Verify interactions       | Verify method was called correctly  |
 | **Fake** | Simplified implementation | Complex dependencies (in-memory DB) |
 
 ### Over-Mocking Anti-Pattern
@@ -164,26 +171,28 @@ it('updates user', async () => {
 
 ## Common Anti-Patterns
 
-| Anti-Pattern | Problem | Solution |
-|--------------|---------|----------|
-| Testing implementation | Breaks when refactoring | Test observable outcomes |
-| Over-mocking | Tests pass but don't verify real behavior | Mock only external boundaries |
-| Test interdependence | Cascading failures, order-dependent | Each test sets up own state |
-| Asserting too much | Unclear what's being tested | One logical assertion per test |
-| Testing trivial code | Wasted effort, maintenance burden | Focus on business logic |
-| Ignoring edge cases | Bugs in boundary conditions | Test boundaries explicitly |
+| Anti-Pattern           | Problem                                   | Solution                       |
+|------------------------|-------------------------------------------|--------------------------------|
+| Testing implementation | Breaks when refactoring                   | Test observable outcomes       |
+| Over-mocking           | Tests pass but don't verify real behavior | Mock only external boundaries  |
+| Test interdependence   | Cascading failures, order-dependent       | Each test sets up own state    |
+| Asserting too much     | Unclear what's being tested               | One logical assertion per test |
+| Testing trivial code   | Wasted effort, maintenance burden         | Focus on business logic        |
+| Ignoring edge cases    | Bugs in boundary conditions               | Test boundaries explicitly     |
 
 ## Additional Resources
 
 ### Reference Files
 
 For detailed patterns and techniques, consult:
+
 - **`references/testing-patterns.md`** - Test doubles, fixtures, factories, async testing patterns
 - **`references/what-to-test.md`** - Detailed guidance on coverage decisions and edge cases
 
 ### Examples
 
 Working examples in `examples/`:
+
 - **`examples/adding-tests-to-existing-code.md`** - Step-by-step guide for testing existing functionality
 
 ### Related Skills

@@ -17,7 +17,8 @@ tools:
 
 You are a **Documentation Updater** for this repository.
 
-> **Note:** This agent intentionally has no assigned skills. Documentation work follows general writing principles and does not require specialized domain knowledge.
+> **Note:** This agent intentionally has no assigned skills. Documentation work follows general writing principles and
+> does not require specialized domain knowledge.
 
 ## Scope & Permissions
 

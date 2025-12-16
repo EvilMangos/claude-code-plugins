@@ -6,29 +6,30 @@ Comprehensive security guide for building, deploying, and running secure contain
 
 ### Image Trust Hierarchy
 
-| Source | Trust Level | Use Case |
-|--------|------------|----------|
-| Official images (Docker Hub) | High | Standard runtime environments |
-| Verified publisher images | High | Vendor-provided images |
-| Organization private registry | High | Internal base images |
-| Community images | Low | Avoid for production |
-| Unknown sources | None | Never use |
+| Source                        | Trust Level | Use Case                      |
+|-------------------------------|-------------|-------------------------------|
+| Official images (Docker Hub)  | High        | Standard runtime environments |
+| Verified publisher images     | High        | Vendor-provided images        |
+| Organization private registry | High        | Internal base images          |
+| Community images              | Low         | Avoid for production          |
+| Unknown sources               | None        | Never use                     |
 
 ### Minimal Base Images
 
 **Comparison:**
 
-| Base Image | Size | Attack Surface | Use Case |
-|------------|------|----------------|----------|
-| scratch | ~0MB | Minimal | Static binaries (Go, Rust) |
-| distroless | ~2-20MB | Very low | Runtime-only containers |
-| alpine | ~5MB | Low | General purpose, shell needed |
-| slim variants | ~50-100MB | Medium | When dependencies required |
-| Full OS (ubuntu, debian) | ~100-500MB | High | Avoid for production |
+| Base Image               | Size       | Attack Surface | Use Case                      |
+|--------------------------|------------|----------------|-------------------------------|
+| scratch                  | ~0MB       | Minimal        | Static binaries (Go, Rust)    |
+| distroless               | ~2-20MB    | Very low       | Runtime-only containers       |
+| alpine                   | ~5MB       | Low            | General purpose, shell needed |
+| slim variants            | ~50-100MB  | Medium         | When dependencies required    |
+| Full OS (ubuntu, debian) | ~100-500MB | High           | Avoid for production          |
 
 ### Version Pinning
 
 **Correct:**
+
 ```dockerfile
 # Pin to specific digest for reproducibility
 FROM node:20.10.0-alpine3.18@sha256:abc123...
@@ -38,6 +39,7 @@ FROM node:20.10-alpine3.18
 ```
 
 **Incorrect:**
+
 ```dockerfile
 FROM node:latest        # Never do this
 FROM node:20           # Too broad
@@ -82,6 +84,7 @@ ENTRYPOINT ["/app"]
 ```
 
 **Benefits:**
+
 - Build tools not in final image
 - Smaller attack surface
 - Reduced image size
@@ -90,6 +93,7 @@ ENTRYPOINT ["/app"]
 ### Avoid Secret Exposure
 
 **WRONG - secrets in layer:**
+
 ```dockerfile
 # This copies .env to image
 COPY . .
@@ -103,6 +107,7 @@ RUN --mount=type=secret,id=key cat /run/secrets/key > /app/.env
 ```
 
 **CORRECT:**
+
 ```dockerfile
 # Use secret only during build, don't persist
 RUN --mount=type=secret,id=npm_token \
@@ -179,9 +184,9 @@ spec:
 
   volumes:
     - name: tmp
-      emptyDir: {}
+      emptyDir: { }
     - name: cache
-      emptyDir: {}
+      emptyDir: { }
 ```
 
 ### Docker Run Security
@@ -206,15 +211,16 @@ docker run \
 
 **Common capabilities and their risks:**
 
-| Capability | Risk | When Needed |
-|------------|------|-------------|
-| CAP_NET_RAW | Network sniffing | Ping, network diagnostics |
-| CAP_SYS_ADMIN | Container escape | Almost never (avoid) |
-| CAP_NET_BIND_SERVICE | Bind low ports | Web servers on port 80/443 |
-| CAP_CHOWN | Change file ownership | File management |
-| CAP_SETUID/SETGID | Privilege escalation | Process user switching |
+| Capability           | Risk                  | When Needed                |
+|----------------------|-----------------------|----------------------------|
+| CAP_NET_RAW          | Network sniffing      | Ping, network diagnostics  |
+| CAP_SYS_ADMIN        | Container escape      | Almost never (avoid)       |
+| CAP_NET_BIND_SERVICE | Bind low ports        | Web servers on port 80/443 |
+| CAP_CHOWN            | Change file ownership | File management            |
+| CAP_SETUID/SETGID    | Privilege escalation  | Process user switching     |
 
 **Default policy:**
+
 ```
 Drop ALL capabilities
 Add back only specifically needed
@@ -259,6 +265,7 @@ spec:
 ### Service Mesh Security
 
 When using service mesh (Istio, Linkerd):
+
 - Enable mTLS between services
 - Implement authorization policies
 - Use egress gateways for external access
@@ -268,13 +275,13 @@ When using service mesh (Istio, Linkerd):
 
 ### What Scanners Detect
 
-| Category | Examples |
-|----------|----------|
-| OS vulnerabilities | CVEs in base image packages |
-| Application dependencies | Vulnerable libraries |
-| Misconfigurations | Running as root, exposed secrets |
-| Malware | Known malicious software |
-| Secrets | Hardcoded credentials |
+| Category                 | Examples                         |
+|--------------------------|----------------------------------|
+| OS vulnerabilities       | CVEs in base image packages      |
+| Application dependencies | Vulnerable libraries             |
+| Misconfigurations        | Running as root, exposed secrets |
+| Malware                  | Known malicious software         |
+| Secrets                  | Hardcoded credentials            |
 
 ### Scanning Integration Points
 
@@ -296,12 +303,12 @@ When using service mesh (Istio, Linkerd):
 
 ### Vulnerability Response Matrix
 
-| Severity | Response Time | Action |
-|----------|---------------|--------|
-| Critical | < 24 hours | Block deployment, emergency patch |
-| High | < 7 days | Plan immediate patch |
-| Medium | < 30 days | Include in regular update cycle |
-| Low | < 90 days | Address in maintenance window |
+| Severity | Response Time | Action                            |
+|----------|---------------|-----------------------------------|
+| Critical | < 24 hours    | Block deployment, emergency patch |
+| High     | < 7 days      | Plan immediate patch              |
+| Medium   | < 30 days     | Include in regular update cycle   |
+| Low      | < 90 days     | Address in maintenance window     |
 
 ## Registry Security
 
@@ -317,17 +324,17 @@ When using service mesh (Istio, Linkerd):
         {
           "action": "ALLOW",
           "operation": "PUSH",
-          "principals": ["group:ci-systems"]
+          "principals": [ "group:ci-systems" ]
         },
         {
           "action": "ALLOW",
           "operation": "PULL",
-          "principals": ["serviceAccount:k8s-nodes"]
+          "principals": [ "serviceAccount:k8s-nodes" ]
         },
         {
           "action": "DENY",
           "operation": "*",
-          "principals": ["allUsers"]
+          "principals": [ "allUsers" ]
         }
       ]
     }
@@ -353,10 +360,10 @@ apiVersion: policy/v1
 kind: ClusterAdmissionPolicy
 spec:
   rules:
-    - apiGroups: [""]
-      apiVersions: ["v1"]
-      resources: ["pods"]
-      operations: ["CREATE", "UPDATE"]
+    - apiGroups: [ "" ]
+      apiVersions: [ "v1" ]
+      resources: [ "pods" ]
+      operations: [ "CREATE", "UPDATE" ]
   validatingConfig:
     rules:
       - name: require-signed-images
@@ -376,6 +383,7 @@ spec:
 ### Container Audit Logging
 
 Events to log:
+
 - Container start/stop
 - Exec into container
 - File system changes (if writable)
@@ -386,6 +394,7 @@ Events to log:
 ### Runtime Detection
 
 Monitor for:
+
 - Unexpected processes
 - Unusual network connections
 - File integrity changes
@@ -426,19 +435,19 @@ Monitor for:
 
 ### Dockerfile Issues
 
-| Issue | Risk | Fix |
-|-------|------|-----|
-| `USER root` | Full container compromise | Use non-root user |
-| `FROM :latest` | Unpredictable updates | Pin to specific version |
-| `ADD` with URL | Unverified downloads | Use `COPY` or verify hash |
-| `COPY . .` | Secrets in image | Use .dockerignore |
+| Issue          | Risk                      | Fix                       |
+|----------------|---------------------------|---------------------------|
+| `USER root`    | Full container compromise | Use non-root user         |
+| `FROM :latest` | Unpredictable updates     | Pin to specific version   |
+| `ADD` with URL | Unverified downloads      | Use `COPY` or verify hash |
+| `COPY . .`     | Secrets in image          | Use .dockerignore         |
 
 ### Runtime Issues
 
-| Issue | Risk | Fix |
-|-------|------|-----|
-| Privileged mode | Host access | Never use privileged |
-| Host network | Network sniffing | Use container network |
-| Host PID namespace | Process visibility | Use container PID |
-| Mounted docker socket | Container escape | Never mount socket |
-| Writable root FS | Persistent malware | Read-only filesystem |
+| Issue                 | Risk               | Fix                   |
+|-----------------------|--------------------|-----------------------|
+| Privileged mode       | Host access        | Never use privileged  |
+| Host network          | Network sniffing   | Use container network |
+| Host PID namespace    | Process visibility | Use container PID     |
+| Mounted docker socket | Container escape   | Never mount socket    |
+| Writable root FS      | Persistent malware | Read-only filesystem  |

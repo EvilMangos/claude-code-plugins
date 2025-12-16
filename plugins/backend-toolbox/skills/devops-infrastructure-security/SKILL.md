@@ -49,6 +49,7 @@ Before deploying infrastructure changes, verify these critical items:
 ### Environment Variables
 
 **Safe pattern:**
+
 ```
 # Secrets injected at runtime from secrets manager
 # Application reads from environment
@@ -56,6 +57,7 @@ DATABASE_URL=${secrets.database_url}
 ```
 
 **Dangerous patterns to avoid:**
+
 ```
 # Hardcoded in code
 DB_PASSWORD = "production_password_123"
@@ -71,6 +73,7 @@ environment:
 ### Detection Checklist
 
 Before committing, scan for:
+
 - [ ] `.env` files with real values
 - [ ] Hardcoded strings matching secret patterns
 - [ ] Credentials in configuration files
@@ -99,6 +102,7 @@ Before committing, scan for:
 ### Dockerfile Security
 
 **Secure patterns:**
+
 ```dockerfile
 # Use specific version
 FROM node:20.10-alpine
@@ -116,6 +120,7 @@ RUN npm ci --only=production
 ```
 
 **Dangerous patterns:**
+
 ```dockerfile
 # Avoid
 FROM node:latest        # Unpinned version
@@ -153,6 +158,7 @@ RUN npm install         # Installing dev dependencies
 ### GitHub Actions Security
 
 **Secure patterns:**
+
 ```yaml
 permissions:
   contents: read  # Minimum required
@@ -170,6 +176,7 @@ jobs:
 ```
 
 **Dangerous patterns:**
+
 ```yaml
 permissions: write-all  # Too broad
 
@@ -253,13 +260,13 @@ steps:
 
 ### Common Misconfigurations
 
-| Resource | Misconfiguration | Secure Setting |
-|----------|-----------------|----------------|
-| S3/Storage | Public access | Block public access |
-| Security Groups | 0.0.0.0/0 ingress | Specific IP ranges |
-| IAM | Admin policies | Scoped permissions |
-| Databases | Public subnet | Private subnet |
-| Encryption | Disabled | Enabled (KMS managed) |
+| Resource        | Misconfiguration  | Secure Setting        |
+|-----------------|-------------------|-----------------------|
+| S3/Storage      | Public access     | Block public access   |
+| Security Groups | 0.0.0.0/0 ingress | Specific IP ranges    |
+| IAM             | Admin policies    | Scoped permissions    |
+| Databases       | Public subnet     | Private subnet        |
+| Encryption      | Disabled          | Enabled (KMS managed) |
 
 ## Logging & Monitoring
 
@@ -310,5 +317,6 @@ For detailed patterns and examples, consult:
 ### Related Skills
 
 When reviewing infrastructure for security issues, also consider:
+
 - **web-api-security** - Application-level security patterns
 - **code-review-checklist** - General review guidance

@@ -9,7 +9,8 @@ description: >
 
 # Backend Performance Optimization
 
-Principles and checklists for identifying and resolving backend performance bottlenecks. Focus on database optimization, caching, API efficiency, and resource management.
+Principles and checklists for identifying and resolving backend performance bottlenecks. Focus on database optimization,
+caching, API efficiency, and resource management.
 
 ## Performance Investigation Checklist
 
@@ -40,12 +41,14 @@ Before optimizing, identify the actual bottleneck:
 **Symptom:** Loop executes one query per item instead of batch query.
 
 **Detection checklist:**
+
 - [ ] Review ORM-generated queries in logs
 - [ ] Look for loops that trigger database calls
 - [ ] Check for lazy-loaded relationships accessed in loops
 - [ ] Profile total query count vs expected
 
 **Resolution:**
+
 - Use eager loading (include/preload associations)
 - Batch queries with IN clauses
 - Use JOINs instead of separate queries
@@ -53,15 +56,16 @@ Before optimizing, identify the actual bottleneck:
 
 ### Indexing Strategy
 
-| Index Type | Use Case |
-|------------|----------|
-| B-tree (default) | Equality, range queries, sorting |
-| Hash | Exact equality only |
-| Composite | Multi-column WHERE/ORDER BY |
-| Partial | Queries filtering specific subset |
-| Covering | Query satisfied entirely from index |
+| Index Type       | Use Case                            |
+|------------------|-------------------------------------|
+| B-tree (default) | Equality, range queries, sorting    |
+| Hash             | Exact equality only                 |
+| Composite        | Multi-column WHERE/ORDER BY         |
+| Partial          | Queries filtering specific subset   |
+| Covering         | Query satisfied entirely from index |
 
 **Indexing checklist:**
+
 - [ ] Index foreign keys used in JOINs
 - [ ] Create composite indexes for common query patterns
 - [ ] Order composite index columns by selectivity (highest first)
@@ -77,6 +81,7 @@ Before optimizing, identify the actual bottleneck:
 - [ ] Release connections promptly after use
 
 **Pool sizing guideline:**
+
 ```
 connections = (core_count * 2) + effective_spindle_count
 ```
@@ -88,6 +93,7 @@ For most web apps: start with 10-20 connections, tune based on monitoring.
 ### Cache Decision Checklist
 
 Before caching, verify:
+
 - [ ] Data is read more often than written
 - [ ] Stale data is acceptable for some period
 - [ ] Cache hit rate will be high enough to justify complexity
@@ -95,25 +101,28 @@ Before caching, verify:
 
 ### Cache Layers
 
-| Layer | Latency | Use Case |
-|-------|---------|----------|
-| In-memory (local) | ~1ms | Frequently accessed, small datasets |
-| Distributed (Redis) | ~5-10ms | Shared state, sessions, rate limiting |
-| CDN | ~20-50ms | Static assets, API responses |
-| Database cache | ~10-50ms | Query results, computed values |
+| Layer               | Latency  | Use Case                              |
+|---------------------|----------|---------------------------------------|
+| In-memory (local)   | ~1ms     | Frequently accessed, small datasets   |
+| Distributed (Redis) | ~5-10ms  | Shared state, sessions, rate limiting |
+| CDN                 | ~20-50ms | Static assets, API responses          |
+| Database cache      | ~10-50ms | Query results, computed values        |
 
 ### Caching Patterns
 
 **Cache-aside (Lazy loading):**
+
 1. Check cache for data
 2. On miss: fetch from source, populate cache
 3. Return data
 
 **Write-through:**
+
 1. Write to cache and database together
 2. Ensures consistency, higher write latency
 
 **Write-behind:**
+
 1. Write to cache immediately
 2. Async write to database
 3. Better write performance, risk of data loss
@@ -148,6 +157,7 @@ Before caching, verify:
 ### Async Processing
 
 Move these operations out of request/response cycle:
+
 - Email/notification sending
 - File processing
 - Report generation
@@ -155,6 +165,7 @@ Move these operations out of request/response cycle:
 - Audit logging (non-critical)
 
 **Implementation options:**
+
 - Message queues (RabbitMQ, SQS, Redis)
 - Background job processors
 - Event-driven architectures
@@ -199,14 +210,14 @@ Move these operations out of request/response cycle:
 
 ### Key Metrics to Track
 
-| Metric | Target | Action Trigger |
-|--------|--------|----------------|
-| P95 response time | <200ms | >500ms |
-| P99 response time | <500ms | >1s |
-| Error rate | <0.1% | >1% |
-| Database query time | <50ms avg | >100ms |
-| Cache hit rate | >80% | <60% |
-| Memory usage | Stable | Growing trend |
+| Metric              | Target    | Action Trigger |
+|---------------------|-----------|----------------|
+| P95 response time   | <200ms    | >500ms         |
+| P99 response time   | <500ms    | >1s            |
+| Error rate          | <0.1%     | >1%            |
+| Database query time | <50ms avg | >100ms         |
+| Cache hit rate      | >80%      | <60%           |
+| Memory usage        | Stable    | Growing trend  |
 
 ### Profiling Approach
 
@@ -234,16 +245,20 @@ Common optimizations with high impact:
 ### Reference Files
 
 For detailed patterns and techniques, consult:
-- **`references/database-optimization.md`** - Deep dive on query optimization, indexing strategies, and database-specific tuning
+
+- **`references/database-optimization.md`** - Deep dive on query optimization, indexing strategies, and
+  database-specific tuning
 - **`references/caching-patterns.md`** - Detailed caching strategies, invalidation patterns, and cache architecture
 
 ### Examples
 
 Working examples in `examples/`:
+
 - **`examples/common-bottlenecks.md`** - Before/after patterns for common performance issues
 
 ### Related Skills
 
 When addressing performance issues, also consider:
+
 - **algorithm-efficiency** - Code-level and algorithmic optimizations
 - **web-api-security** - Security considerations that may impact performance

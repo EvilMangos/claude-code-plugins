@@ -71,18 +71,19 @@ export class AuthService {
 
 Analyze the code for testable behaviors:
 
-| Behavior | Test Priority | Reason |
-|----------|--------------|--------|
-| User not found → error | High | Security - don't leak user existence |
-| Wrong password → error | High | Core auth functionality |
-| Account locked → error | High | Security feature |
-| Unverified user → error | Medium | Business rule |
-| Successful login → token | High | Happy path |
-| Failed attempts tracking | High | Security feature |
-| Account locking after max attempts | High | Security feature |
-| Lock duration | Medium | Verify timing |
+| Behavior                           | Test Priority | Reason                               |
+|------------------------------------|---------------|--------------------------------------|
+| User not found → error             | High          | Security - don't leak user existence |
+| Wrong password → error             | High          | Core auth functionality              |
+| Account locked → error             | High          | Security feature                     |
+| Unverified user → error            | Medium        | Business rule                        |
+| Successful login → token           | High          | Happy path                           |
+| Failed attempts tracking           | High          | Security feature                     |
+| Account locking after max attempts | High          | Security feature                     |
+| Lock duration                      | Medium        | Verify timing                        |
 
 **Skip testing:**
+
 - `generateToken` internals (private, tested via login)
 - Database query mechanics (external dependency)
 - Email sending mechanics (external dependency)
@@ -338,17 +339,20 @@ auth.test.ts
 ```
 
 **Coverage achieved:**
+
 - All error paths tested
 - Security behaviors verified (no info leakage, locking)
 - Happy path with token validation
 - State changes (failed attempts, resets) verified
 
 **What we mocked:**
+
 - Database (external, stateful)
 - Password comparison (external crypto)
 - Email sending (external service)
 
 **What we tested with real code:**
+
 - Business logic (attempt counting, lock thresholds)
 - Token generation
 - Error messages

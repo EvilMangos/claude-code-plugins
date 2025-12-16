@@ -1,7 +1,8 @@
 # Code Smells - Detailed Reference
 
 This reference is used for identifying and communicating common code smells during design assessment.
-Code smells are used as indicators of potential problems in code design. Code correctness is not necessarily implied, but areas worth investigating are suggested.
+Code smells are used as indicators of potential problems in code design. Code correctness is not necessarily implied,
+but areas worth investigating are suggested.
 
 ## Bloaters
 
@@ -329,7 +330,8 @@ Code structures that make changes difficult.
 
 **Problem:** Violates Single Responsibility Principle.
 
-**Example:** A `UserService` class that handles authentication, profile updates, notification preferences, and billing - each feature change touches this one class.
+**Example:** A `UserService` class that handles authentication, profile updates, notification preferences, and billing -
+each feature change touches this one class.
 
 **Refactoring:** Split into `AuthenticationService`, `ProfileService`, `NotificationPreferences`, `BillingService`.
 
@@ -343,7 +345,8 @@ Code structures that make changes difficult.
 
 **Problem:** Related logic is scattered, leading to missed updates and inconsistencies.
 
-**Example:** Adding a new field to an entity requires updating the entity, DTO, mapper, validator, repository, API controller, and tests - all with similar boilerplate.
+**Example:** Adding a new field to an entity requires updating the entity, DTO, mapper, validator, repository, API
+controller, and tests - all with similar boilerplate.
 
 **Refactoring:**
 
@@ -469,7 +472,8 @@ class PersonWrapper {
 }
 ```
 
-**Refactoring:** Remove the middle man and use the delegate directly, unless the wrapper provides real value (like lazy loading, access control, or adapting interfaces).
+**Refactoring:** Remove the middle man and use the delegate directly, unless the wrapper provides real value (like lazy
+loading, access control, or adapting interfaces).
 
 ---
 
@@ -521,7 +525,7 @@ Code that serves no purpose and should be removed.
 When reviewing code, prioritize smells by impact:
 
 | Priority   | Smells                               | Why                    |
-| ---------- | ------------------------------------ | ---------------------- |
+|------------|--------------------------------------|------------------------|
 | **High**   | Shotgun Surgery, Divergent Change    | Make all changes risky |
 | **High**   | Feature Envy, Inappropriate Intimacy | Create tight coupling  |
 | **Medium** | Long Method, Large Class             | Reduce comprehension   |

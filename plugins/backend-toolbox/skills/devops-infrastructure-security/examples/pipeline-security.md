@@ -11,9 +11,9 @@ name: Secure CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 # Minimal default permissions
 permissions:
@@ -58,7 +58,7 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
-    needs: [security-scan, dependency-audit]
+    needs: [ security-scan, dependency-audit ]
     permissions:
       contents: read
       packages: write  # Only if pushing to GHCR
@@ -112,7 +112,7 @@ jobs:
   # Deployment with environment protection
   deploy:
     runs-on: ubuntu-latest
-    needs: [build, container-scan]
+    needs: [ build, container-scan ]
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
@@ -218,7 +218,7 @@ container_scan:
   stage: scan
   image:
     name: aquasec/trivy
-    entrypoint: [""]
+    entrypoint: [ "" ]
   script:
     - trivy image --exit-code 1 --severity HIGH,CRITICAL $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
   rules:
@@ -445,7 +445,8 @@ sh "curl -H 'Authorization: Bearer ${API_KEY}' https://api.example.com"  // Inte
 
 ```yaml
 # UNSAFE - PR title can contain shell commands
-- run: echo "Building PR: ${{ github.event.pull_request.title }}"
+- run:
+    echo "Building PR: ${{ github.event.pull_request.title }}"
 
 # UNSAFE - Branch name can be malicious
 - run: git checkout ${{ github.head_ref }}
@@ -461,7 +462,8 @@ sh "curl -H 'Authorization: Bearer ${API_KEY}' https://api.example.com"  // Inte
 - name: Echo PR title
   env:
     PR_TITLE: ${{ github.event.pull_request.title }}
-  run: echo "Building PR: $PR_TITLE"
+  run:
+    echo "Building PR: $PR_TITLE"
 
 # SAFE - Validate branch name
 - name: Checkout
