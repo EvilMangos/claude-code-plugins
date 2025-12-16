@@ -31,11 +31,11 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 ### Specialists
 
-| Agent | Role | Color |
-|-------|------|-------|
-| security-specialist | Vulnerability assessment, secure coding | red |
-| performance-specialist | Bottleneck analysis, optimization | yellow |
-| devops-specialist | CI/CD, Docker, Kubernetes, deployment | blue |
+| Agent                           | Role | Color |
+|---------------------------------|------|-------|
+| application-security-specialist | Vulnerability assessment, secure coding | red |
+| performance-specialist          | Bottleneck analysis, optimization | yellow |
+| devops-specialist               | CI/CD, Docker, Kubernetes, deployment | blue |
 
 ### Support
 

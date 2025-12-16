@@ -1,5 +1,5 @@
 ---
-description: Develop a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, refactoring, code review, and documentation updates.
+description: Develop a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, performance check, security check, refactoring, code review, and documentation updates.
 argument-hint: [ feature-description ]
 allowed-tools: Read, Grep, Glob, Task, SlashCommand
 ---
@@ -20,6 +20,8 @@ Required subagents:
 - tests-reviewer
 - backend-developer
 - acceptance-reviewer
+- performance-specialist
+- application-security-specialist
 - refactorer
 - code-reviewer
 - documentation-updater
@@ -129,9 +131,68 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
         - stabilization gate (Step 6) as needed
         - re-run acceptance review
 
-### 8) Refactoring (delegate to `refactorer`, with tests after each step)
+### 8) Performance check loop (`performance-specialist` ↔ `backend-developer`)
 
-- Once acceptance reasonably passes, invoke `refactorer` for behavior-preserving cleanup:
+- After acceptance review passes, enter a performance review loop:
+
+**Loop start:**
+1. Invoke `performance-specialist` to analyze the implementation for performance concerns:
+    - Algorithmic complexity (time and space)
+    - Database query efficiency (N+1 queries, missing indexes, excessive joins)
+    - Memory allocation patterns and potential leaks
+    - I/O bottlenecks and blocking operations
+    - Caching opportunities
+    - Concurrency and parallelization potential
+2. The `performance-specialist` must return:
+    - A list of findings with details and suggested fixes
+    - Classification for each: **BLOCKING** (must fix) or **NON-BLOCKING** (optional optimization)
+    - A verdict: **PASS / PARTIAL / FAIL**
+
+**If BLOCKING issues found:**
+3. Pass the BLOCKING findings to `backend-developer` with:
+    - The specific performance issues identified
+    - The suggested fixes from `performance-specialist`
+    - Relevant `/run-tests` invocations to verify behavior is preserved
+4. `backend-developer` implements fixes (small steps, run `/run-tests` after each step)
+5. **Go back to Loop start** — re-invoke `performance-specialist` for a new review
+
+**Loop exit condition:**
+- Verdict is PASS, or only NON-BLOCKING issues remain
+- Do not proceed to security check until loop exits
+
+### 9) Security check loop (`application-security-specialist` ↔ `backend-developer`)
+
+- After performance check loop exits, enter a security review loop:
+
+**Loop start:**
+1. Invoke `application-security-specialist` to analyze the implementation for security vulnerabilities:
+    - Input validation and sanitization
+    - Authentication and authorization checks
+    - Injection vulnerabilities (SQL, command, LDAP, etc.)
+    - Sensitive data handling (logging, storage, transmission)
+    - Error handling and information disclosure
+    - Dependency vulnerabilities
+    - OWASP Top 10 compliance
+2. The `application-security-specialist` must return:
+    - A list of findings with details, severity, and recommended fixes
+    - Classification for each: **BLOCKING** (vulnerability must be fixed) or **NON-BLOCKING** (hardening recommendation)
+    - A verdict: **PASS / PARTIAL / FAIL**
+
+**If BLOCKING issues found:**
+3. Pass the BLOCKING findings to `backend-developer` with:
+    - The specific security vulnerabilities identified
+    - The recommended fixes from `application-security-specialist`
+    - Relevant `/run-tests` invocations to verify behavior is preserved
+4. `backend-developer` implements fixes (small steps, run `/run-tests` after each step)
+5. **Go back to Loop start** — re-invoke `application-security-specialist` for a new review
+
+**Loop exit condition:**
+- Verdict is PASS, or only NON-BLOCKING issues remain
+- Do not proceed to refactoring until loop exits
+
+### 10) Refactoring (delegate to `refactorer`, with tests after each step)
+
+- Once the security check loop exits, invoke `refactorer` for behavior-preserving cleanup:
     - Improve structure, naming, separation of concerns
     - Remove duplication, clarify control flow
     - Keep external behavior identical
@@ -144,7 +205,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
 - If larger refactors are discovered:
     - Record them as follow-up tasks instead of doing them now.
 
-### 9) Code review with reflection loop (delegate to `code-reviewer`)
+### 11) Code review with reflection loop (delegate to `code-reviewer`)
 
 - Invoke `code-reviewer` once refactoring is green.
 - `code-reviewer` should evaluate:
@@ -164,7 +225,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The Se
 - Re-invoke `code-reviewer` after fixes.
 - Repeat until no blocking issues remain, or the user explicitly accepts remaining trade-offs.
 
-### 10) Update documentation (delegate to `documentation-updater`)
+### 12) Update documentation (delegate to `documentation-updater`)
 
 - Once code review has no blocking issues, invoke `documentation-updater` to update any documentation impacted by the change:
     - README usage examples
