@@ -21,7 +21,7 @@ If `/run-tests` is missing:
 ```
 Workflow Prerequisite Check
 
-The general-toolbox workflows (develop-feature, refactor, refactor-tests) require a /run-tests command.
+The backend-toolbox workflows (develop-feature, refactor, refactor-tests) require a /run-tests command.
 
 To set up:
 1. Create `.claude/commands/run-tests.md` in your project
