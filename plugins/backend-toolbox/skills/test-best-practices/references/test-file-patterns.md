@@ -1,6 +1,6 @@
 # Test File Identification Patterns
 
-Use these patterns to identify test files across any codebase. This is a shared reference used by multiple commands and agents to enforce test-file boundaries.
+Common patterns are used to identify test files across any codebase.
 
 ## Test File Locations (Path Segments)
 
@@ -100,7 +100,7 @@ These are allowed to be modified when refactoring tests, but are NOT production 
 
 ## Detection Logic
 
-To determine if a file is a test file:
+A file can be determined to be a test file as follows:
 
 ```
 1. Check if any path segment matches test directory patterns

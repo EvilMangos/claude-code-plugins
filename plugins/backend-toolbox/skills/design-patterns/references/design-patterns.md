@@ -1,5 +1,7 @@
 # Design Patterns - Comprehensive Reference
 
+This reference covers creational, structural, and behavioral design patterns, with selection guidance for common problems.
+
 ## Creational Patterns
 
 ### Factory Method
@@ -7,6 +9,7 @@
 **Intent:** Define an interface for creating objects, but let subclasses decide which class to instantiate.
 
 **When to use:**
+
 - Object creation logic is complex
 - Creation varies based on conditions
 - Need to decouple creation from usage
@@ -45,6 +48,7 @@ class PayPalProcessorFactory extends PaymentProcessorFactory {
 **Intent:** Create families of related objects without specifying concrete classes.
 
 **When to use:**
+
 - System should be independent of how products are created
 - Need to enforce that products from the same family are used together
 - Multiple product variations exist
@@ -57,15 +61,27 @@ interface UIFactory {
 }
 
 class MaterialUIFactory implements UIFactory {
-  createButton(): Button { return new MaterialButton(); }
-  createCheckbox(): Checkbox { return new MaterialCheckbox(); }
-  createTextField(): TextField { return new MaterialTextField(); }
+  createButton(): Button {
+    return new MaterialButton();
+  }
+  createCheckbox(): Checkbox {
+    return new MaterialCheckbox();
+  }
+  createTextField(): TextField {
+    return new MaterialTextField();
+  }
 }
 
 class BootstrapUIFactory implements UIFactory {
-  createButton(): Button { return new BootstrapButton(); }
-  createCheckbox(): Checkbox { return new BootstrapCheckbox(); }
-  createTextField(): TextField { return new BootstrapTextField(); }
+  createButton(): Button {
+    return new BootstrapButton();
+  }
+  createCheckbox(): Checkbox {
+    return new BootstrapCheckbox();
+  }
+  createTextField(): TextField {
+    return new BootstrapTextField();
+  }
 }
 ```
 
@@ -74,6 +90,7 @@ class BootstrapUIFactory implements UIFactory {
 **Intent:** Construct complex objects step by step, allowing different representations.
 
 **When to use:**
+
 - Object has many optional parameters
 - Construction involves multiple steps
 - Want to prevent incomplete object creation
@@ -97,7 +114,7 @@ class QueryBuilder {
     return this;
   }
 
-  orderBy(column: string, direction: 'ASC' | 'DESC' = 'ASC'): this {
+  orderBy(column: string, direction: "ASC" | "DESC" = "ASC"): this {
     this.query.orderBy = { column, direction };
     return this;
   }
@@ -108,17 +125,17 @@ class QueryBuilder {
   }
 
   build(): Query {
-    if (!this.query.table) throw new Error('Table is required');
+    if (!this.query.table) throw new Error("Table is required");
     return this.query;
   }
 }
 
 // Usage
 const query = new QueryBuilder()
-  .select('id', 'name', 'email')
-  .from('users')
-  .where('active = true')
-  .orderBy('created_at', 'DESC')
+  .select("id", "name", "email")
+  .from("users")
+  .where("active = true")
+  .orderBy("created_at", "DESC")
   .limit(10)
   .build();
 ```
@@ -128,6 +145,7 @@ const query = new QueryBuilder()
 **Intent:** Ensure a class has only one instance with global access point.
 
 **When to use:**
+
 - Exactly one instance is needed (configuration, connection pool)
 - Controlled access to sole instance required
 
@@ -174,6 +192,7 @@ class ConfigurationService {
 **Intent:** Convert interface of a class into another interface clients expect.
 
 **When to use:**
+
 - Integrating with legacy code or third-party libraries
 - Interface doesn't match what client expects
 - Need to make incompatible classes work together
@@ -206,7 +225,7 @@ function printReport(printer: Printer, report: string): void {
 }
 
 const adapter = new LegacyPrinterAdapter(new LegacyPrinter());
-printReport(adapter, 'Annual Report');
+printReport(adapter, "Annual Report");
 ```
 
 ### Decorator
@@ -214,6 +233,7 @@ printReport(adapter, 'Annual Report');
 **Intent:** Attach additional responsibilities to objects dynamically.
 
 **When to use:**
+
 - Add responsibilities without modifying existing code
 - Responsibilities can be combined in various ways
 - Subclassing would create explosion of classes
@@ -225,8 +245,12 @@ interface Coffee {
 }
 
 class SimpleCoffee implements Coffee {
-  cost(): number { return 2; }
-  description(): string { return 'Simple coffee'; }
+  cost(): number {
+    return 2;
+  }
+  description(): string {
+    return "Simple coffee";
+  }
 }
 
 // Decorators
@@ -237,18 +261,30 @@ abstract class CoffeeDecorator implements Coffee {
 }
 
 class MilkDecorator extends CoffeeDecorator {
-  cost(): number { return this.coffee.cost() + 0.5; }
-  description(): string { return this.coffee.description() + ', milk'; }
+  cost(): number {
+    return this.coffee.cost() + 0.5;
+  }
+  description(): string {
+    return this.coffee.description() + ", milk";
+  }
 }
 
 class SugarDecorator extends CoffeeDecorator {
-  cost(): number { return this.coffee.cost() + 0.25; }
-  description(): string { return this.coffee.description() + ', sugar'; }
+  cost(): number {
+    return this.coffee.cost() + 0.25;
+  }
+  description(): string {
+    return this.coffee.description() + ", sugar";
+  }
 }
 
 class WhipDecorator extends CoffeeDecorator {
-  cost(): number { return this.coffee.cost() + 0.75; }
-  description(): string { return this.coffee.description() + ', whip'; }
+  cost(): number {
+    return this.coffee.cost() + 0.75;
+  }
+  description(): string {
+    return this.coffee.description() + ", whip";
+  }
 }
 
 // Usage - combine decorators
@@ -258,7 +294,7 @@ coffee = new SugarDecorator(coffee);
 coffee = new WhipDecorator(coffee);
 
 console.log(coffee.description()); // Simple coffee, milk, sugar, whip
-console.log(coffee.cost());        // 3.5
+console.log(coffee.cost()); // 3.5
 ```
 
 ### Facade
@@ -266,6 +302,7 @@ console.log(coffee.cost());        // 3.5
 **Intent:** Provide unified interface to a set of interfaces in a subsystem.
 
 **When to use:**
+
 - Simplify complex subsystem for common use cases
 - Reduce coupling between clients and subsystem
 - Layer subsystems
@@ -273,23 +310,33 @@ console.log(coffee.cost());        // 3.5
 ```typescript
 // Complex subsystem classes
 class VideoDecoder {
-  decode(file: string): VideoData { /* ... */ }
+  decode(file: string): VideoData {
+    /* ... */
+  }
 }
 
 class AudioDecoder {
-  decode(file: string): AudioData { /* ... */ }
+  decode(file: string): AudioData {
+    /* ... */
+  }
 }
 
 class VideoRenderer {
-  render(video: VideoData, screen: Screen): void { /* ... */ }
+  render(video: VideoData, screen: Screen): void {
+    /* ... */
+  }
 }
 
 class AudioPlayer {
-  play(audio: AudioData, speakers: Speakers): void { /* ... */ }
+  play(audio: AudioData, speakers: Speakers): void {
+    /* ... */
+  }
 }
 
 class SubtitleLoader {
-  load(file: string): Subtitles { /* ... */ }
+  load(file: string): Subtitles {
+    /* ... */
+  }
 }
 
 // Facade simplifies the complex subsystem
@@ -321,7 +368,7 @@ class VideoPlayerFacade {
 
 // Simple usage
 const player = new VideoPlayerFacade();
-player.play('movie.mp4', screen, speakers, 'movie.srt');
+player.play("movie.mp4", screen, speakers, "movie.srt");
 ```
 
 ### Composite
@@ -329,6 +376,7 @@ player.play('movie.mp4', screen, speakers, 'movie.srt');
 **Intent:** Compose objects into tree structures to represent part-whole hierarchies.
 
 **When to use:**
+
 - Represent hierarchies of objects
 - Clients should treat individual objects and compositions uniformly
 - Tree-like structures
@@ -343,9 +391,13 @@ interface FileSystemNode {
 class File implements FileSystemNode {
   constructor(private name: string, private size: number) {}
 
-  getName(): string { return this.name; }
-  getSize(): number { return this.size; }
-  print(indent = ''): void {
+  getName(): string {
+    return this.name;
+  }
+  getSize(): number {
+    return this.size;
+  }
+  print(indent = ""): void {
     console.log(`${indent}${this.name} (${this.size}KB)`);
   }
 }
@@ -359,25 +411,27 @@ class Directory implements FileSystemNode {
     this.children.push(node);
   }
 
-  getName(): string { return this.name; }
+  getName(): string {
+    return this.name;
+  }
 
   getSize(): number {
     return this.children.reduce((sum, child) => sum + child.getSize(), 0);
   }
 
-  print(indent = ''): void {
+  print(indent = ""): void {
     console.log(`${indent}${this.name}/`);
-    this.children.forEach(child => child.print(indent + '  '));
+    this.children.forEach((child) => child.print(indent + "  "));
   }
 }
 
 // Usage
-const root = new Directory('root');
-const src = new Directory('src');
-src.add(new File('index.ts', 10));
-src.add(new File('app.ts', 25));
+const root = new Directory("root");
+const src = new Directory("src");
+src.add(new File("index.ts", 10));
+src.add(new File("app.ts", 25));
 root.add(src);
-root.add(new File('package.json', 2));
+root.add(new File("package.json", 2));
 
 root.print();
 console.log(`Total size: ${root.getSize()}KB`);
@@ -392,6 +446,7 @@ console.log(`Total size: ${root.getSize()}KB`);
 **Intent:** Define family of algorithms, encapsulate each one, make them interchangeable.
 
 **When to use:**
+
 - Multiple algorithms for a task
 - Algorithm selection at runtime
 - Avoid conditional statements for algorithm selection
@@ -454,6 +509,7 @@ sorter.sort([3, 1, 4, 1, 5]);
 **Intent:** Define one-to-many dependency so when one object changes state, dependents are notified.
 
 **When to use:**
+
 - Changes to one object require changing others
 - Object should notify others without knowing who they are
 - Event-driven systems
@@ -484,7 +540,7 @@ class EventEmitter {
   emit(event: string, data: any): void {
     const observers = this.observers.get(event);
     if (observers) {
-      observers.forEach(observer => observer.update(event, data));
+      observers.forEach((observer) => observer.update(event, data));
     }
   }
 }
@@ -493,13 +549,13 @@ class EventEmitter {
 class OrderService extends EventEmitter {
   createOrder(order: Order): void {
     // Create order logic
-    this.emit('orderCreated', order);
+    this.emit("orderCreated", order);
   }
 }
 
 class EmailNotifier implements Observer {
   update(event: string, data: Order): void {
-    if (event === 'orderCreated') {
+    if (event === "orderCreated") {
       console.log(`Sending email for order ${data.id}`);
     }
   }
@@ -507,15 +563,15 @@ class EmailNotifier implements Observer {
 
 class InventoryUpdater implements Observer {
   update(event: string, data: Order): void {
-    if (event === 'orderCreated') {
+    if (event === "orderCreated") {
       console.log(`Updating inventory for order ${data.id}`);
     }
   }
 }
 
 const orderService = new OrderService();
-orderService.subscribe('orderCreated', new EmailNotifier());
-orderService.subscribe('orderCreated', new InventoryUpdater());
+orderService.subscribe("orderCreated", new EmailNotifier());
+orderService.subscribe("orderCreated", new InventoryUpdater());
 ```
 
 ### Command
@@ -523,6 +579,7 @@ orderService.subscribe('orderCreated', new InventoryUpdater());
 **Intent:** Encapsulate a request as an object, allowing parameterization and queuing.
 
 **When to use:**
+
 - Parameterize objects with operations
 - Queue, log, or support undo for operations
 - Structure system around high-level operations
@@ -534,16 +591,20 @@ interface Command {
 }
 
 class TextEditor {
-  private content = '';
+  private content = "";
 
-  getContent(): string { return this.content; }
+  getContent(): string {
+    return this.content;
+  }
 
   insert(text: string, position: number): void {
-    this.content = this.content.slice(0, position) + text + this.content.slice(position);
+    this.content =
+      this.content.slice(0, position) + text + this.content.slice(position);
   }
 
   delete(position: number, length: number): void {
-    this.content = this.content.slice(0, position) + this.content.slice(position + length);
+    this.content =
+      this.content.slice(0, position) + this.content.slice(position + length);
   }
 }
 
@@ -596,6 +657,7 @@ class CommandHistory {
 **Intent:** Allow object to alter its behavior when internal state changes.
 
 **When to use:**
+
 - Object behavior depends on state
 - Operations have large conditional statements based on state
 - State transitions are explicit
@@ -614,7 +676,9 @@ class PendingState implements OrderState {
   cancel(order: Order): void {
     order.setState(new CancelledState());
   }
-  getStatus(): string { return 'PENDING'; }
+  getStatus(): string {
+    return "PENDING";
+  }
 }
 
 class ProcessingState implements OrderState {
@@ -622,9 +686,11 @@ class ProcessingState implements OrderState {
     order.setState(new ShippedState());
   }
   cancel(order: Order): void {
-    throw new Error('Cannot cancel order in processing');
+    throw new Error("Cannot cancel order in processing");
   }
-  getStatus(): string { return 'PROCESSING'; }
+  getStatus(): string {
+    return "PROCESSING";
+  }
 }
 
 class ShippedState implements OrderState {
@@ -632,29 +698,35 @@ class ShippedState implements OrderState {
     order.setState(new DeliveredState());
   }
   cancel(order: Order): void {
-    throw new Error('Cannot cancel shipped order');
+    throw new Error("Cannot cancel shipped order");
   }
-  getStatus(): string { return 'SHIPPED'; }
+  getStatus(): string {
+    return "SHIPPED";
+  }
 }
 
 class DeliveredState implements OrderState {
   proceed(order: Order): void {
-    throw new Error('Order already delivered');
+    throw new Error("Order already delivered");
   }
   cancel(order: Order): void {
-    throw new Error('Cannot cancel delivered order');
+    throw new Error("Cannot cancel delivered order");
   }
-  getStatus(): string { return 'DELIVERED'; }
+  getStatus(): string {
+    return "DELIVERED";
+  }
 }
 
 class CancelledState implements OrderState {
   proceed(order: Order): void {
-    throw new Error('Cannot proceed cancelled order');
+    throw new Error("Cannot proceed cancelled order");
   }
   cancel(order: Order): void {
-    throw new Error('Order already cancelled');
+    throw new Error("Order already cancelled");
   }
-  getStatus(): string { return 'CANCELLED'; }
+  getStatus(): string {
+    return "CANCELLED";
+  }
 }
 
 class Order {
@@ -682,17 +754,17 @@ class Order {
 
 ## Pattern Selection Guide
 
-| Problem | Consider Pattern |
-|---------|------------------|
-| Object creation is complex | Factory, Builder |
-| Need single instance | Singleton (prefer DI) |
-| Incompatible interfaces | Adapter |
-| Add responsibilities dynamically | Decorator |
-| Simplify complex subsystem | Facade |
-| Tree/hierarchy structures | Composite |
-| Swappable algorithms | Strategy |
-| Notify multiple objects of changes | Observer |
-| Undo/redo, queuing operations | Command |
-| Behavior varies by state | State |
+| Problem                            | Consider Pattern      |
+| ---------------------------------- | --------------------- |
+| Object creation is complex         | Factory, Builder      |
+| Need single instance               | Singleton (prefer DI) |
+| Incompatible interfaces            | Adapter               |
+| Add responsibilities dynamically   | Decorator             |
+| Simplify complex subsystem         | Facade                |
+| Tree/hierarchy structures          | Composite             |
+| Swappable algorithms               | Strategy              |
+| Notify multiple objects of changes | Observer              |
+| Undo/redo, queuing operations      | Command               |
+| Behavior varies by state           | State                 |
 
 For Domain-Driven Design patterns (Entity, Value Object, Aggregate, Repository, Domain Service, Domain Event, Specification, Bounded Context, Anti-Corruption Layer), see **`references/domain-driven-design.md`**.

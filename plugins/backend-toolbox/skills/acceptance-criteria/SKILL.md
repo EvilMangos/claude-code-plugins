@@ -1,8 +1,8 @@
 ---
 name: acceptance-criteria
 description: >
-  Use this skill when completing any task to verify the implementation satisfies all requirements.
-  Always check that changes fully meet the original request before marking work as done.
+  This skill should be used when completing any task to verify the implementation satisfies all requirements.
+  Changes should always be checked to ensure they fully meet the original request before work is marked as done.
   This is the default verification step for all development tasks.
 ---
 

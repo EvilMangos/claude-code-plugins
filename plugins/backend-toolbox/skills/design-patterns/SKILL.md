@@ -1,7 +1,7 @@
 ---
 name: design-patterns
 description: >
-  Use this skill when implementing new features, refactoring code, or deciding how to structure
+  This skill should be used when implementing new features, refactoring code, or deciding how to structure
   solutions. Covers SOLID principles, GoF design patterns, DDD patterns, and dependency injection.
   Triggers: "how should I implement", "which pattern", "design this feature", "structure this code",
   "dependency injection", "factory pattern", "DDD", "domain model".

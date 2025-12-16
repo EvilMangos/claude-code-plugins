@@ -7,6 +7,7 @@ Detailed security considerations for code review.
 ### User Input
 
 Check for:
+
 - [ ] All user input is validated before use
 - [ ] Validation happens server-side (client-side is for UX only)
 - [ ] Input length limits are enforced
@@ -14,6 +15,7 @@ Check for:
 - [ ] Null/undefined inputs are handled
 
 Common vulnerabilities:
+
 - Buffer overflow from unbounded input
 - Type confusion attacks
 - Prototype pollution (JavaScript)
@@ -21,6 +23,7 @@ Common vulnerabilities:
 ### File Uploads
 
 Check for:
+
 - [ ] File type validation (not just extension)
 - [ ] File size limits enforced
 - [ ] Filenames sanitized before storage
@@ -28,6 +31,7 @@ Check for:
 - [ ] Antivirus scanning for uploaded content
 
 Common vulnerabilities:
+
 - Executable uploads
 - Path traversal via filename
 - DoS via large files
@@ -37,12 +41,14 @@ Common vulnerabilities:
 ### SQL Injection
 
 Check for:
+
 - [ ] Parameterized queries used (not string concatenation)
 - [ ] ORM methods used correctly
 - [ ] Dynamic table/column names are whitelisted
 - [ ] Stored procedures don't use dynamic SQL
 
 Red flags:
+
 ```sql
 -- BAD: String concatenation
 "SELECT * FROM users WHERE id = " + userId
@@ -54,12 +60,14 @@ Red flags:
 ### Command Injection
 
 Check for:
+
 - [ ] Shell commands avoid user input
 - [ ] If unavoidable, input is strictly validated
 - [ ] Use language APIs instead of shell commands
 - [ ] Arguments are properly escaped
 
 Red flags:
+
 ```python
 # BAD: Direct input in command
 os.system(f"convert {user_file} output.png")
@@ -72,29 +80,33 @@ Image.open(validated_path).save("output.png")
 ### XSS (Cross-Site Scripting)
 
 Check for:
+
 - [ ] Output encoding for HTML context
 - [ ] Content-Security-Policy headers set
 - [ ] User content in URLs is encoded
 - [ ] JavaScript frameworks' safe methods used
 
 Red flags:
+
 ```javascript
 // BAD: innerHTML with user content
-element.innerHTML = userInput
+element.innerHTML = userInput;
 
 // GOOD: textContent or sanitization
-element.textContent = userInput
+element.textContent = userInput;
 ```
 
 ### Path Traversal
 
 Check for:
+
 - [ ] File paths are canonicalized before use
 - [ ] Paths verified to be within allowed directories
 - [ ] Symlinks resolved and checked
 - [ ] No direct use of user input in paths
 
 Red flags:
+
 ```python
 # BAD: Direct path concatenation
 open(f"/data/{user_filename}")
@@ -110,6 +122,7 @@ if not safe_path.is_relative_to("/data"):
 ### Authentication
 
 Check for:
+
 - [ ] Passwords hashed with modern algorithm (bcrypt, argon2)
 - [ ] Timing-safe comparison for secrets
 - [ ] Rate limiting on login attempts
@@ -117,6 +130,7 @@ Check for:
 - [ ] MFA implementation is robust
 
 Red flags:
+
 - MD5/SHA1 for passwords
 - Plaintext password storage
 - Credentials in logs
@@ -125,6 +139,7 @@ Red flags:
 ### Authorization
 
 Check for:
+
 - [ ] Authorization checks on every request
 - [ ] Checks happen server-side
 - [ ] Principle of least privilege applied
@@ -132,6 +147,7 @@ Check for:
 - [ ] Admin functions protected
 
 Common issues:
+
 - IDOR (Insecure Direct Object Reference)
 - Missing function-level access control
 - Privilege escalation paths
@@ -141,6 +157,7 @@ Common issues:
 ### Sensitive Data Handling
 
 Check for:
+
 - [ ] PII encrypted at rest
 - [ ] TLS for data in transit
 - [ ] Sensitive data not in logs
@@ -148,6 +165,7 @@ Check for:
 - [ ] Data minimization practiced
 
 Sensitive data includes:
+
 - Passwords, tokens, API keys
 - Personal identifiable information
 - Financial data
@@ -156,6 +174,7 @@ Sensitive data includes:
 ### Secrets Management
 
 Check for:
+
 - [ ] No hardcoded secrets in code
 - [ ] Secrets not in version control
 - [ ] Environment variables or secret managers used
@@ -163,6 +182,7 @@ Check for:
 - [ ] Different secrets per environment
 
 Red flags:
+
 ```python
 # BAD: Hardcoded secret
 API_KEY = "sk-1234567890abcdef"
@@ -176,6 +196,7 @@ API_KEY = os.environ["API_KEY"]
 ### Common Issues
 
 Check for:
+
 - [ ] Modern algorithms (AES-256, RSA-2048+, SHA-256+)
 - [ ] Proper random number generation (CSPRNG)
 - [ ] Keys stored securely
@@ -183,6 +204,7 @@ Check for:
 - [ ] Authenticated encryption used
 
 Red flags:
+
 - Custom crypto implementations
 - Deprecated algorithms (DES, MD5, SHA1)
 - Predictable random values
@@ -193,6 +215,7 @@ Red flags:
 ### Information Leakage
 
 Check for:
+
 - [ ] Generic error messages to users
 - [ ] Detailed errors only in logs
 - [ ] Stack traces not exposed
@@ -200,6 +223,7 @@ Check for:
 - [ ] Debug mode disabled in production
 
 Red flags:
+
 ```python
 # BAD: Exposing internal details
 return {"error": str(exception)}
@@ -213,6 +237,7 @@ return {"error": "An error occurred", "reference": error_id}
 ### Third-Party Code
 
 Check for:
+
 - [ ] Dependencies from trusted sources
 - [ ] Known vulnerabilities checked (npm audit, etc.)
 - [ ] Dependency versions pinned
@@ -220,6 +245,7 @@ Check for:
 - [ ] License compliance
 
 Tools:
+
 - `npm audit` / `yarn audit`
 - `pip-audit`
 - Snyk, Dependabot, etc.
@@ -229,6 +255,7 @@ Tools:
 ### REST API
 
 Check for:
+
 - [ ] Authentication required
 - [ ] Rate limiting implemented
 - [ ] Input validation on all parameters
@@ -238,6 +265,7 @@ Check for:
 ### GraphQL
 
 Check for:
+
 - [ ] Query depth limiting
 - [ ] Query complexity analysis
 - [ ] Introspection disabled in production
@@ -248,6 +276,7 @@ Check for:
 ### Security Logging
 
 Check for:
+
 - [ ] Authentication events logged
 - [ ] Authorization failures logged
 - [ ] Input validation failures logged
@@ -255,6 +284,7 @@ Check for:
 - [ ] Log injection prevented
 
 Required log events:
+
 - Login success/failure
 - Password changes
 - Permission changes

@@ -1,5 +1,7 @@
 # SOLID Principles - Detailed Reference
 
+This reference covers the SOLID principles, common violation signals, and refactoring approaches for maintainable designs.
+
 ## Single Responsibility Principle (SRP)
 
 > "A class should have only one reason to change." — Robert C. Martin
@@ -11,6 +13,7 @@ Every module, class, or function should have responsibility over a single part o
 ### Identifying Violations
 
 **Code smells:**
+
 - Class has multiple unrelated methods
 - Changes to different features require modifying the same class
 - Class has dependencies for unrelated concerns (e.g., database AND email AND logging)
@@ -24,17 +27,19 @@ class User {
   constructor(public name: string, public email: string) {}
 
   validate(): boolean {
-    return this.email.includes('@') && this.name.length > 0;
+    return this.email.includes("@") && this.name.length > 0;
   }
 
   save(): void {
     // SQL insertion logic
-    db.query(`INSERT INTO users (name, email) VALUES ('${this.name}', '${this.email}')`);
+    db.query(
+      `INSERT INTO users (name, email) VALUES ('${this.name}', '${this.email}')`
+    );
   }
 
   sendWelcomeEmail(): void {
     // Email sending logic
-    emailService.send(this.email, 'Welcome!', 'Thanks for joining');
+    emailService.send(this.email, "Welcome!", "Thanks for joining");
   }
 }
 ```
@@ -49,19 +54,22 @@ class User {
 
 class UserValidator {
   validate(user: User): boolean {
-    return user.email.includes('@') && user.name.length > 0;
+    return user.email.includes("@") && user.name.length > 0;
   }
 }
 
 class UserRepository {
   save(user: User): void {
-    db.query('INSERT INTO users (name, email) VALUES (?, ?)', [user.name, user.email]);
+    db.query("INSERT INTO users (name, email) VALUES (?, ?)", [
+      user.name,
+      user.email,
+    ]);
   }
 }
 
 class WelcomeEmailSender {
   send(user: User): void {
-    emailService.send(user.email, 'Welcome!', 'Thanks for joining');
+    emailService.send(user.email, "Welcome!", "Thanks for joining");
   }
 }
 ```
@@ -92,6 +100,7 @@ Design modules that can have their behavior extended without modifying their sou
 ### Identifying Violations
 
 **Code smells:**
+
 - Adding a new type requires modifying existing switch/if statements
 - Core logic contains conditionals for specific cases
 - Changes ripple through the codebase
@@ -101,15 +110,15 @@ Design modules that can have their behavior extended without modifying their sou
 ```typescript
 // BAD: Adding a new shape requires modifying this function
 function calculateArea(shape: Shape): number {
-  if (shape.type === 'circle') {
+  if (shape.type === "circle") {
     return Math.PI * shape.radius ** 2;
-  } else if (shape.type === 'rectangle') {
+  } else if (shape.type === "rectangle") {
     return shape.width * shape.height;
-  } else if (shape.type === 'triangle') {
+  } else if (shape.type === "triangle") {
     return (shape.base * shape.height) / 2;
   }
   // Must modify this function for every new shape!
-  throw new Error('Unknown shape');
+  throw new Error("Unknown shape");
 }
 ```
 
@@ -174,6 +183,7 @@ If S is a subtype of T, then objects of type T can be replaced with objects of t
 ### Identifying Violations
 
 **Code smells:**
+
 - Subclass throws `NotImplementedException` for inherited methods
 - Subclass overrides method to do nothing or behave completely differently
 - Code checks type before calling methods (`instanceof`, type guards)
@@ -186,9 +196,15 @@ If S is a subtype of T, then objects of type T can be replaced with objects of t
 class Rectangle {
   constructor(protected width: number, protected height: number) {}
 
-  setWidth(w: number): void { this.width = w; }
-  setHeight(h: number): void { this.height = h; }
-  getArea(): number { return this.width * this.height; }
+  setWidth(w: number): void {
+    this.width = w;
+  }
+  setHeight(h: number): void {
+    this.height = h;
+  }
+  getArea(): number {
+    return this.width * this.height;
+  }
 }
 
 class Square extends Rectangle {
@@ -220,18 +236,23 @@ interface Shape {
 
 class Rectangle implements Shape {
   constructor(private width: number, private height: number) {}
-  getArea(): number { return this.width * this.height; }
+  getArea(): number {
+    return this.width * this.height;
+  }
 }
 
 class Square implements Shape {
   constructor(private side: number) {}
-  getArea(): number { return this.side ** 2; }
+  getArea(): number {
+    return this.side ** 2;
+  }
 }
 ```
 
 ### LSP Contract Rules
 
 Subtypes must:
+
 1. **Preconditions** - Cannot strengthen (require more than base)
 2. **Postconditions** - Cannot weaken (guarantee less than base)
 3. **Invariants** - Must maintain all base class invariants
@@ -257,6 +278,7 @@ Many specific interfaces are better than one general-purpose interface. Split la
 ### Identifying Violations
 
 **Code smells:**
+
 - Interfaces with 10+ methods
 - Implementing classes leave methods empty or throw `NotImplementedException`
 - Changes to interface force changes in unrelated implementers
@@ -275,11 +297,21 @@ interface Worker {
 }
 
 class Robot implements Worker {
-  work(): void { /* OK */ }
-  eat(): void { throw new Error('Robots do not eat'); }  // Forced to implement
-  sleep(): void { throw new Error('Robots do not sleep'); }
-  attendMeeting(): void { /* OK */ }
-  writeReport(): void { /* OK */ }
+  work(): void {
+    /* OK */
+  }
+  eat(): void {
+    throw new Error("Robots do not eat");
+  } // Forced to implement
+  sleep(): void {
+    throw new Error("Robots do not sleep");
+  }
+  attendMeeting(): void {
+    /* OK */
+  }
+  writeReport(): void {
+    /* OK */
+  }
 }
 ```
 
@@ -305,17 +337,33 @@ interface Collaborator {
 }
 
 class Human implements Workable, Feedable, Restable, Collaborator {
-  work(): void { /* ... */ }
-  eat(): void { /* ... */ }
-  sleep(): void { /* ... */ }
-  attendMeeting(): void { /* ... */ }
-  writeReport(): void { /* ... */ }
+  work(): void {
+    /* ... */
+  }
+  eat(): void {
+    /* ... */
+  }
+  sleep(): void {
+    /* ... */
+  }
+  attendMeeting(): void {
+    /* ... */
+  }
+  writeReport(): void {
+    /* ... */
+  }
 }
 
 class Robot implements Workable, Collaborator {
-  work(): void { /* ... */ }
-  attendMeeting(): void { /* ... */ }
-  writeReport(): void { /* ... */ }
+  work(): void {
+    /* ... */
+  }
+  attendMeeting(): void {
+    /* ... */
+  }
+  writeReport(): void {
+    /* ... */
+  }
   // No need to implement eat() or sleep()
 }
 ```
@@ -330,6 +378,7 @@ class Robot implements Workable, Collaborator {
 ### Role Interfaces
 
 Design interfaces around client roles:
+
 - `Readable` - for clients that read
 - `Writable` - for clients that write
 - `Closeable` - for clients that manage lifecycle
@@ -348,6 +397,7 @@ Design interfaces around client roles:
 ### Identifying Violations
 
 **Code smells:**
+
 - High-level business logic imports infrastructure (database, HTTP, file system)
 - Classes instantiate dependencies with `new`
 - Testing requires real database/network/filesystem
@@ -357,9 +407,9 @@ Design interfaces around client roles:
 
 ```typescript
 // BAD: OrderService directly depends on concrete implementations
-import { MySQLDatabase } from './mysql-database';
-import { StripePaymentGateway } from './stripe-gateway';
-import { SendGridEmailer } from './sendgrid-emailer';
+import { MySQLDatabase } from "./mysql-database";
+import { StripePaymentGateway } from "./stripe-gateway";
+import { SendGridEmailer } from "./sendgrid-emailer";
 
 class OrderService {
   private db = new MySQLDatabase();
@@ -369,7 +419,7 @@ class OrderService {
   createOrder(order: Order): void {
     this.db.save(order);
     this.payment.charge(order.total);
-    this.emailer.send(order.customerEmail, 'Order confirmed');
+    this.emailer.send(order.customerEmail, "Order confirmed");
   }
 }
 ```
@@ -400,22 +450,28 @@ class OrderService {
   createOrder(order: Order): void {
     this.repository.save(order);
     this.payment.charge(order.total);
-    this.emailer.send(order.customerEmail, 'Order confirmed');
+    this.emailer.send(order.customerEmail, "Order confirmed");
   }
 }
 
 // Implementations depend on abstractions
 class MySQLOrderRepository implements OrderRepository {
-  save(order: Order): void { /* MySQL-specific */ }
+  save(order: Order): void {
+    /* MySQL-specific */
+  }
 }
 
 class StripePaymentGateway implements PaymentGateway {
-  charge(amount: number): void { /* Stripe-specific */ }
+  charge(amount: number): void {
+    /* Stripe-specific */
+  }
 }
 
 // Easy to test with mocks
 class MockOrderRepository implements OrderRepository {
-  save(order: Order): void { /* In-memory for tests */ }
+  save(order: Order): void {
+    /* In-memory for tests */
+  }
 }
 ```
 

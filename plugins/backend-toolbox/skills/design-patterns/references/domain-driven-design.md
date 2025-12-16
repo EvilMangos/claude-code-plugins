@@ -1,10 +1,13 @@
 # Domain-Driven Design (DDD) - Comprehensive Reference
 
+This reference covers strategic and tactical Domain-Driven Design patterns for modeling complex business domains and defining boundaries.
+
 Domain-Driven Design is an approach to software development that centers the design on the core business domain. It provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling domain logic).
 
 ## When to Use DDD
 
 **Good fit:**
+
 - Complex business logic with many rules
 - Domain experts available for collaboration
 - Long-lived projects that will evolve
@@ -12,6 +15,7 @@ Domain-Driven Design is an approach to software development that centers the des
 - Team needs shared understanding of domain
 
 **Poor fit:**
+
 - Simple CRUD applications
 - Technical/infrastructure-focused systems
 - Short-term or throwaway projects
@@ -47,12 +51,14 @@ A bounded context is a boundary within which a particular domain model is define
 ```
 
 **Key principles:**
+
 - Each context has its own ubiquitous language
 - Models don't leak across context boundaries
 - Contexts communicate through well-defined interfaces
 - Same real-world concept can have different representations
 
 **Identifying bounded contexts:**
+
 - Look for linguistic boundaries (different terms for same thing)
 - Organizational boundaries (different teams)
 - Different business capabilities
@@ -66,7 +72,7 @@ A shared vocabulary between developers and domain experts, used consistently in 
 // BAD: Technical jargon, not domain language
 class DataProcessor {
   processRecords(records: Record[]): void {
-    records.forEach(r => {
+    records.forEach((r) => {
       if (r.flag === 1) {
         this.handler.handle(r);
       }
@@ -77,7 +83,7 @@ class DataProcessor {
 // GOOD: Ubiquitous language from the domain
 class OrderFulfillmentService {
   fulfillPendingOrders(orders: Order[]): void {
-    orders.forEach(order => {
+    orders.forEach((order) => {
       if (order.isReadyForFulfillment()) {
         this.warehouse.shipOrder(order);
       }
@@ -87,6 +93,7 @@ class OrderFulfillmentService {
 ```
 
 **Building ubiquitous language:**
+
 - Work closely with domain experts
 - Use domain terms in code (class names, methods, variables)
 - Refactor code when language evolves
@@ -98,16 +105,16 @@ class OrderFulfillmentService {
 
 Defines relationships between bounded contexts.
 
-| Pattern | Description | When to Use |
-|---------|-------------|-------------|
-| **Shared Kernel** | Two contexts share a subset of the model | Tightly coupled teams, shared core concepts |
-| **Customer-Supplier** | Upstream context provides what downstream needs | Clear dependency direction |
-| **Conformist** | Downstream adopts upstream's model as-is | No influence over upstream |
-| **Anti-Corruption Layer** | Translation layer protects from external models | Integrating legacy/external systems |
-| **Open Host Service** | Context exposes well-defined API | Many consumers |
-| **Published Language** | Shared interchange format (JSON schema, etc.) | Integration between systems |
-| **Separate Ways** | No integration, contexts are independent | No meaningful relationship |
-| **Partnership** | Two contexts cooperate on integration | Mutual dependency, aligned teams |
+| Pattern                   | Description                                     | When to Use                                 |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| **Shared Kernel**         | Two contexts share a subset of the model        | Tightly coupled teams, shared core concepts |
+| **Customer-Supplier**     | Upstream context provides what downstream needs | Clear dependency direction                  |
+| **Conformist**            | Downstream adopts upstream's model as-is        | No influence over upstream                  |
+| **Anti-Corruption Layer** | Translation layer protects from external models | Integrating legacy/external systems         |
+| **Open Host Service**     | Context exposes well-defined API                | Many consumers                              |
+| **Published Language**    | Shared interchange format (JSON schema, etc.)   | Integration between systems                 |
+| **Separate Ways**         | No integration, contexts are independent        | No meaningful relationship                  |
+| **Partnership**           | Two contexts cooperate on integration           | Mutual dependency, aligned teams            |
 
 ### Anti-Corruption Layer (ACL)
 
@@ -158,7 +165,7 @@ class CustomerTranslator {
       addr_ln_2: customer.address.line2,
       cty: customer.address.city,
       st: customer.address.state,
-      zp: customer.address.zipCode
+      zp: customer.address.zipCode,
     };
   }
 }
@@ -184,6 +191,7 @@ class CustomerGateway {
 ```
 
 **When to use ACL:**
+
 - Integrating with legacy systems
 - Consuming third-party APIs
 - Protecting from upstream model changes
@@ -213,18 +221,20 @@ class Order {
     this._createdAt = new Date();
   }
 
-  get id(): OrderId { return this._id; }
+  get id(): OrderId {
+    return this._id;
+  }
 
   addLineItem(product: Product, quantity: number): void {
     if (this._status !== OrderStatus.Draft) {
-      throw new Error('Cannot modify non-draft order');
+      throw new Error("Cannot modify non-draft order");
     }
     this._lineItems.push(new LineItem(product.id, quantity, product.price));
   }
 
   submit(): void {
     if (this._lineItems.length === 0) {
-      throw new Error('Cannot submit empty order');
+      throw new Error("Cannot submit empty order");
     }
     this._status = OrderStatus.Submitted;
   }
@@ -237,6 +247,7 @@ class Order {
 ```
 
 **Entity characteristics:**
+
 - Has unique identity (usually a dedicated ID type)
 - Identity remains constant through state changes
 - Equality based on identity, not attributes
@@ -244,6 +255,7 @@ class Order {
 - Encapsulates business rules
 
 **Entity vs Data Object:**
+
 ```typescript
 // Entity - has identity and behavior
 class Customer {
@@ -252,7 +264,7 @@ class Customer {
 
   deactivate(): void {
     if (this._status === CustomerStatus.Deactivated) {
-      throw new Error('Already deactivated');
+      throw new Error("Already deactivated");
     }
     this._status = CustomerStatus.Deactivated;
   }
@@ -276,20 +288,20 @@ class Money {
     public readonly currency: Currency
   ) {
     if (amount < 0) {
-      throw new Error('Amount cannot be negative');
+      throw new Error("Amount cannot be negative");
     }
   }
 
   add(other: Money): Money {
     if (!this.currency.equals(other.currency)) {
-      throw new Error('Cannot add different currencies');
+      throw new Error("Cannot add different currencies");
     }
     return new Money(this.amount + other.amount, this.currency);
   }
 
   subtract(other: Money): Money {
     if (!this.currency.equals(other.currency)) {
-      throw new Error('Cannot subtract different currencies');
+      throw new Error("Cannot subtract different currencies");
     }
     return new Money(this.amount - other.amount, this.currency);
   }
@@ -300,8 +312,7 @@ class Money {
 
   // Value-based equality
   equals(other: Money): boolean {
-    return this.amount === other.amount &&
-           this.currency.equals(other.currency);
+    return this.amount === other.amount && this.currency.equals(other.currency);
   }
 
   static zero(currency: Currency): Money {
@@ -319,31 +330,36 @@ class Address {
   ) {
     // Validate on construction
     if (!street || !city || !zipCode) {
-      throw new Error('Invalid address');
+      throw new Error("Invalid address");
     }
   }
 
   equals(other: Address): boolean {
-    return this.street === other.street &&
-           this.city === other.city &&
-           this.state === other.state &&
-           this.zipCode === other.zipCode &&
-           this.country === other.country;
+    return (
+      this.street === other.street &&
+      this.city === other.city &&
+      this.state === other.state &&
+      this.zipCode === other.zipCode &&
+      this.country === other.country
+    );
   }
 
   // Value objects are immutable - return new instance
   withStreet(street: string): Address {
-    return new Address(street, this.city, this.state, this.zipCode, this.country);
+    return new Address(
+      street,
+      this.city,
+      this.state,
+      this.zipCode,
+      this.country
+    );
   }
 }
 
 class DateRange {
-  constructor(
-    public readonly start: Date,
-    public readonly end: Date
-  ) {
+  constructor(public readonly start: Date, public readonly end: Date) {
     if (start > end) {
-      throw new Error('Start date must be before end date');
+      throw new Error("Start date must be before end date");
     }
   }
 
@@ -356,7 +372,9 @@ class DateRange {
   }
 
   get durationInDays(): number {
-    return Math.ceil((this.end.getTime() - this.start.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.ceil(
+      (this.end.getTime() - this.start.getTime()) / (1000 * 60 * 60 * 24)
+    );
   }
 }
 
@@ -364,7 +382,7 @@ class DateRange {
 class OrderId {
   constructor(public readonly value: string) {
     if (!value || value.length === 0) {
-      throw new Error('OrderId cannot be empty');
+      throw new Error("OrderId cannot be empty");
     }
   }
 
@@ -379,6 +397,7 @@ class OrderId {
 ```
 
 **Value object characteristics:**
+
 - Immutable (all properties readonly)
 - No identity
 - Equality based on all attributes
@@ -387,6 +406,7 @@ class OrderId {
 - Can contain other value objects
 
 **When to use value objects:**
+
 - Representing concepts with no identity (money, addresses, dates)
 - Typed IDs (OrderId, CustomerId)
 - Measurements and quantities
@@ -412,13 +432,23 @@ class Order {
     this._status = OrderStatus.Draft;
   }
 
-  get id(): OrderId { return this._id; }
-  get customerId(): CustomerId { return this._customerId; }
-  get status(): OrderStatus { return this._status; }
-  get shippingAddress(): Address { return this._shippingAddress; }
+  get id(): OrderId {
+    return this._id;
+  }
+  get customerId(): CustomerId {
+    return this._customerId;
+  }
+  get status(): OrderStatus {
+    return this._status;
+  }
+  get shippingAddress(): Address {
+    return this._shippingAddress;
+  }
 
   // Return copy to prevent external modification
-  get lineItems(): ReadonlyArray<LineItem> { return [...this._lineItems]; }
+  get lineItems(): ReadonlyArray<LineItem> {
+    return [...this._lineItems];
+  }
 
   get total(): Money {
     return this._lineItems.reduce(
@@ -430,7 +460,9 @@ class Order {
   // All modifications go through the aggregate root
   addLineItem(productId: ProductId, quantity: number, unitPrice: Money): void {
     this.ensureDraft();
-    const existing = this._lineItems.find(li => li.productId.equals(productId));
+    const existing = this._lineItems.find((li) =>
+      li.productId.equals(productId)
+    );
     if (existing) {
       existing.increaseQuantity(quantity);
     } else {
@@ -440,9 +472,11 @@ class Order {
 
   removeLineItem(productId: ProductId): void {
     this.ensureDraft();
-    const index = this._lineItems.findIndex(li => li.productId.equals(productId));
+    const index = this._lineItems.findIndex((li) =>
+      li.productId.equals(productId)
+    );
     if (index === -1) {
-      throw new Error('Line item not found');
+      throw new Error("Line item not found");
     }
     this._lineItems.splice(index, 1);
   }
@@ -455,21 +489,21 @@ class Order {
   submit(): void {
     this.ensureDraft();
     if (this._lineItems.length === 0) {
-      throw new Error('Cannot submit empty order');
+      throw new Error("Cannot submit empty order");
     }
     this._status = OrderStatus.Submitted;
   }
 
   cancel(): void {
     if (this._status === OrderStatus.Shipped) {
-      throw new Error('Cannot cancel shipped order');
+      throw new Error("Cannot cancel shipped order");
     }
     this._status = OrderStatus.Cancelled;
   }
 
   private ensureDraft(): void {
     if (this._status !== OrderStatus.Draft) {
-      throw new Error('Order is not in draft status');
+      throw new Error("Order is not in draft status");
     }
   }
 }
@@ -483,23 +517,27 @@ class LineItem {
     public readonly unitPrice: Money
   ) {
     if (_quantity <= 0) {
-      throw new Error('Quantity must be positive');
+      throw new Error("Quantity must be positive");
     }
   }
 
-  get quantity(): number { return this._quantity; }
-  get subtotal(): Money { return this.unitPrice.multiply(this._quantity); }
+  get quantity(): number {
+    return this._quantity;
+  }
+  get subtotal(): Money {
+    return this.unitPrice.multiply(this._quantity);
+  }
 
   increaseQuantity(amount: number): void {
     if (amount <= 0) {
-      throw new Error('Amount must be positive');
+      throw new Error("Amount must be positive");
     }
     this._quantity += amount;
   }
 
   decreaseQuantity(amount: number): void {
     if (amount <= 0 || amount > this._quantity) {
-      throw new Error('Invalid amount');
+      throw new Error("Invalid amount");
     }
     this._quantity -= amount;
   }
@@ -507,6 +545,7 @@ class LineItem {
 ```
 
 **Aggregate rules:**
+
 1. **Root entity only**: External objects can only reference the aggregate root
 2. **Root controls access**: All changes to internal objects go through the root
 3. **Transactional boundary**: Aggregates are loaded and saved as a whole
@@ -515,12 +554,13 @@ class LineItem {
 6. **Invariant enforcement**: Root ensures all invariants are satisfied
 
 **Aggregate design guidelines:**
+
 ```typescript
 // BAD: Large aggregate with too many responsibilities
 class Customer {
-  orders: Order[];           // Should be separate aggregate
-  invoices: Invoice[];       // Should be separate aggregate
-  supportTickets: Ticket[];  // Should be separate aggregate
+  orders: Order[]; // Should be separate aggregate
+  invoices: Invoice[]; // Should be separate aggregate
+  supportTickets: Ticket[]; // Should be separate aggregate
 }
 
 // GOOD: Small, focused aggregates referencing by ID
@@ -534,7 +574,7 @@ class Customer {
 
 class Order {
   id: OrderId;
-  customerId: CustomerId;  // Reference by ID, not Customer object
+  customerId: CustomerId; // Reference by ID, not Customer object
   lineItems: LineItem[];
 }
 ```
@@ -563,27 +603,26 @@ class PostgresOrderRepository implements OrderRepository {
   }
 
   async findById(id: OrderId): Promise<Order | null> {
-    const row = await this.db.query(
-      'SELECT * FROM orders WHERE id = $1',
-      [id.value]
-    );
+    const row = await this.db.query("SELECT * FROM orders WHERE id = $1", [
+      id.value,
+    ]);
     if (!row) return null;
     return this.toDomain(row);
   }
 
   async findByCustomerId(customerId: CustomerId): Promise<Order[]> {
     const rows = await this.db.query(
-      'SELECT * FROM orders WHERE customer_id = $1',
+      "SELECT * FROM orders WHERE customer_id = $1",
       [customerId.value]
     );
-    return Promise.all(rows.map(row => this.toDomain(row)));
+    return Promise.all(rows.map((row) => this.toDomain(row)));
   }
 
   async findPendingOrders(): Promise<Order[]> {
     const rows = await this.db.query(
       "SELECT * FROM orders WHERE status = 'pending'"
     );
-    return Promise.all(rows.map(row => this.toDomain(row)));
+    return Promise.all(rows.map((row) => this.toDomain(row)));
   }
 
   async save(order: Order): Promise<void> {
@@ -600,12 +639,14 @@ class PostgresOrderRepository implements OrderRepository {
           order.customerId.value,
           order.status,
           JSON.stringify(order.shippingAddress),
-          order.createdAt
+          order.createdAt,
         ]
       );
 
       // Replace line items
-      await tx.query('DELETE FROM line_items WHERE order_id = $1', [order.id.value]);
+      await tx.query("DELETE FROM line_items WHERE order_id = $1", [
+        order.id.value,
+      ]);
 
       for (const item of order.lineItems) {
         await tx.query(
@@ -616,7 +657,7 @@ class PostgresOrderRepository implements OrderRepository {
             item.productId.value,
             item.quantity,
             item.unitPrice.amount,
-            item.unitPrice.currency.code
+            item.unitPrice.currency.code,
           ]
         );
       }
@@ -625,14 +666,16 @@ class PostgresOrderRepository implements OrderRepository {
 
   async delete(order: Order): Promise<void> {
     await this.db.transaction(async (tx) => {
-      await tx.query('DELETE FROM line_items WHERE order_id = $1', [order.id.value]);
-      await tx.query('DELETE FROM orders WHERE id = $1', [order.id.value]);
+      await tx.query("DELETE FROM line_items WHERE order_id = $1", [
+        order.id.value,
+      ]);
+      await tx.query("DELETE FROM orders WHERE id = $1", [order.id.value]);
     });
   }
 
   private async toDomain(row: any): Promise<Order> {
     const lineItemRows = await this.db.query(
-      'SELECT * FROM line_items WHERE order_id = $1',
+      "SELECT * FROM line_items WHERE order_id = $1",
       [row.id]
     );
 
@@ -642,18 +685,19 @@ class PostgresOrderRepository implements OrderRepository {
       customerId: row.customer_id,
       status: row.status,
       shippingAddress: JSON.parse(row.shipping_address),
-      lineItems: lineItemRows.map(li => ({
+      lineItems: lineItemRows.map((li) => ({
         productId: li.product_id,
         quantity: li.quantity,
-        unitPrice: { amount: li.unit_price, currency: li.currency }
+        unitPrice: { amount: li.unit_price, currency: li.currency },
       })),
-      createdAt: row.created_at
+      createdAt: row.created_at,
     });
   }
 }
 ```
 
 **Repository characteristics:**
+
 - One repository per aggregate type
 - Provides illusion of in-memory collection
 - Encapsulates query logic
@@ -681,7 +725,10 @@ class OrderPricingService {
     const discount = this.discountPolicy.calculateDiscount(order, customer);
     const afterDiscount = subtotal.subtract(discount);
 
-    const tax = this.taxCalculator.calculate(afterDiscount, order.shippingAddress);
+    const tax = this.taxCalculator.calculate(
+      afterDiscount,
+      order.shippingAddress
+    );
 
     return new OrderTotal(subtotal, discount, tax, afterDiscount.add(tax));
   }
@@ -695,7 +742,9 @@ class InventoryAllocationService {
     const allocations: Allocation[] = [];
 
     for (const lineItem of order.lineItems) {
-      const inventory = await this.inventoryRepository.findByProductId(lineItem.productId);
+      const inventory = await this.inventoryRepository.findByProductId(
+        lineItem.productId
+      );
 
       if (!inventory || inventory.availableQuantity < lineItem.quantity) {
         return AllocationResult.insufficientInventory(lineItem.productId);
@@ -729,6 +778,7 @@ class FundsTransferService {
 ```
 
 **When to use domain services:**
+
 - Operation involves multiple aggregates
 - Operation requires external information
 - Logic doesn't belong to any single entity
@@ -736,6 +786,7 @@ class FundsTransferService {
 - Complex calculations or validations
 
 **Domain service vs Application service:**
+
 ```typescript
 // Domain Service - pure domain logic
 class OrderPricingService {
@@ -768,7 +819,7 @@ interface DomainEvent {
 
 class OrderSubmitted implements DomainEvent {
   public readonly occurredOn: Date;
-  public readonly aggregateType = 'Order';
+  public readonly aggregateType = "Order";
 
   constructor(
     public readonly aggregateId: string,
@@ -782,7 +833,7 @@ class OrderSubmitted implements DomainEvent {
 
 class OrderShipped implements DomainEvent {
   public readonly occurredOn: Date;
-  public readonly aggregateType = 'Order';
+  public readonly aggregateType = "Order";
 
   constructor(
     public readonly aggregateId: string,
@@ -796,7 +847,7 @@ class OrderShipped implements DomainEvent {
 
 class PaymentReceived implements DomainEvent {
   public readonly occurredOn: Date;
-  public readonly aggregateType = 'Order';
+  public readonly aggregateType = "Order";
 
   constructor(
     public readonly aggregateId: string,
@@ -827,29 +878,34 @@ class Order {
   submit(): void {
     // ... validation logic ...
     this._status = OrderStatus.Submitted;
-    this.addDomainEvent(new OrderSubmitted(
-      this._id.value,
-      this._customerId.value,
-      this.total.amount,
-      this._lineItems.length
-    ));
+    this.addDomainEvent(
+      new OrderSubmitted(
+        this._id.value,
+        this._customerId.value,
+        this.total.amount,
+        this._lineItems.length
+      )
+    );
   }
 
   ship(trackingNumber: string, carrier: string, estimatedDelivery: Date): void {
     // ... validation logic ...
     this._status = OrderStatus.Shipped;
-    this.addDomainEvent(new OrderShipped(
-      this._id.value,
-      trackingNumber,
-      carrier,
-      estimatedDelivery
-    ));
+    this.addDomainEvent(
+      new OrderShipped(
+        this._id.value,
+        trackingNumber,
+        carrier,
+        estimatedDelivery
+      )
+    );
   }
 }
 
 // Event dispatcher
 class DomainEventDispatcher {
-  private handlers: Map<string, ((event: DomainEvent) => Promise<void>)[]> = new Map();
+  private handlers: Map<string, ((event: DomainEvent) => Promise<void>)[]> =
+    new Map();
 
   register<T extends DomainEvent>(
     eventType: new (...args: any[]) => T,
@@ -864,7 +920,7 @@ class DomainEventDispatcher {
 
   async dispatch(event: DomainEvent): Promise<void> {
     const handlers = this.handlers.get(event.constructor.name) || [];
-    await Promise.all(handlers.map(handler => handler(event)));
+    await Promise.all(handlers.map((handler) => handler(event)));
   }
 
   async dispatchAll(events: DomainEvent[]): Promise<void> {
@@ -889,6 +945,7 @@ dispatcher.register(OrderShipped, async (event) => {
 ```
 
 **Domain event characteristics:**
+
 - Immutable
 - Named in past tense (OrderSubmitted, not SubmitOrder)
 - Contains all relevant data at time of occurrence
@@ -911,7 +968,11 @@ class OrderFactory {
   // Complex creation from shopping cart
   async createFromCart(cart: ShoppingCart, customer: Customer): Promise<Order> {
     const orderId = this.orderRepository.nextId();
-    const order = new Order(orderId, customer.id, customer.defaultShippingAddress);
+    const order = new Order(
+      orderId,
+      customer.id,
+      customer.defaultShippingAddress
+    );
 
     for (const cartItem of cart.items) {
       const product = await this.productRepository.findById(cartItem.productId);
@@ -919,7 +980,10 @@ class OrderFactory {
         throw new Error(`Product not found: ${cartItem.productId}`);
       }
 
-      const price = await this.pricingService.getPriceForCustomer(product, customer);
+      const price = await this.pricingService.getPriceForCustomer(
+        product,
+        customer
+      );
       order.addLineItem(product.id, cartItem.quantity, price);
     }
 
@@ -932,7 +996,7 @@ class OrderFactory {
       new OrderId(data.id),
       new CustomerId(data.customerId),
       Address.fromData(data.shippingAddress),
-      data.lineItems.map(li => LineItem.fromData(li)),
+      data.lineItems.map((li) => LineItem.fromData(li)),
       OrderStatus.fromString(data.status),
       data.createdAt
     );
@@ -942,16 +1006,13 @@ class OrderFactory {
 // Factory method on aggregate for simple cases
 class Order {
   static create(customerId: CustomerId, shippingAddress: Address): Order {
-    return new Order(
-      OrderId.generate(),
-      customerId,
-      shippingAddress
-    );
+    return new Order(OrderId.generate(), customerId, shippingAddress);
   }
 }
 ```
 
 **When to use factories:**
+
 - Creation involves multiple steps
 - Creation requires fetching related data
 - Different creation strategies exist
@@ -986,30 +1047,26 @@ abstract class CompositeSpecification<T> implements Specification<T> {
 }
 
 class AndSpecification<T> extends CompositeSpecification<T> {
-  constructor(
-    private left: Specification<T>,
-    private right: Specification<T>
-  ) {
+  constructor(private left: Specification<T>, private right: Specification<T>) {
     super();
   }
 
   isSatisfiedBy(candidate: T): boolean {
-    return this.left.isSatisfiedBy(candidate) &&
-           this.right.isSatisfiedBy(candidate);
+    return (
+      this.left.isSatisfiedBy(candidate) && this.right.isSatisfiedBy(candidate)
+    );
   }
 }
 
 class OrSpecification<T> extends CompositeSpecification<T> {
-  constructor(
-    private left: Specification<T>,
-    private right: Specification<T>
-  ) {
+  constructor(private left: Specification<T>, private right: Specification<T>) {
     super();
   }
 
   isSatisfiedBy(candidate: T): boolean {
-    return this.left.isSatisfiedBy(candidate) ||
-           this.right.isSatisfiedBy(candidate);
+    return (
+      this.left.isSatisfiedBy(candidate) || this.right.isSatisfiedBy(candidate)
+    );
   }
 }
 
@@ -1026,9 +1083,11 @@ class NotSpecification<T> extends CompositeSpecification<T> {
 // Domain-specific specifications
 class OrderReadyForShipment extends CompositeSpecification<Order> {
   isSatisfiedBy(order: Order): boolean {
-    return order.status === OrderStatus.Paid &&
-           order.hasShippingAddress &&
-           order.lineItems.length > 0;
+    return (
+      order.status === OrderStatus.Paid &&
+      order.hasShippingAddress &&
+      order.lineItems.length > 0
+    );
   }
 }
 
@@ -1044,8 +1103,10 @@ class HighValueOrder extends CompositeSpecification<Order> {
 
 class CustomerEligibleForDiscount extends CompositeSpecification<Customer> {
   isSatisfiedBy(customer: Customer): boolean {
-    return customer.membershipLevel === MembershipLevel.Gold ||
-           customer.totalPurchases.isGreaterThan(Money.of(1000, Currency.USD));
+    return (
+      customer.membershipLevel === MembershipLevel.Gold ||
+      customer.totalPurchases.isGreaterThan(Money.of(1000, Currency.USD))
+    );
   }
 }
 
@@ -1069,7 +1130,9 @@ const recent = new RecentOrder(30);
 // Find priority orders: ready for shipment AND (high value OR recent)
 const prioritySpec = readyForShipment.and(highValue.or(recent));
 
-const priorityOrders = orders.filter(order => prioritySpec.isSatisfiedBy(order));
+const priorityOrders = orders.filter((order) =>
+  prioritySpec.isSatisfiedBy(order)
+);
 
 // Use for validation
 class OrderValidator {
@@ -1082,6 +1145,7 @@ class OrderValidator {
 ```
 
 **When to use specifications:**
+
 - Reusable business rules
 - Complex query criteria
 - Validation logic
@@ -1166,17 +1230,17 @@ class SubmitOrderHandler {
 
 ## Pattern Selection Guide
 
-| Problem | Consider Pattern |
-|---------|------------------|
-| Complex domain logic | DDD Tactical Patterns |
-| Large system with multiple teams | Bounded Contexts |
-| Identity matters over time | Entity |
-| Immutable descriptive object | Value Object |
-| Cluster of related objects | Aggregate |
-| Persistence abstraction | Repository |
-| Cross-aggregate operations | Domain Service |
-| React to domain changes | Domain Event |
-| Reusable business rules | Specification |
-| Complex object creation | Factory |
-| Integrating external systems | Anti-Corruption Layer |
-| Shared vocabulary with domain experts | Ubiquitous Language |
+| Problem                               | Consider Pattern      |
+| ------------------------------------- | --------------------- |
+| Complex domain logic                  | DDD Tactical Patterns |
+| Large system with multiple teams      | Bounded Contexts      |
+| Identity matters over time            | Entity                |
+| Immutable descriptive object          | Value Object          |
+| Cluster of related objects            | Aggregate             |
+| Persistence abstraction               | Repository            |
+| Cross-aggregate operations            | Domain Service        |
+| React to domain changes               | Domain Event          |
+| Reusable business rules               | Specification         |
+| Complex object creation               | Factory               |
+| Integrating external systems          | Anti-Corruption Layer |
+| Shared vocabulary with domain experts | Ubiquitous Language   |

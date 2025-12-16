@@ -1,23 +1,27 @@
 # Dependency Injection - Detailed Reference
 
+This reference covers dependency injection concepts, injection patterns, container usage, and testing implications.
+
 ## What is Dependency Injection?
 
 Dependency Injection (DI) is a technique where objects receive their dependencies from external sources rather than creating them internally. It's the practical application of the Dependency Inversion Principle (DIP).
 
 **Without DI:**
+
 ```typescript
 class OrderService {
-  private repository = new MySQLOrderRepository();  // Hard-coded dependency
-  private emailer = new SendGridEmailService();     // Hard-coded dependency
+  private repository = new MySQLOrderRepository(); // Hard-coded dependency
+  private emailer = new SendGridEmailService(); // Hard-coded dependency
 }
 ```
 
 **With DI:**
+
 ```typescript
 class OrderService {
   constructor(
-    private repository: OrderRepository,    // Injected abstraction
-    private emailer: EmailService           // Injected abstraction
+    private repository: OrderRepository, // Injected abstraction
+    private emailer: EmailService // Injected abstraction
   ) {}
 }
 ```
@@ -30,8 +34,8 @@ class OrderService {
 
 ```typescript
 // Easy to test with mocks
-describe('OrderService', () => {
-  it('should save order and send email', async () => {
+describe("OrderService", () => {
+  it("should save order and send email", async () => {
     const mockRepo = { save: jest.fn() };
     const mockEmailer = { send: jest.fn() };
 
@@ -48,9 +52,10 @@ describe('OrderService', () => {
 
 ```typescript
 // Swap implementations based on environment
-const repository = process.env.NODE_ENV === 'test'
-  ? new InMemoryOrderRepository()
-  : new MySQLOrderRepository();
+const repository =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryOrderRepository()
+    : new MySQLOrderRepository();
 
 const service = new OrderService(repository, emailer);
 ```
@@ -102,6 +107,7 @@ class UserService {
 ```
 
 **Advantages:**
+
 - Dependencies are explicit and required
 - Object is fully initialized after construction
 - Easy to see all dependencies at a glance
@@ -123,7 +129,7 @@ class ReportGenerator {
 
   generate(data: ReportData): Report {
     if (!this.formatter) {
-      throw new Error('Formatter not set');
+      throw new Error("Formatter not set");
     }
     return this.formatter.format(data);
   }
@@ -136,10 +142,12 @@ generator.generate(data);
 ```
 
 **Advantages:**
+
 - Can change dependencies after construction
 - Useful for optional dependencies
 
 **Disadvantages:**
+
 - Object may be in invalid state
 - Dependencies not obvious from constructor
 - Order of method calls matters
@@ -154,7 +162,7 @@ Dependencies are provided through method parameters.
 class DataProcessor {
   process(data: RawData, validator: DataValidator): ProcessedData {
     if (!validator.validate(data)) {
-      throw new ValidationError('Invalid data');
+      throw new ValidationError("Invalid data");
     }
     // Process data...
   }
@@ -167,6 +175,7 @@ processor.process(data, new LenientValidator());
 ```
 
 **Advantages:**
+
 - Different dependencies per method call
 - Useful when dependency varies by context
 
@@ -234,11 +243,11 @@ class Container {
 
 // Usage
 const container = new Container();
-container.register('config', new Configuration());
-container.registerFactory('logger', () => new ConsoleLogger());
+container.register("config", new Configuration());
+container.registerFactory("logger", () => new ConsoleLogger());
 
-const config = container.resolve<Configuration>('config');
-const logger = container.resolve<Logger>('logger');
+const config = container.resolve<Configuration>("config");
+const logger = container.resolve<Logger>("logger");
 ```
 
 ### Decorator-Based DI (TypeScript)
@@ -246,10 +255,10 @@ const logger = container.resolve<Logger>('logger');
 Using decorators with reflect-metadata:
 
 ```typescript
-import 'reflect-metadata';
+import "reflect-metadata";
 
-const INJECTABLE_KEY = Symbol('injectable');
-const INJECT_KEY = Symbol('inject');
+const INJECTABLE_KEY = Symbol("injectable");
+const INJECT_KEY = Symbol("inject");
 
 // Mark class as injectable
 function Injectable(): ClassDecorator {
@@ -270,8 +279,8 @@ function Inject(token: string): ParameterDecorator {
 @Injectable()
 class UserService {
   constructor(
-    @Inject('UserRepository') private repo: UserRepository,
-    @Inject('Logger') private logger: Logger
+    @Inject("UserRepository") private repo: UserRepository,
+    @Inject("Logger") private logger: Logger
   ) {}
 }
 ```
@@ -279,12 +288,14 @@ class UserService {
 ### Popular DI Containers
 
 **TypeScript/JavaScript:**
+
 - **InversifyJS** - Full-featured, decorator-based
 - **TSyringe** - Lightweight, Microsoft
 - **TypeDI** - Simple and powerful
 - **Awilix** - Function-based, no decorators
 
 **Framework-Integrated:**
+
 - **NestJS** - Built-in DI container
 - **Angular** - Hierarchical injector
 - **Spring (Java)** - ApplicationContext
@@ -307,6 +318,7 @@ const db2 = container.resolve(DatabaseConnection);
 ```
 
 **Use for:**
+
 - Configuration
 - Database connection pools
 - Caches
@@ -326,6 +338,7 @@ const logger2 = container.resolve(RequestLogger);
 ```
 
 **Use for:**
+
 - Stateful services
 - Services with request-specific data
 - Services that shouldn't be shared
@@ -347,6 +360,7 @@ const userService = req.scope.resolve(UserService);
 ```
 
 **Use for:**
+
 - Per-request services
 - Unit of work patterns
 - Services with request-specific state
@@ -375,18 +389,15 @@ class OrderService {
 // BAD: Service locator - hides dependencies
 class OrderService {
   createOrder(order: Order): void {
-    const repo = ServiceLocator.get('OrderRepository');
-    const emailer = ServiceLocator.get('EmailService');
+    const repo = ServiceLocator.get("OrderRepository");
+    const emailer = ServiceLocator.get("EmailService");
     // Dependencies not visible from constructor
   }
 }
 
 // GOOD: Constructor injection - explicit dependencies
 class OrderService {
-  constructor(
-    private repo: OrderRepository,
-    private emailer: EmailService
-  ) {}
+  constructor(private repo: OrderRepository, private emailer: EmailService) {}
 }
 ```
 
@@ -396,8 +407,8 @@ class OrderService {
 // BAD: Logic in constructor
 class UserService {
   constructor(private repo: UserRepository) {
-    this.warmUpCache();  // Side effect
-    this.validateConnection();  // Can throw
+    this.warmUpCache(); // Side effect
+    this.validateConnection(); // Can throw
   }
 }
 
@@ -421,7 +432,7 @@ class ServiceA {
 }
 
 class ServiceB {
-  constructor(private serviceA: ServiceA) {}  // Circular!
+  constructor(private serviceA: ServiceA) {} // Circular!
 }
 
 // GOOD: Break cycle with interface or events
@@ -431,7 +442,9 @@ interface ServiceAInterface {
 
 class ServiceA implements ServiceAInterface {
   constructor(private serviceB: ServiceB) {}
-  methodNeededByB(): void { /* ... */ }
+  methodNeededByB(): void {
+    /* ... */
+  }
 }
 
 class ServiceB {
@@ -449,7 +462,7 @@ class OrderService {
   }
 
   createOrder(): void {
-    const repo = this.container.resolve('repo');
+    const repo = this.container.resolve("repo");
   }
 }
 
@@ -468,10 +481,7 @@ interface UserServiceFactory {
 }
 
 class TenantAwareUserServiceFactory implements UserServiceFactory {
-  constructor(
-    private connectionPool: ConnectionPool,
-    private config: Config
-  ) {}
+  constructor(private connectionPool: ConnectionPool, private config: Config) {}
 
   create(tenantId: string): UserService {
     const connection = this.connectionPool.getForTenant(tenantId);
@@ -498,7 +508,7 @@ class TenantController {
 ### Unit Testing with Mocks
 
 ```typescript
-describe('OrderService', () => {
+describe("OrderService", () => {
   let service: OrderService;
   let mockRepo: jest.Mocked<OrderRepository>;
   let mockEmailer: jest.Mocked<EmailService>;
@@ -515,22 +525,23 @@ describe('OrderService', () => {
     service = new OrderService(mockRepo, mockEmailer);
   });
 
-  it('should save order and send confirmation', async () => {
-    const order = new Order('123', []);
+  it("should save order and send confirmation", async () => {
+    const order = new Order("123", []);
 
     await service.createOrder(order);
 
     expect(mockRepo.save).toHaveBeenCalledWith(order);
     expect(mockEmailer.send).toHaveBeenCalledWith(
-      expect.objectContaining({ orderId: '123' })
+      expect.objectContaining({ orderId: "123" })
     );
   });
 
-  it('should not send email if save fails', async () => {
-    mockRepo.save.mockRejectedValue(new Error('DB error'));
+  it("should not send email if save fails", async () => {
+    mockRepo.save.mockRejectedValue(new Error("DB error"));
 
-    await expect(service.createOrder(new Order('123', [])))
-      .rejects.toThrow('DB error');
+    await expect(service.createOrder(new Order("123", []))).rejects.toThrow(
+      "DB error"
+    );
 
     expect(mockEmailer.send).not.toHaveBeenCalled();
   });
@@ -540,7 +551,7 @@ describe('OrderService', () => {
 ### Integration Testing with Test Doubles
 
 ```typescript
-describe('OrderService Integration', () => {
+describe("OrderService Integration", () => {
   let service: OrderService;
   let testRepo: InMemoryOrderRepository;
   let testEmailer: SpyEmailService;
@@ -552,12 +563,12 @@ describe('OrderService Integration', () => {
     service = new OrderService(testRepo, testEmailer);
   });
 
-  it('should persist order', async () => {
-    const order = new Order('123', [item1, item2]);
+  it("should persist order", async () => {
+    const order = new Order("123", [item1, item2]);
 
     await service.createOrder(order);
 
-    const saved = await testRepo.findById('123');
+    const saved = await testRepo.findById("123");
     expect(saved).toEqual(order);
     expect(testEmailer.sentEmails).toHaveLength(1);
   });
@@ -581,9 +592,9 @@ class GodService {
     private logger: Logger,
     private config: Config,
     private cache: Cache,
-    private validator: Validator,
-    // ... more
-  ) {}
+    private validator: Validator
+  ) // ... more
+  {}
 }
 
 // GOOD: Split into focused classes
@@ -595,10 +606,7 @@ class OrderCreator {
 }
 
 class OrderNotifier {
-  constructor(
-    private emailer: EmailService,
-    private smsService: SmsService
-  ) {}
+  constructor(private emailer: EmailService, private smsService: SmsService) {}
 }
 ```
 
@@ -608,9 +616,9 @@ class OrderNotifier {
 // BAD: Primitive parameters mixed with services
 class EmailService {
   constructor(
-    private smtpHost: string,  // Primitive
-    private smtpPort: number,  // Primitive
-    private logger: Logger     // Service
+    private smtpHost: string, // Primitive
+    private smtpPort: number, // Primitive
+    private logger: Logger // Service
   ) {}
 }
 
@@ -622,10 +630,7 @@ interface EmailConfig {
 }
 
 class EmailService {
-  constructor(
-    private config: EmailConfig,
-    private logger: Logger
-  ) {}
+  constructor(private config: EmailConfig, private logger: Logger) {}
 }
 ```
 
@@ -659,15 +664,15 @@ class Service {
 
 ## Summary
 
-| Pattern | When to Use |
-|---------|-------------|
+| Pattern               | When to Use                            |
+| --------------------- | -------------------------------------- |
 | Constructor Injection | Required dependencies (default choice) |
-| Setter Injection | Optional dependencies |
-| Method Injection | Per-call varying dependencies |
-| Factory Injection | Complex/contextual creation |
+| Setter Injection      | Optional dependencies                  |
+| Method Injection      | Per-call varying dependencies          |
+| Factory Injection     | Complex/contextual creation            |
 
-| Lifetime | When to Use |
-|----------|-------------|
+| Lifetime  | When to Use                 |
+| --------- | --------------------------- |
 | Singleton | Stateless, shared resources |
 | Transient | Stateful, per-use instances |
-| Scoped | Per-request, unit of work |
+| Scoped    | Per-request, unit of work   |

@@ -1,41 +1,41 @@
 # Acceptance Criteria Checklist
 
-Checklist for verifying that all request instructions have been satisfied.
+A checklist is provided for verifying that all request instructions have been satisfied.
 
 ## Instruction Extraction
 
-- [ ] Read the original request carefully
-- [ ] List all explicit instructions (direct asks)
-- [ ] Identify implicit instructions (clearly expected behaviors)
-- [ ] Note any constraints or requirements mentioned
-- [ ] Flag ambiguous terms that need clarification
+- [ ] The original request should be read carefully
+- [ ] All explicit instructions (direct asks) should be listed
+- [ ] Implicit instructions (clearly expected behaviors) should be identified
+- [ ] Any mentioned constraints or requirements should be noted
+- [ ] Ambiguous terms that need clarification should be flagged
 
 ## Instruction Mapping
 
-For each instruction:
-- [ ] Locate where it's implemented in the code
-- [ ] Note the file and location (`file:line`)
-- [ ] Determine status: Done / Partial / Missing
+For each instruction, the following should be performed:
+- [ ] Where it is implemented in the code should be identified
+- [ ] The file and location (`file:line`) should be noted
+- [ ] Status should be determined: Done / Partial / Missing
 
 ## Completeness Verification
 
-For each instruction verify:
+For each instruction, the following should be verified:
 - [ ] The functionality is present
-- [ ] It behaves as the request specified
+- [ ] Behavior matches what was specified in the request
 - [ ] All aspects of the instruction are covered
-- [ ] It matches the intent behind the request
+- [ ] The intent behind the request is matched
 
 ## Gap Analysis
 
-- [ ] List all missing instructions
-- [ ] List all partially implemented instructions
-- [ ] Note where implementation differs from request
-- [ ] Document any assumptions made
+- [ ] All missing instructions should be listed
+- [ ] All partially implemented instructions should be listed
+- [ ] Where implementation differs from the request should be noted
+- [ ] Any assumptions made should be documented
 
 ## Final Verification
 
 - [ ] Every explicit instruction has been addressed
-- [ ] No instruction was overlooked or forgotten
+- [ ] No instruction has been overlooked or forgotten
 - [ ] Implementation matches what was requested
 - [ ] Gaps and assumptions are documented
-- [ ] Verdict determined: PASS / PARTIAL / FAIL
+- [ ] A verdict is determined: PASS / PARTIAL / FAIL

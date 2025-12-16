@@ -1,6 +1,6 @@
 # Acceptance Review Report Template
 
-Use this template when reporting acceptance review findings.
+This template is used when acceptance review findings are reported.
 
 ## Full Report Template
 
@@ -12,15 +12,16 @@ Use this template when reporting acceptance review findings.
 
 ### Instructions Mapping
 
-| # | Instruction | Status | Implementation | Notes |
-|---|-------------|--------|----------------|-------|
-| 1 | [Explicit instruction from request] | ✅ Done | `file.ts:42` | |
-| 2 | [Another instruction] | ⚠️ Partial | `component.tsx:15` | Missing X |
-| 3 | [Implicit instruction] | ❌ Missing | - | Not implemented |
+| #   | Instruction                         | Status     | Implementation     | Notes           |
+| --- | ----------------------------------- | ---------- | ------------------ | --------------- |
+| 1   | [Explicit instruction from request] | ✅ Done    | `file.ts:42`       |                 |
+| 2   | [Another instruction]               | ⚠️ Partial | `component.tsx:15` | Missing X       |
+| 3   | [Implicit instruction]              | ❌ Missing | -                  | Not implemented |
 
 ### Gaps
 
 1. **[Gap Title]**
+
    - **Type**: Missing | Incomplete | Different | Assumption
    - **Requested**: [What the request asked for]
    - **Implemented**: [What was actually done]
@@ -31,8 +32,8 @@ Use this template when reporting acceptance review findings.
 
 ### Assumptions Made
 
-| Assumption | Basis | Risk if Wrong |
-|------------|-------|---------------|
+| Assumption         | Basis                          | Risk if Wrong |
+| ------------------ | ------------------------------ | ------------- |
 | [What was assumed] | [Why this assumption was made] | [Consequence] |
 
 ### Open Questions
@@ -47,7 +48,7 @@ Use this template when reporting acceptance review findings.
 
 ## Condensed Report Template
 
-For smaller reviews:
+The following condensed template can be used for smaller reviews:
 
 ```markdown
 ## Acceptance Review: [Request Summary]
@@ -55,21 +56,24 @@ For smaller reviews:
 **Verdict**: PASS | PARTIAL | FAIL
 
 ### Instructions
+
 - [x] Instruction 1 - `file.ts:42`
 - [ ] Instruction 2 - Missing
 - [~] Instruction 3 - Partial: needs X
 
 ### Gaps
+
 1. [Gap]: [What's needed]
 
 ### Action Items
+
 - [ ] [What needs to happen next]
 ```
 
 ## Verdict Definitions
 
-| Verdict | Meaning | Action |
-|---------|---------|--------|
-| **PASS** | All instructions from request satisfied | Complete |
+| Verdict     | Meaning                                 | Action                             |
+| ----------- | --------------------------------------- | ---------------------------------- |
+| **PASS**    | All instructions from request satisfied | Complete                           |
 | **PARTIAL** | Most instructions met, some gaps remain | Address gaps or confirm acceptable |
-| **FAIL** | Critical instructions not satisfied | Must address before proceeding |
+| **FAIL**    | Critical instructions not satisfied     | Must address before proceeding     |

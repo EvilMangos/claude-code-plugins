@@ -1,5 +1,7 @@
 # Coupling and Cohesion - Detailed Reference
 
+Types, measurement techniques, and refactoring guidance for coupling and cohesion in software design.
+
 ## Overview
 
 **Coupling** and **cohesion** are fundamental metrics for evaluating software design quality:
@@ -31,6 +33,7 @@ class OrderProcessor {
 ```
 
 **Problems:**
+
 - Changes to Inventory internals break OrderProcessor
 - No encapsulation
 - Impossible to test in isolation
@@ -41,7 +44,7 @@ Modules share global data.
 
 ```typescript
 // BAD: Global state shared between modules
-let globalConfig = { taxRate: 0.1, currency: 'USD' };
+let globalConfig = { taxRate: 0.1, currency: "USD" };
 
 class PriceCalculator {
   calculate(price: number): number {
@@ -57,6 +60,7 @@ class InvoiceGenerator {
 ```
 
 **Problems:**
+
 - Any module can change global state
 - Order of operations matters
 - Hard to track what changed state
@@ -69,12 +73,15 @@ One module controls another's flow by passing control information.
 ```typescript
 // POOR: Passing flags to control behavior
 class ReportGenerator {
-  generate(data: Data, format: 'pdf' | 'html' | 'csv',
-           includeHeaders: boolean,
-           sortOrder: 'asc' | 'desc'): Report {
-    if (format === 'pdf') {
+  generate(
+    data: Data,
+    format: "pdf" | "html" | "csv",
+    includeHeaders: boolean,
+    sortOrder: "asc" | "desc"
+  ): Report {
+    if (format === "pdf") {
       // PDF logic
-    } else if (format === 'html') {
+    } else if (format === "html") {
       // HTML logic
     } else {
       // CSV logic
@@ -84,7 +91,7 @@ class ReportGenerator {
       // Add headers
     }
 
-    if (sortOrder === 'asc') {
+    if (sortOrder === "asc") {
       // Sort ascending
     } else {
       // Sort descending
@@ -94,6 +101,7 @@ class ReportGenerator {
 ```
 
 **Problems:**
+
 - Caller must understand implementation
 - Changes require modifying conditionals
 - Hard to extend
@@ -105,9 +113,15 @@ interface ReportFormatter {
   format(data: Data): Report;
 }
 
-class PdfFormatter implements ReportFormatter { /* ... */ }
-class HtmlFormatter implements ReportFormatter { /* ... */ }
-class CsvFormatter implements ReportFormatter { /* ... */ }
+class PdfFormatter implements ReportFormatter {
+  /* ... */
+}
+class HtmlFormatter implements ReportFormatter {
+  /* ... */
+}
+class CsvFormatter implements ReportFormatter {
+  /* ... */
+}
 
 class ReportGenerator {
   constructor(private formatter: ReportFormatter) {}
@@ -127,12 +141,13 @@ Passing entire data structures when only part is needed.
 class EmailService {
   sendWelcome(user: User): void {
     // Only uses user.email, but receives entire User object
-    this.send(user.email, 'Welcome!');
+    this.send(user.email, "Welcome!");
   }
 }
 ```
 
 **Problems:**
+
 - Creates unnecessary dependency on User structure
 - Changes to User might affect EmailService
 - Harder to test (need full User object)
@@ -143,7 +158,7 @@ class EmailService {
 // GOOD: Only receive what's needed
 class EmailService {
   sendWelcome(email: string): void {
-    this.send(email, 'Welcome!');
+    this.send(email, "Welcome!");
   }
 }
 ```
@@ -168,6 +183,7 @@ class ShippingCalculator {
 ```
 
 **Benefits:**
+
 - Clear interfaces
 - Easy to test
 - Changes are localized
@@ -184,7 +200,7 @@ interface OrderEvent {
 }
 
 interface OrderCreatedEvent extends OrderEvent {
-  type: 'ORDER_CREATED';
+  type: "ORDER_CREATED";
   customerId: string;
   items: OrderItem[];
 }
@@ -200,11 +216,11 @@ class OrderService {
   createOrder(order: Order): void {
     // Create order...
     this.eventBus.publish({
-      type: 'ORDER_CREATED',
+      type: "ORDER_CREATED",
       orderId: order.id,
       timestamp: new Date(),
       customerId: order.customerId,
-      items: order.items
+      items: order.items,
     });
   }
 }
@@ -212,7 +228,7 @@ class OrderService {
 // Other services subscribe without knowing about OrderService
 class InventoryService {
   constructor(eventBus: EventBus) {
-    eventBus.subscribe('ORDER_CREATED', this.handleOrderCreated.bind(this));
+    eventBus.subscribe("ORDER_CREATED", this.handleOrderCreated.bind(this));
   }
 
   private handleOrderCreated(event: OrderCreatedEvent): void {
@@ -222,6 +238,7 @@ class InventoryService {
 ```
 
 **Benefits:**
+
 - Modules don't know about each other
 - Easy to add new subscribers
 - Highly testable
@@ -289,10 +306,10 @@ Only talk to immediate friends:
 
 ```typescript
 // BAD: Reaching through objects
-order.getCustomer().getAddress().getCity()
+order.getCustomer().getAddress().getCity();
 
 // GOOD: Ask, don't reach
-order.getShippingCity()
+order.getShippingCity();
 ```
 
 #### 4. Use Events for Cross-Cutting Concerns
@@ -322,15 +339,26 @@ Elements are grouped arbitrarily with no meaningful relationship.
 ```typescript
 // TERRIBLE: Random utilities thrown together
 class Utils {
-  static formatDate(date: Date): string { /* ... */ }
-  static calculateTax(amount: number): number { /* ... */ }
-  static validateEmail(email: string): boolean { /* ... */ }
-  static compressImage(image: Buffer): Buffer { /* ... */ }
-  static sendNotification(message: string): void { /* ... */ }
+  static formatDate(date: Date): string {
+    /* ... */
+  }
+  static calculateTax(amount: number): number {
+    /* ... */
+  }
+  static validateEmail(email: string): boolean {
+    /* ... */
+  }
+  static compressImage(image: Buffer): Buffer {
+    /* ... */
+  }
+  static sendNotification(message: string): void {
+    /* ... */
+  }
 }
 ```
 
 **Problems:**
+
 - No logical organization
 - Hard to find functionality
 - Changes affect unrelated code
@@ -342,13 +370,20 @@ Elements are grouped because they do similar things, but operate on different da
 ```typescript
 // POOR: Grouped by "type" of operation
 class DataExporter {
-  exportUsersToCsv(users: User[]): string { /* ... */ }
-  exportOrdersToXml(orders: Order[]): string { /* ... */ }
-  exportProductsToJson(products: Product[]): string { /* ... */ }
+  exportUsersToCsv(users: User[]): string {
+    /* ... */
+  }
+  exportOrdersToXml(orders: Order[]): string {
+    /* ... */
+  }
+  exportProductsToJson(products: Product[]): string {
+    /* ... */
+  }
 }
 ```
 
 **Problems:**
+
 - Different data types handled by same class
 - Changes to one export affect others
 
@@ -371,6 +406,7 @@ class StartupInitializer {
 ```
 
 **Problems:**
+
 - Unrelated responsibilities
 - Hard to test individually
 - Changes to one area affect others
@@ -402,15 +438,26 @@ Elements operate on the same data.
 ```typescript
 // GOOD: All methods work with User data
 class UserService {
-  create(userData: CreateUserDto): User { /* ... */ }
-  update(id: string, userData: UpdateUserDto): User { /* ... */ }
-  delete(id: string): void { /* ... */ }
-  findById(id: string): User | null { /* ... */ }
-  findByEmail(email: string): User | null { /* ... */ }
+  create(userData: CreateUserDto): User {
+    /* ... */
+  }
+  update(id: string, userData: UpdateUserDto): User {
+    /* ... */
+  }
+  delete(id: string): void {
+    /* ... */
+  }
+  findById(id: string): User | null {
+    /* ... */
+  }
+  findByEmail(email: string): User | null {
+    /* ... */
+  }
 }
 ```
 
 **Benefits:**
+
 - Clear data ownership
 - Related operations together
 - Easier to understand
@@ -433,6 +480,7 @@ class ImageProcessor {
 ```
 
 **Benefits:**
+
 - Clear data flow
 - Easy to understand transformation
 - Can be parallelized
@@ -469,6 +517,7 @@ class EmailValidator {
 ```
 
 **Benefits:**
+
 - Single responsibility
 - Highly reusable
 - Easy to test
@@ -483,10 +532,12 @@ class EmailValidator {
 Measures how related methods are within a class.
 
 **LCOM1:** Count method pairs that don't share instance variables minus pairs that do.
+
 - LCOM1 = 0: Cohesive
 - LCOM1 > 0: Lack of cohesion
 
 **LCOM4 (Preferred):** Count connected components in method-field graph.
+
 - LCOM4 = 1: Cohesive (all methods connected)
 - LCOM4 > 1: Should potentially be split into multiple classes
 
@@ -508,16 +559,36 @@ Extract classes when responsibilities diverge:
 ```typescript
 // Before: Mixed responsibilities
 class User {
-  save(): void { /* database logic */ }
-  sendEmail(): void { /* email logic */ }
-  validate(): boolean { /* validation logic */ }
+  save(): void {
+    /* database logic */
+  }
+  sendEmail(): void {
+    /* email logic */
+  }
+  validate(): boolean {
+    /* validation logic */
+  }
 }
 
 // After: Separated responsibilities
-class User { /* just data */ }
-class UserRepository { save(user: User): void { /* ... */ } }
-class UserEmailService { sendWelcome(user: User): void { /* ... */ } }
-class UserValidator { validate(user: User): ValidationResult { /* ... */ } }
+class User {
+  /* just data */
+}
+class UserRepository {
+  save(user: User): void {
+    /* ... */
+  }
+}
+class UserEmailService {
+  sendWelcome(user: User): void {
+    /* ... */
+  }
+}
+class UserValidator {
+  validate(user: User): ValidationResult {
+    /* ... */
+  }
+}
 ```
 
 #### 2. Group Related Data and Behavior
@@ -531,8 +602,12 @@ interface Address {
   postalCode: string;
 }
 
-function formatAddress(address: Address): string { /* ... */ }
-function validateAddress(address: Address): boolean { /* ... */ }
+function formatAddress(address: Address): string {
+  /* ... */
+}
+function validateAddress(address: Address): boolean {
+  /* ... */
+}
 
 // After: Data and behavior together
 class Address {
@@ -543,8 +618,12 @@ class Address {
     public postalCode: string
   ) {}
 
-  format(): string { /* ... */ }
-  validate(): boolean { /* ... */ }
+  format(): string {
+    /* ... */
+  }
+  validate(): boolean {
+    /* ... */
+  }
 }
 ```
 
@@ -563,17 +642,18 @@ class Order {
 
 // After: Value object
 class Money {
-  constructor(
-    private amount: number,
-    private currency: Currency
-  ) {}
+  constructor(private amount: number, private currency: Currency) {}
 
   convertTo(targetCurrency: Currency): Money {
     // Focused currency conversion
   }
 
-  add(other: Money): Money { /* ... */ }
-  multiply(factor: number): Money { /* ... */ }
+  add(other: Money): Money {
+    /* ... */
+  }
+  multiply(factor: number): Money {
+    /* ... */
+  }
 }
 
 class Order {
@@ -588,12 +668,14 @@ class Order {
 ### Code Review Checklist
 
 **Coupling Questions:**
+
 - [ ] Does this change introduce new dependencies?
 - [ ] Are dependencies injected or hard-coded?
 - [ ] Is the module reaching through objects (Law of Demeter)?
 - [ ] Could this be decoupled with an interface?
 
 **Cohesion Questions:**
+
 - [ ] Does every method use instance state?
 - [ ] Can the class be described in one sentence?
 - [ ] Would changing one feature require changing unrelated code?
@@ -602,16 +684,19 @@ class Order {
 ### Refactoring Triggers
 
 **Split class when:**
+
 - Two groups of methods never interact
 - Class has multiple reasons to change
 - Methods use different subsets of fields
 
 **Extract interface when:**
+
 - Multiple implementations exist or are likely
 - Testing requires mocking
 - Module should be swappable
 
 **Use events when:**
+
 - Multiple systems react to the same change
 - Ordering doesn't matter
 - Cross-cutting concerns (logging, analytics)

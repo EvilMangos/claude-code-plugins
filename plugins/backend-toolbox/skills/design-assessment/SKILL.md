@@ -1,7 +1,7 @@
 ---
 name: design-assessment
 description: >
-  Use this skill when reviewing code for design issues, evaluating architecture quality,
+  This skill should be used when reviewing code for design issues, evaluating architecture quality,
   identifying code smells, or assessing coupling/cohesion. Triggers: "code review",
   "design review", "code smells", "coupling issues", "is this well designed",
   "architecture assessment", "quality check".
