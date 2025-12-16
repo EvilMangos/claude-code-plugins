@@ -1,20 +1,10 @@
 {
   "name": "backend-toolbox",
-  "displayName": "Backend Toolbox",
   "version": "0.1.0",
   "description": "All-in-one workflow commands + subagents + (optional) hooks",
   "author": {
     "name": "EvilMangos"
   },
   "license": "MIT",
-  "components": {
-    "agentsDir": "agents",
-    "commandsDir": "commands",
-    "hooksDir": "hooks",
-    "skillsDir": "skills"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/EvilMangos/claude-code-plugins"
-  }
+  "repository": "https://github.com/EvilMangos/claude-code-plugins"
 }
