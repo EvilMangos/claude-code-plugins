@@ -1,5 +1,5 @@
 ---
-name: security-specialist
+name: application-security-specialist
 description: >
   Use when reviewing code for security vulnerabilities, implementing auth/authz, or hardening applications.
   Security specialist focused on vulnerability assessment, secure coding, and application hardening.
