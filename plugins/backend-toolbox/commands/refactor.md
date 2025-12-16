@@ -1,7 +1,7 @@
 ---
 description: Refactor code in a given path (file or folder) with tests after each step; never modify test files. If no path is provided, scope is the entire codebase.
 argument-hint: [ path ]
-allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), SlashCommand, Task
+allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), SlashCommand, Task
 ---
 
 You are orchestrating a **refactor-only** workflow for this repository.
