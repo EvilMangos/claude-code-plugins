@@ -14,7 +14,31 @@ Patterns and principles for structuring code correctly. Use when implementing fe
 
 > A class should have only one reason to change.
 
-**Applying SRP:**
+#### File-Level SRP
+
+> A file should ideally contain a single public element (class, function, enum, interface).
+
+When adding a new element to a file that already contains one, **consider extraction**:
+
+- Is the new element tightly coupled to the existing one? (helper, type for the class) → Keep together
+- Is it independently usable or testable? → Extract to its own file
+- Would it be imported separately? → Extract to its own file
+
+This is a heuristic, not a strict rule. The goal is cohesive, focused files.
+
+#### Directory Organization
+
+> Group related files into folders; avoid flat structures with many files.
+
+When creating, moving, or refactoring files, **consider grouping**:
+
+- Does the directory have many files (10+)? → Consider creating subfolders
+- Are some files clearly related (same feature, same domain)? → Group into a folder
+- Is a new file part of an existing logical group? → Place it in that folder
+
+**Warning:** Test files should NOT be grouped into separate `tests/` or `__tests__/` folders away from implementation. Tests travel with their implementation files (e.g., `user.ts` and `user.test.ts` in the same directory).
+
+#### Applying SRP to Classes
 
 1. Identify reasons for change - List what business requirements could cause the class to change
 2. Group related functionality - Methods that change together belong together

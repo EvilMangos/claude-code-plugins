@@ -16,6 +16,8 @@ Identify and evaluate design issues in existing code. Use this skill during code
 |-------------------------|-------------------------------------------------|----------------------------------------------|
 | **Long Method**         | Method > 20-30 lines, multiple responsibilities | Hard to understand, test, reuse              |
 | **Large Class**         | Class > 200-300 lines, many unrelated methods   | Low cohesion, hard to modify                 |
+| **Multi-Element File**  | Multiple public classes/functions/types in one file | Harder to navigate, test in isolation, refactor |
+| **Flat Directory**      | Many files (10+) in a single directory without subfolders | Hard to navigate, find related files, understand structure |
 | **Long Parameter List** | > 3-4 parameters                                | Hard to call, often indicates missing object |
 | **Primitive Obsession** | Using primitives instead of small objects       | Scattered validation, no encapsulation       |
 | **Data Clumps**         | Same group of variables appear together         | Missing abstraction                          |

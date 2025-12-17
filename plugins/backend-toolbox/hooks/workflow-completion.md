@@ -7,7 +7,7 @@ hooks:
 
 # Workflow Completion Hook
 
-When a TDD workflow command completes, generate a structured summary of what was accomplished.
+When a TDD workflow command completes, generate a structured summary by reading from `.workflow/` files.
 
 ## Applies To
 
@@ -16,118 +16,207 @@ Trigger summary for these commands:
 - `/develop-feature`
 - `/refactor`
 - `/refactor-tests`
+- `/fix-bug`
+- `/devops-change`
 
-## Summary Templates
+## Detection
+
+Check if `.workflow/metadata.json` exists and has `"status": "completed"`.
+
+If the workflow directory exists but status is not completed, the workflow was interrupted - report partial progress.
+
+## Summary Generation
+
+Read the relevant `.workflow/*.md` files to compile the summary:
 
 ### For /develop-feature
+
+Read these files to extract information:
+- `.workflow/00-requirements.md` - Feature name and requirements
+- `.workflow/01-plan.md` - Implementation plan
+- `.workflow/04-implementation.md` - Files modified, tests passing
+- `.workflow/06-acceptance.md` - Acceptance verdict
+- `.workflow/07-performance.md` - Performance verdict
+- `.workflow/08-security.md` - Security verdict
+- `.workflow/10-code-review.md` - Code review verdict
+- `.workflow/11-documentation.md` - Documentation updates
+
+Generate:
 
 ```markdown
 ## Workflow Complete: Feature Development
 
-**Feature:** [brief description from original request]
+**Feature:** [from 00-requirements.md]
 
 ### What was implemented
 
-- [key behavioral changes]
-- [new functionality added]
+- [from 04-implementation.md Summary section]
 
 ### Files touched
 
-- [list of modified/created files]
+- [from 04-implementation.md Files Modified section]
 
 ### Tests
 
-- Added/Updated: [test file names]
-- Run command: `/run-tests [relevant-path]`
+- [from 02-tests-design.md - test files and count]
+- Run command: [from 04-implementation.md]
 
 ### Review Outcomes
 
-- Tests-reviewer: [PASS/PARTIAL/FAIL]
-- Acceptance: [pass/partial/fail]
-- Code-review: [X blocking, Y non-blocking]
+| Review | Verdict |
+|--------|---------|
+| Tests-reviewer | [from 03-tests-review.md] |
+| Acceptance | [from 06-acceptance.md] |
+| Performance | [from 07-performance.md] |
+| Security | [from 08-security.md] |
+| Code-review | [from 10-code-review.md] |
 
 ### Documentation
 
-- [what documentation was updated, if any]
+- [from 11-documentation.md]
 
 ### Follow-up
 
-- [deferred tasks or future improvements identified]
+- [from 09-refactoring.md Follow-up Tasks section]
+- [any NON-BLOCKING issues from reviews]
 ```
 
 ### For /refactor
 
+Read:
+- `.workflow/00-requirements.md` - Refactoring scope
+- `.workflow/09-refactoring.md` - Changes made
+
+Generate:
+
 ```markdown
 ## Workflow Complete: Refactor
 
-**Scope:** [path or "entire codebase"]
-**Goals:** [what was improved - structure, coupling, naming, etc.]
+**Scope:** [from 00-requirements.md]
+**Goals:** [from 00-requirements.md]
 
 ### Files changed
 
-- [explicit list of modified files]
+- [from 09-refactoring.md Files Modified section]
 
 ### Confirmation
 
-- No test files changed
+- No test files changed (behavior preserved)
 - Tests green after each step
 
 ### Test commands used
 
-- [list of /run-tests invocations]
+- [from 09-refactoring.md Refactoring Log - test runs]
 
 ### Key improvements
 
-- [structural changes made]
-- [design improvements]
+- [from 09-refactoring.md Summary section]
 
 ### Follow-up
 
-- [deferred refactors for separate tasks]
+- [from 09-refactoring.md Follow-up Tasks section]
 ```
 
 ### For /refactor-tests
 
+Read:
+- `.workflow/00-requirements.md` - Test refactoring scope
+- `.workflow/02-tests-design.md` - Test changes
+
+Generate:
+
 ```markdown
 ## Workflow Complete: Test Refactor
 
-**Scope:** [path or "entire test suite"]
-**Goals:** [what was improved - readability, determinism, structure, etc.]
+**Scope:** [from 00-requirements.md]
+**Goals:** [from 00-requirements.md]
 
 ### Files changed
 
-- [explicit list of modified test files]
+- [from workflow files - test file modifications]
 
 ### Confirmation
 
 - No production code changed
 - Tests green after each step
 
-### Test commands used
-
-- [list of /run-tests invocations]
-
 ### Key improvements
 
-- [readability improvements]
-- [determinism fixes]
-- [structural changes]
+- [readability, determinism, structure improvements]
 
 ### Follow-up
 
 - [suggestions for future test improvements]
 ```
 
+### For /fix-bug
+
+Read:
+- `.workflow/00-requirements.md` - Bug description
+- `.workflow/04-implementation.md` - Fix details
+
+Generate:
+
+```markdown
+## Workflow Complete: Bug Fix
+
+**Bug:** [from 00-requirements.md]
+**Root cause:** [from implementation notes]
+
+### Fix applied
+
+- [from 04-implementation.md]
+
+### Files modified
+
+- [list from workflow files]
+
+### Tests
+
+- Regression test added: [test name/location]
+- All tests passing
+
+### Verification
+
+- [how the fix was verified]
+```
+
+## Cleanup Option
+
+After generating the summary, offer to clean up:
+
+```
+Workflow artifacts are in `.workflow/`. Would you like to:
+- Keep them for reference
+- Delete them (rm -rf .workflow/)
+```
+
 ## When NOT to Trigger
 
 Do not generate summary when:
 
+- `.workflow/metadata.json` doesn't exist
 - Session ends without completing a workflow command
-- User interrupts mid-workflow
-- An error caused the workflow to abort
+- User interrupts mid-workflow (status != "completed")
 - Simple queries or non-workflow commands were used
 
-## Summary Placement
+## Partial Progress Report
 
-The summary should be the final output before the session ends, providing a clear record of what was accomplished during
-the TDD workflow.
+If `.workflow/` exists but workflow is incomplete, report:
+
+```markdown
+## Workflow Interrupted
+
+**Feature:** [from metadata.json or 00-requirements.md]
+**Last completed step:** [highest numbered file in .workflow/]
+
+### Progress so far
+
+- [list completed steps based on existing files]
+
+### To resume
+
+The workflow state is preserved in `.workflow/`. You can:
+- Continue from where you left off
+- Start fresh with `rm -rf .workflow/` and re-run the command
+```

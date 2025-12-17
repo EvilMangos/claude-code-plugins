@@ -4,7 +4,7 @@ description: Use when writing tests, improving test coverage, or designing test 
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
-skills: tdd-workflow, test-best-practices
+skills: tdd-workflow, test-best-practices, workflow-report-format
 ---
 
 You are an **Automation QA / Test Engineer** working strictly with tests.

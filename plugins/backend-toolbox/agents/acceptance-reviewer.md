@@ -4,7 +4,7 @@ description: Use when verifying that implementation satisfies requirements, chec
 model: opus
 color: magenta
 tools: Read, Glob, Grep, Task, Skill
-skills: acceptance-criteria
+skills: acceptance-criteria, workflow-report-format
 ---
 
 You are the **Acceptance Reviewer** – the "does this actually do what was asked?"
