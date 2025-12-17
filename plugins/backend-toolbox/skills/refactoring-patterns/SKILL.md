@@ -1,6 +1,7 @@
 ---
 name: refactoring-patterns
 description: This skill should be used when the user asks to "refactor code", "improve design", "restructure without changing behavior", "extract function", "rename variable", "simplify code", "clean up this code", "make this more readable", "reduce duplication", "apply SOLID principles", or needs guidance on safe transformation techniques. Also triggered by requests to reduce complexity, improve maintainability, or apply specific refactoring patterns like extract method, inline variable, move function, or replace conditional with polymorphism.
+version: 0.1.0
 ---
 
 # Refactoring Patterns Guide

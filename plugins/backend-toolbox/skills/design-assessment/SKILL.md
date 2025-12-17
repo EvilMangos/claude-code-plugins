@@ -1,6 +1,7 @@
 ---
 name: design-assessment
 description: This skill should be used when the user asks to "assess design quality", "identify code smells", "check coupling and cohesion", "evaluate architecture", "is this well designed", "design review", "find design issues", "architecture assessment", "quality assessment", or needs to identify structural problems in existing code.
+version: 0.1.0
 ---
 
 # Design Assessment

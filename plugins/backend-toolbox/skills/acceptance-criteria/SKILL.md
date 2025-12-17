@@ -1,6 +1,7 @@
 ---
 name: acceptance-criteria
 description: This skill should be used when the user asks to "verify acceptance criteria", "check if requirements are met", "validate implementation against requirements", "does this meet the acceptance criteria", "verify the task is complete", "check requirements coverage", "acceptance testing", "review my implementation", "did I miss anything", "compare implementation to requirements", or needs to systematically verify implementation against original request instructions. Also applies when checking if a feature is done, validating completeness of work, or mapping requirements to code.
+version: 0.1.0
 ---
 
 # Acceptance Criteria Verification

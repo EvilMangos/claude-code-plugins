@@ -1,6 +1,7 @@
 ---
 name: design-patterns
 description: This skill should be used when the user asks about design patterns, SOLID principles, dependency injection, or code architecture. Common triggers include "which pattern should I use", "how should I structure this", "apply SOLID principles", "set up dependency injection", "factory pattern", "repository pattern", "strategy pattern", "DDD", "domain model", "singleton", "observer pattern", "decorator vs inheritance", "refactor to use strategy", "how to make this more testable", "decouple my classes", "reduce coupling between components", "what pattern for...", "implement the repository pattern", "use abstract factory", "apply command pattern", "event-driven design", or when the user mentions design patterns by name.
+version: 0.1.0
 ---
 
 # Design Patterns

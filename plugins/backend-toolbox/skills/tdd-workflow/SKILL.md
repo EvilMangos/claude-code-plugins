@@ -1,6 +1,7 @@
 ---
 name: tdd-workflow
 description: This skill should be used when the user asks to "use TDD", "write tests first", "follow red-green-refactor", "test-driven development", "TDD workflow", "write failing test first", "do TDD", "red-green-refactor cycle", or explicitly requests a test-first development approach for implementing features.
+version: 0.1.0
 ---
 
 # TDD Workflow Guide
