@@ -1,12 +1,6 @@
 ---
 name: workflow-report-format
-description: |
-  This skill defines the standard format for workflow reports used in background agent orchestration.
-  Use this skill when participating in a multi-agent workflow (develop-feature, fix-bug, etc.)
-  where agents run sequentially in background and communicate via files.
-
-  Key triggers: "workflow report", "write report to file", "background agent output",
-  "orchestrator handoff", "file-based context", "workflow state".
+description: This skill defines the standard format for workflow reports used in background agent orchestration. Use this skill when participating in a multi-agent workflow (develop-feature, fix-bug, etc.) where agents run sequentially in background and communicate via files. Key triggers - "workflow report", "write report to file", "background agent output", "orchestrator handoff", "file-based context", "workflow state".
 version: 0.1.0
 ---
 
@@ -664,17 +658,371 @@ NEXT_INPUT: .workflow/11-documentation.md
 
 ---
 
-## Loop Iteration Naming
+## Reflection Loops
 
-When reflection loops occur, use incremented filenames:
+Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must be fixed before proceeding.
+
+### Loop Flow
 
 ```
-.workflow/07-performance.md      # First review
-.workflow/loop-iterations/07-performance-2.md  # After first fix
-.workflow/loop-iterations/07-performance-3.md  # After second fix
+┌─────────────────────────────────────────────────────────────────────┐
+│  REVIEWER (e.g., performance-specialist)                            │
+│  - Reads implementation                                             │
+│  - Writes: .workflow/07-performance.md                              │
+│  - Returns: STATUS: FAIL, BLOCKING issues: 2                        │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ (FAIL → loop)
+┌─────────────────────────────────────────────────────────────────────┐
+│  FIXER (e.g., backend-developer)                                    │
+│  - Reads: .workflow/07-performance.md (the findings)                │
+│  - Fixes BLOCKING issues                                            │
+│  - Writes: .workflow/loop-iterations/07-performance-fix-1.md        │
+│  - Returns: STATUS: DONE                                            │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  REVIEWER (iteration 2)                                             │
+│  - Reads: .workflow/07-performance.md (original)                    │
+│  - Reads: .workflow/loop-iterations/07-performance-fix-1.md         │
+│  - Writes: .workflow/loop-iterations/07-performance-review-2.md     │
+│  - Returns: STATUS: PASS (or FAIL → continue loop)                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-The orchestrator tracks which iteration is current.
+### File Naming Convention for Loops
+
+```
+.workflow/
+├── 07-performance.md                           # Initial review (iteration 1)
+└── loop-iterations/
+    ├── 07-performance-fix-1.md                 # Fix attempt after iteration 1
+    ├── 07-performance-review-2.md              # Review iteration 2
+    ├── 07-performance-fix-2.md                 # Fix attempt after iteration 2
+    └── 07-performance-review-3.md              # Review iteration 3 (hopefully PASS)
+```
+
+Pattern: `{step}-{name}-{action}-{iteration}.md`
+- `action`: `fix` (fixer agent) or `review` (reviewer agent)
+- `iteration`: incrementing number
+
+### Orchestrator Responsibilities in Loops
+
+The orchestrator MUST pass to agents:
+
+1. **Iteration number** - So the agent knows what filename to use
+2. **Files to read** - Previous findings and any fix reports
+3. **Specific task** - What BLOCKING issues to address
+
+Example orchestrator prompt for fixer (iteration 1):
+```
+## Task
+Fix the BLOCKING performance issues identified in the review.
+
+## Iteration
+This is fix iteration 1.
+
+## Input Files
+Read: .workflow/07-performance.md
+
+## Focus On
+Address ONLY the BLOCKING issues listed. Do not address NON-BLOCKING.
+
+## Output
+1. Write FULL report to: .workflow/loop-iterations/07-performance-fix-1.md
+2. Return brief status only
+```
+
+Example orchestrator prompt for reviewer (iteration 2):
+```
+## Task
+Re-review performance after fixes were applied.
+
+## Iteration
+This is review iteration 2.
+
+## Input Files
+Read:
+- .workflow/07-performance.md (original findings)
+- .workflow/loop-iterations/07-performance-fix-1.md (what was fixed)
+- .workflow/04-implementation.md (current implementation state)
+
+## Output
+1. Write FULL report to: .workflow/loop-iterations/07-performance-review-2.md
+2. Return brief status only
+```
+
+### Fix Report Template (for loops)
+
+```markdown
+# {Step Name} Fix Report
+
+**Status:** DONE
+**Agent:** {fixer-agent-name}
+**Timestamp:** {ISO timestamp}
+**Iteration:** Fix {N}
+**Input Files:** {review file that identified issues}
+
+## Issues Addressed
+
+### BLOCKING Issue 1: {title from review}
+- **Original Finding:** {quote from review}
+- **Fix Applied:** {description of fix}
+- **Files Modified:** `path/to/file.ts:42`
+- **Test Verification:** `/run-tests {pattern}` → PASS
+
+### BLOCKING Issue 2: {title from review}
+- **Original Finding:** {quote from review}
+- **Fix Applied:** {description of fix}
+- **Files Modified:** `path/to/file.ts:100`
+- **Test Verification:** `/run-tests {pattern}` → PASS
+
+## Issues NOT Addressed
+- NON-BLOCKING issues deferred (as instructed)
+
+## Handoff Notes
+- Ready for re-review
+- All BLOCKING issues from iteration {N} addressed
+```
+
+### Re-Review Report Template (for loops)
+
+```markdown
+# {Step Name} Re-Review Report
+
+**Status:** PASS | PARTIAL | FAIL
+**Agent:** {reviewer-agent-name}
+**Timestamp:** {ISO timestamp}
+**Iteration:** Review {N}
+**Input Files:** {original review + fix reports}
+
+## Previous Issues Status
+
+| Issue | Original Status | Current Status | Notes |
+|-------|-----------------|----------------|-------|
+| {issue 1} | BLOCKING | ✅ RESOLVED | Fix verified |
+| {issue 2} | BLOCKING | ⚠️ PARTIAL | Still needs work |
+| {issue 3} | NON-BLOCKING | ⏸️ DEFERRED | Not in scope |
+
+## New Issues Found (if any)
+- {any new issues discovered}
+
+## Verdict
+- **PASS**: All BLOCKING resolved, ready to proceed
+- **PARTIAL**: {N} BLOCKING issues remain (continue loop)
+- **FAIL**: {N} BLOCKING issues remain (continue loop)
+
+## Handoff Notes
+- {what's needed if loop continues}
+```
+
+### Loop Termination
+
+The orchestrator exits the loop when:
+1. Reviewer returns `STATUS: PASS`
+2. Reviewer returns `STATUS: PARTIAL` with only NON-BLOCKING issues
+3. Maximum iterations reached (recommend: 3-5, configurable)
+4. User explicitly accepts remaining issues
+
+If max iterations reached without PASS:
+```
+STATUS: PARTIAL
+FILE: .workflow/loop-iterations/07-performance-review-{N}.md
+SUMMARY: Max iterations reached with {X} BLOCKING issues remaining
+NEXT_INPUT: .workflow/loop-iterations/07-performance-review-{N}.md
+---
+- Loop exhausted after {N} iterations
+- Remaining BLOCKING: {list}
+- User decision required: accept or abort
+```
+
+---
+
+## Handling File Errors
+
+### Missing Input Files
+
+When an agent attempts to read a required input file that doesn't exist:
+
+### Step 1: List Directory Contents
+
+```bash
+ls -la .workflow/
+ls -la .workflow/loop-iterations/  # if checking loop files
+```
+
+### Step 2: Identify Alternatives
+
+Check if the required file exists under a different name or iteration:
+- Expected: `.workflow/07-performance.md`
+- Found: `.workflow/07-perf.md` or `.workflow/07-performance-review.md`
+
+Common mismatches:
+- Abbreviated names (`perf` vs `performance`)
+- Missing iteration suffix (`-review-2` vs `-2`)
+- Wrong step number
+
+### Step 3: Decision
+
+**If alternative file found:**
+- Use the identified file
+- Log the discrepancy in the report's Handoff Notes:
+  ```
+  ## Handoff Notes
+  - WARNING: Expected `.workflow/07-performance.md`, used `.workflow/07-perf.md` instead
+  ```
+
+**If no matching file exists:**
+
+The agent MUST stop and return an error status:
+
+```
+STATUS: ERROR
+FILE: none
+SUMMARY: Required input file missing: .workflow/04-implementation.md
+NEXT_INPUT: none
+---
+- Expected file: .workflow/04-implementation.md
+- Files in .workflow/: [list actual files found]
+- Cannot proceed without this input
+- WORKFLOW HALTED - orchestrator must investigate
+```
+
+### Orchestrator Response to ERROR
+
+When orchestrator receives `STATUS: ERROR`:
+
+1. **Do NOT proceed to next step**
+2. **Do NOT retry the same agent** (it will fail again)
+3. **Investigate the cause:**
+   - Was a previous step skipped?
+   - Did a previous agent fail to write its output?
+   - Is there a step number mismatch?
+4. **Report to user:**
+   ```
+   WORKFLOW HALTED
+
+   Agent: {agent-name}
+   Missing file: {file path}
+
+   Available files in .workflow/:
+   - {list files}
+
+   Possible causes:
+   - Step {N} may have failed silently
+   - File naming mismatch
+
+   To recover:
+   - Re-run step {N} to regenerate the missing file
+   - Or manually create the required file
+   ```
+
+### Prevention: Verify Output After Each Step
+
+After each `TaskOutput(block: true)`, the orchestrator SHOULD verify the output file exists:
+
+```
+# After agent completes
+response = TaskOutput(block: true)
+
+# Parse the FILE from response
+expected_file = parse_file_from_response(response)
+
+# Verify it exists before proceeding
+if not file_exists(expected_file):
+    HALT with error: "Agent claimed to write {expected_file} but file not found"
+```
+
+This catches silent failures early rather than discovering them in later steps.
+
+---
+
+### Write Failures
+
+When an agent cannot create or write to its output file:
+
+**Common causes:**
+- Permission denied (directory not writable)
+- `.workflow/` directory doesn't exist
+- Disk full
+- Path contains invalid characters
+- File locked by another process
+
+**Agent behavior on write failure:**
+
+### Step 1: Attempt Recovery
+
+If `.workflow/` doesn't exist, try to create it:
+```bash
+mkdir -p .workflow/loop-iterations
+```
+
+If permission denied, check current directory:
+```bash
+pwd
+ls -la | grep .workflow
+```
+
+### Step 2: If Recovery Fails
+
+The agent MUST return an error status (do NOT return DONE/PASS with a non-existent file):
+
+```
+STATUS: ERROR
+FILE: none
+SUMMARY: Cannot write output file: .workflow/04-implementation.md
+NEXT_INPUT: none
+---
+- Attempted to write: .workflow/04-implementation.md
+- Error: Permission denied (or: Directory does not exist, etc.)
+- Recovery attempted: mkdir -p .workflow/ → failed
+- Current directory: /path/to/repo
+- WORKFLOW HALTED - orchestrator must investigate
+```
+
+### Step 3: Do NOT Fake Success
+
+**Critical:** Never return `STATUS: DONE` or `STATUS: PASS` if the output file was not successfully written. This will cause cascading failures when the next agent tries to read the file.
+
+Bad (causes downstream failure):
+```
+STATUS: DONE
+FILE: .workflow/04-implementation.md  ← file doesn't actually exist!
+SUMMARY: Implementation complete
+```
+
+Good (halts immediately with clear error):
+```
+STATUS: ERROR
+FILE: none
+SUMMARY: Write failed: .workflow/04-implementation.md - Permission denied
+```
+
+### Orchestrator Response to Write Failures
+
+When orchestrator receives `STATUS: ERROR` due to write failure:
+
+1. **HALT workflow immediately**
+2. **Check directory permissions:**
+   ```bash
+   ls -la .workflow/
+   touch .workflow/test-write && rm .workflow/test-write
+   ```
+3. **Report to user:**
+   ```
+   WORKFLOW HALTED - Write Failure
+
+   Agent: {agent-name}
+   Could not write: {file path}
+   Error: {error message}
+
+   To recover:
+   - Check directory permissions: ls -la .workflow/
+   - Ensure .workflow/ exists: mkdir -p .workflow/loop-iterations
+   - Check disk space: df -h .
+   - Re-run the failed step after fixing permissions
+   ```
 
 ---
 
@@ -688,6 +1036,7 @@ The orchestrator uses STATUS to decide next action:
 | PASS | Proceed to next step |
 | PARTIAL | Enter fix loop (may proceed with warnings) |
 | FAIL | Enter fix loop (must fix before proceeding) |
+| ERROR | **HALT workflow** - missing file or critical failure |
 
 For PARTIAL/FAIL in review steps:
 1. Route to appropriate fixer agent (automation-qa, backend-developer, refactorer)
