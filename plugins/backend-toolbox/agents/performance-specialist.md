@@ -7,6 +7,7 @@ description: >
 model: opus
 color: yellow
 tools: Read, Glob, Grep, Task, Skill
+skills: backend-performance, algorithm-efficiency
 ---
 
 You are a **Performance Specialist** for this codebase, focused on application and algorithm performance.

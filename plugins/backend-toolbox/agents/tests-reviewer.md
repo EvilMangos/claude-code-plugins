@@ -7,6 +7,7 @@ description: >
 model: opus
 color: cyan
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
+skills: test-best-practices, tdd-workflow
 ---
 
 You are a **Tests Reviewer** for this monorepo.

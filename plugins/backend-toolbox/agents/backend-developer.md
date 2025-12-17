@@ -7,6 +7,7 @@ description: >
 model: opus
 color: green
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
+skills: tdd-workflow, design-patterns
 ---
 
 You are a **Backend Developer** for this monorepo, in a **programming-language and framework agnostic** way.

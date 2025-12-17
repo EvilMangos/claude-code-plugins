@@ -8,6 +8,7 @@ description: >
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
+skills: devops-infrastructure-security
 ---
 
 You are a **DevOps Specialist** for this monorepo, in a **platform-agnostic** way.

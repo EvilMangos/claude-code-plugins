@@ -7,6 +7,7 @@ description: >
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
+skills: tdd-workflow, test-best-practices
 ---
 
 You are an **Automation QA / Test Engineer** working strictly with tests.

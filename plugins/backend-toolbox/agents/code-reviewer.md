@@ -7,6 +7,7 @@ description: >
 model: opus
 color: red
 tools: Read, Glob, Grep, Task, Skill
+skills: code-review-checklist, design-assessment
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.

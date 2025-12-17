@@ -487,6 +487,16 @@ class MockOrderRepository implements OrderRepository {
 3. **Interface Injection** - Implement interface that accepts dependency
 4. **Service Locator** - Ask container for dependencies (less preferred)
 
+### Interface Location (Critical)
+
+Interfaces must be located in a **separate contracts layer** - not in the consumer's module, not in the provider's
+module. This ensures true decoupling. In monorepos, this means a dedicated contracts package.
+
+**Exception**: In hexagonal architecture, ports live in the domain layer (adapters depend on domain).
+
+See `references/dependency-injection.md` section "Locate Interfaces in a Contracts Layer" for detailed patterns with
+code examples.
+
 ### Benefits
 
 - **Testability** - Easy to substitute mocks/stubs

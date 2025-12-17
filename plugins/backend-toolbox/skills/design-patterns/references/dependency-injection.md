@@ -384,7 +384,128 @@ class OrderService {
 }
 ```
 
-### 2. Avoid Service Locator Anti-Pattern
+### 2. Locate Interfaces in a Contracts Layer
+
+**Critical**: Interfaces must NOT live in the consumer's module or the provider's module. They belong in a separate contracts layer.
+
+**Why this matters:**
+
+- Interface with consumer → provider gains unwanted dependency on consumer
+- Interface with provider → consumer depends on provider's module (defeats DIP)
+- Interface in contracts layer → true decoupling achieved
+
+**Single Package/Module Pattern:**
+
+```
+src/
+├── contracts/              # Contracts layer - interfaces only
+│   ├── order-repository.ts # interface OrderRepository
+│   ├── payment-gateway.ts  # interface PaymentGateway
+│   └── email-service.ts    # interface EmailService
+├── domain/                 # High-level business logic
+│   └── order-service.ts    # depends on contracts/*, NOT on infrastructure/*
+└── infrastructure/         # Low-level implementations
+    ├── mysql-order-repository.ts  # implements OrderRepository
+    ├── stripe-payment-gateway.ts  # implements PaymentGateway
+    └── sendgrid-email-service.ts  # implements EmailService
+```
+
+```typescript
+// contracts/order-repository.ts
+export interface OrderRepository {
+  save(order: Order): Promise<void>;
+  findById(id: string): Promise<Order | null>;
+}
+
+// domain/order-service.ts - depends ONLY on contracts
+import { OrderRepository } from '../contracts/order-repository';
+import { PaymentGateway } from '../contracts/payment-gateway';
+
+class OrderService {
+  constructor(
+    private repository: OrderRepository,  // Interface from contracts
+    private payment: PaymentGateway        // Interface from contracts
+  ) {}
+}
+
+// infrastructure/mysql-order-repository.ts - implements contract
+import { OrderRepository } from '../contracts/order-repository';
+
+class MySQLOrderRepository implements OrderRepository {
+  // Implementation details...
+}
+```
+
+**Monorepo Pattern:**
+
+When dependencies cross package/repository boundaries, create a dedicated contracts package:
+
+```
+monorepo/
+├── packages/
+│   ├── contracts/           # Shared contracts package
+│   │   ├── package.json     # @myorg/contracts
+│   │   └── src/
+│   │       ├── order-repository.ts
+│   │       ├── payment-gateway.ts
+│   │       └── index.ts
+│   ├── order-service/       # Consumer package
+│   │   ├── package.json     # depends on @myorg/contracts
+│   │   └── src/
+│   │       └── order-service.ts
+│   └── mysql-adapter/       # Provider package
+│       ├── package.json     # depends on @myorg/contracts
+│       └── src/
+│           └── mysql-order-repository.ts
+```
+
+```json
+// packages/order-service/package.json
+{
+  "name": "@myorg/order-service",
+  "dependencies": {
+    "@myorg/contracts": "workspace:*"  // Only depends on contracts
+  }
+}
+
+// packages/mysql-adapter/package.json
+{
+  "name": "@myorg/mysql-adapter",
+  "dependencies": {
+    "@myorg/contracts": "workspace:*"  // Implements contracts
+  }
+}
+```
+
+**Exception - Hexagonal Architecture:**
+
+In hexagonal (ports and adapters) architecture, the rule is different:
+
+- **Ports** (interfaces) live in the **domain/core** layer
+- **Adapters** depend on the domain and implement its ports
+- This is intentional: the domain defines what it needs, adapters conform to it
+
+```
+src/
+├── domain/                 # Core domain - owns the ports
+│   ├── model/
+│   │   └── order.ts
+│   └── ports/              # Ports ARE in domain (hexagonal exception)
+│       ├── order-repository.port.ts
+│       └── payment-gateway.port.ts
+├── application/            # Use cases
+│   └── create-order.usecase.ts
+└── adapters/               # Adapters implement domain ports
+    ├── driven/             # Secondary/driven adapters
+    │   ├── mysql-order-repository.adapter.ts
+    │   └── stripe-payment.adapter.ts
+    └── driving/            # Primary/driving adapters
+        └── rest-api.adapter.ts
+```
+
+In hexagonal architecture, the domain is the center and everything points inward. Adapters depend on the domain, not the other way around.
+
+### 3. Avoid Service Locator Anti-Pattern
 
 ```typescript
 // BAD: Service locator - hides dependencies
@@ -402,7 +523,7 @@ class OrderService {
 }
 ```
 
-### 3. Keep Constructors Simple
+### 4. Keep Constructors Simple
 
 ```typescript
 // BAD: Logic in constructor
@@ -424,7 +545,7 @@ class UserService {
 }
 ```
 
-### 4. Avoid Circular Dependencies
+### 5. Avoid Circular Dependencies
 
 ```typescript
 // BAD: Circular dependency
@@ -453,7 +574,7 @@ class ServiceB {
 }
 ```
 
-### 5. Inject What You Need
+### 6. Inject What You Need
 
 ```typescript
 // BAD: Injecting container itself
@@ -473,7 +594,7 @@ class OrderService {
 }
 ```
 
-### 6. Use Factory Functions for Complex Creation
+### 7. Use Factory Functions for Complex Creation
 
 ```typescript
 // When creation logic is complex

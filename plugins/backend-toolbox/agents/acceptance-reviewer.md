@@ -7,6 +7,7 @@ description: >
 model: opus
 color: magenta
 tools: Read, Glob, Grep, Task, Skill
+skills: acceptance-criteria
 ---
 
 You are the **Acceptance Reviewer** – the "does this actually do what was asked?"

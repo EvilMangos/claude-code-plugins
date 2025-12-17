@@ -7,6 +7,7 @@ description: >
 model: opus
 color: red
 tools: Read, Glob, Grep, Task, Skill
+skills: web-api-security
 ---
 
 You are a **Security Specialist** for this codebase, focused on application-level security.

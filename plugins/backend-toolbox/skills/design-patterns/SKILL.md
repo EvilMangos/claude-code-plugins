@@ -120,8 +120,15 @@ class Robot implements Workable { /* only work */ }
 **Applying DIP:**
 
 1. Define interfaces for dependencies
-2. Inject dependencies through constructor
-3. Keep high-level modules independent of low-level details
+2. **Locate interfaces in a contracts layer** (not in consumer or provider)
+3. Inject dependencies through constructor
+4. Keep high-level modules independent of low-level details
+
+**Critical - Interface Location:**
+
+- Interfaces must NOT live in the consumer's module or the provider's module
+- Create a separate `contracts/` layer (or package in monorepos)
+- Exception: In hexagonal architecture, ports live in the domain layer
 
 ```typescript
 // Before: Direct dependency
@@ -130,13 +137,19 @@ class OrderService {
   private emailer = new SendGridEmailer();
 }
 
-// After: Depend on abstractions
+// After: Depend on abstractions from contracts layer
+// contracts/order-repository.ts - Interface lives here
+interface OrderRepository { save(order: Order): void; }
+
+// domain/order-service.ts - Depends on contracts
+import { OrderRepository } from '../contracts/order-repository';
 class OrderService {
-  constructor(
-    private repository: OrderRepository,  // Interface
-    private emailer: EmailService         // Interface
-  ) {}
+  constructor(private repository: OrderRepository) {}
 }
+
+// infrastructure/mysql-repository.ts - Implements contracts
+import { OrderRepository } from '../contracts/order-repository';
+class MySQLOrderRepository implements OrderRepository { /* ... */ }
 ```
 
 ## Design Patterns Quick Reference
@@ -209,9 +222,10 @@ class OrderService {
 ### Best Practices
 
 1. **Depend on abstractions** - Interfaces, not concrete classes
-2. **Inject what you need** - Not the container itself
-3. **Keep constructors simple** - Assignment only, no logic
-4. **Avoid circular dependencies** - Break with interfaces or events
+2. **Locate interfaces in contracts layer** - Not in consumer or provider modules
+3. **Inject what you need** - Not the container itself
+4. **Keep constructors simple** - Assignment only, no logic
+5. **Avoid circular dependencies** - Break with interfaces or events
 
 ```typescript
 // Good: Clear dependencies
