@@ -2,6 +2,23 @@
 
 Detailed security considerations for code review.
 
+## OWASP Top 10 Reference
+
+This checklist covers vulnerabilities from the [OWASP Top 10 (2021)](https://owasp.org/Top10/):
+
+| OWASP ID | Category | Section in This Checklist |
+|----------|----------|---------------------------|
+| A01:2021 | Broken Access Control | Authentication & Authorization |
+| A02:2021 | Cryptographic Failures | Cryptography, Data Protection |
+| A03:2021 | Injection | Injection Prevention |
+| A04:2021 | Insecure Design | (See code-review-checklist SKILL.md) |
+| A05:2021 | Security Misconfiguration | Error Handling, API Security |
+| A06:2021 | Vulnerable Components | Dependencies |
+| A07:2021 | Auth Failures | Authentication & Authorization |
+| A08:2021 | Software/Data Integrity | Dependencies |
+| A09:2021 | Logging Failures | Logging & Monitoring |
+| A10:2021 | SSRF | Input Validation |
+
 ## Input Validation
 
 ### User Input
@@ -291,3 +308,101 @@ Required log events:
 - Permission changes
 - Access to sensitive data
 - Security configuration changes
+
+## Quick Remediation Patterns
+
+### SQL Injection Fix
+
+```python
+# Before (vulnerable)
+query = f"SELECT * FROM users WHERE email = '{email}'"
+cursor.execute(query)
+
+# After (safe)
+query = "SELECT * FROM users WHERE email = %s"
+cursor.execute(query, (email,))
+```
+
+### XSS Fix
+
+```javascript
+// Before (vulnerable)
+document.getElementById('output').innerHTML = userInput;
+
+// After (safe) - Option 1: textContent
+document.getElementById('output').textContent = userInput;
+
+// After (safe) - Option 2: DOMPurify for HTML
+import DOMPurify from 'dompurify';
+document.getElementById('output').innerHTML = DOMPurify.sanitize(userInput);
+```
+
+### IDOR Fix
+
+```python
+# Before (vulnerable)
+@app.get("/api/documents/{doc_id}")
+def get_document(doc_id: int, user: User):
+    return db.get_document(doc_id)
+
+# After (safe)
+@app.get("/api/documents/{doc_id}")
+def get_document(doc_id: int, user: User):
+    doc = db.get_document(doc_id)
+    if doc.owner_id != user.id and not user.is_admin:
+        raise HTTPException(403, "Forbidden")
+    return doc
+```
+
+### Command Injection Fix
+
+```python
+# Before (vulnerable)
+import os
+os.system(f"ping {user_host}")
+
+# After (safe) - Use subprocess with list args
+import subprocess
+import shlex
+subprocess.run(["ping", "-c", "1", shlex.quote(validated_host)], check=True)
+```
+
+### Path Traversal Fix
+
+```python
+# Before (vulnerable)
+from pathlib import Path
+file_path = Path(f"/uploads/{user_filename}")
+content = file_path.read_text()
+
+# After (safe)
+from pathlib import Path
+base_dir = Path("/uploads").resolve()
+file_path = (base_dir / user_filename).resolve()
+if not file_path.is_relative_to(base_dir):
+    raise ValueError("Invalid file path")
+content = file_path.read_text()
+```
+
+### Insecure Password Storage Fix
+
+```python
+# Before (vulnerable)
+import hashlib
+password_hash = hashlib.md5(password.encode()).hexdigest()
+
+# After (safe)
+import bcrypt
+password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+# Verification
+if bcrypt.checkpw(password.encode(), stored_hash):
+    # Password matches
+```
+
+## Additional Resources
+
+- [OWASP Top 10](https://owasp.org/Top10/)
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)
+- [CWE Top 25](https://cwe.mitre.org/top25/)
+- [NIST Secure Coding Guidelines](https://www.nist.gov/publications)

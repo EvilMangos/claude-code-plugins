@@ -1,10 +1,16 @@
 ---
 name: code-review-checklist
 description: >
-  This skill should be used when the user asks to "review code", "review my code",
-  "evaluate PR", "check code quality", "review changes", "give feedback on code",
-  "code review", "review this function", "is this code good", or needs a comprehensive
-  checklist for architecture, readability, tests, and safety.
+  This skill provides a structured code review framework with checklists for code quality,
+  security vulnerabilities, and performance optimization. This skill should be used when
+  the user asks to "review this code", "review my code", "do a code review", "check this PR",
+  "evaluate PR", "review pull request", "check code quality", "review changes", "give feedback
+  on code", "review this function", "is this code good", "audit this code", "audit for security
+  issues", "find security vulnerabilities", "check for SQL injection", "review for XSS",
+  "check for injection vulnerabilities", "analyze code quality", "check this code before merging",
+  "review my pull request", "what security issues does this code have", "is this code production-ready",
+  "check for OWASP vulnerabilities", "review authentication security", "check input validation",
+  or needs a comprehensive checklist for architecture, readability, tests, and safety.
 ---
 
 # Code Review Checklist

@@ -2,9 +2,10 @@
 name: web-api-security
 description: >
   This skill should be used when the user asks to "secure my API", "prevent XSS",
-  "SQL injection prevention", "CSRF protection", "secure authentication", "input validation security",
-  "OWASP vulnerabilities", "web security best practices", "security review", "check for vulnerabilities",
-  "harden my web app", or needs guidance on preventing common web application security flaws.
+  "SQL injection prevention", "fix CORS issues", "CSRF protection", "secure authentication",
+  "input validation security", "OWASP vulnerabilities", "web security best practices", "security review",
+  "check for vulnerabilities", "harden my web app", "implement JWT", "set up token refresh",
+  "add rate limiting", "implement OAuth", or needs guidance on preventing common web application security flaws.
 ---
 
 # Web & API Security
@@ -205,6 +206,16 @@ Configure these HTTP security headers:
 - [ ] Maintain security patches for all supported versions
 - [ ] Communicate deprecation timeline clearly
 - [ ] Force upgrade path for critical vulnerabilities
+
+## Common Mistakes
+
+Avoid these frequent security anti-patterns:
+
+- **Relying on client-side validation alone** - Attackers bypass JavaScript; always validate server-side
+- **Using blacklists instead of whitelists** - Blacklists miss novel attacks; define what's allowed, reject everything else
+- **Storing secrets in code or environment variables without encryption** - Use secret managers (Vault, AWS Secrets Manager)
+- **Disabling CORS or using `Access-Control-Allow-Origin: *`** - Opens your API to cross-origin attacks; whitelist specific origins
+- **Rolling your own crypto or auth** - Use battle-tested libraries (bcrypt, passport, established JWT libraries)
 
 ## Additional Resources
 

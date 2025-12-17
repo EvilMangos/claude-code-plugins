@@ -1,10 +1,12 @@
 ---
 name: devops-infrastructure-security
 description: >
-  This skill should be used when the user asks to "secure my pipeline", "secrets management",
-  "container security", "CI/CD security", "dependency vulnerabilities", "supply chain security",
-  "cloud security", "infrastructure security", "secure my deployment", "harden containers",
-  "secure environment variables", "protect API keys", or needs guidance on DevOps and infrastructure security practices.
+ This skill should be used when user asks about "secure my pipeline", "secrets management", "container security",
+  "CI/CD security", "dependency vulnerabilities", "supply chain security", "cloud security",
+  "infrastructure security", "secure my deployment", "harden containers", "secure environment variables",
+  "protect API keys", "scan for vulnerabilities", "security audit", "SAST", "DAST", "SBOM",
+  "image scanning", "credential rotation", "least privilege", "security hardening", "zero trust",
+  or need guidance on securing DevOps workflows, infrastructure, containers, or deployment pipelines.
 ---
 
 # DevOps & Infrastructure Security
@@ -15,14 +17,14 @@ Concise checklists for securing the software supply chain, infrastructure, and d
 
 Before deploying infrastructure changes, verify these critical items:
 
-- [ ] No secrets in code, configs, or environment files committed to repo
-- [ ] Secrets stored in dedicated secrets manager
-- [ ] Container images from trusted base images and scanned
-- [ ] CI/CD pipeline permissions follow least privilege
-- [ ] Dependencies scanned for known vulnerabilities
-- [ ] Network access restricted to minimum required
-- [ ] Logging and monitoring enabled for security events
-- [ ] Infrastructure as Code reviewed for misconfigurations
+- [ ] Ensure no secrets exist in code, configs, or environment files committed to repo
+- [ ] Store secrets in a dedicated secrets manager
+- [ ] Use container images from trusted base images and scan them for vulnerabilities
+- [ ] Apply least privilege to CI/CD pipeline permissions
+- [ ] Scan dependencies for known vulnerabilities
+- [ ] Restrict network access to minimum required
+- [ ] Enable logging and monitoring for security events
+- [ ] Review Infrastructure as Code for misconfigurations
 
 ## Secrets Management
 
@@ -94,8 +96,8 @@ Before committing, scan for:
 
 - [ ] Run as non-root user
 - [ ] Remove unnecessary packages and tools
-- [ ] No secrets baked into image layers
-- [ ] Read-only root filesystem where possible
+- [ ] Ensure no secrets are baked into image layers
+- [ ] Use read-only root filesystem where possible
 - [ ] Drop all capabilities, add only required ones
 - [ ] Set resource limits (memory, CPU)
 
@@ -251,12 +253,12 @@ steps:
 
 ### IaC Review Checklist
 
-- [ ] No hardcoded secrets in templates
-- [ ] Resources follow least privilege
-- [ ] Network rules are restrictive
-- [ ] Encryption enabled where available
-- [ ] Logging and monitoring configured
-- [ ] State files stored securely (encrypted, access-controlled)
+- [ ] Ensure no hardcoded secrets exist in templates
+- [ ] Apply least privilege to all resources
+- [ ] Configure restrictive network rules
+- [ ] Enable encryption where available
+- [ ] Configure logging and monitoring
+- [ ] Store state files securely (encrypted, access-controlled)
 
 ### Common Misconfigurations
 
@@ -306,13 +308,12 @@ steps:
 4. **Audit**: Review logs for unauthorized access
 5. **Remediate**: Fix the vulnerability that caused exposure
 
-## Additional Resources
+## Detailed References
 
-For detailed patterns and examples, consult:
+For in-depth guidance on specific topics, consult these reference documents:
 
 - **`references/secrets-management.md`** - In-depth secrets management patterns and tools
 - **`references/container-hardening.md`** - Comprehensive container security guide
-- **`examples/pipeline-security.md`** - Secure CI/CD pipeline configurations
 
 ### Related Skills
 
