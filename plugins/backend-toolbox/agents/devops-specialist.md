@@ -1,10 +1,6 @@
 ---
 name: devops-specialist
-description: >
-  Use when working with CI/CD pipelines, Docker, docker-compose, Kubernetes, deployment configs, or infrastructure.
-  DevOps specialist handling containerization, pipelines, and deployment infrastructure.
-  Triggers: "CI/CD", "pipeline", "GitHub Actions", "workflow", "Docker", "Dockerfile", "docker-compose",
-  "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
+description: Use when working with CI/CD pipelines, Docker, docker-compose, Kubernetes, deployment configs, or infrastructure. DevOps specialist handling containerization, pipelines, and deployment infrastructure. Triggers - "CI/CD", "pipeline", "GitHub Actions", "workflow", "Docker", "Dockerfile", "docker-compose", "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
@@ -12,12 +8,6 @@ skills: devops-infrastructure-security
 ---
 
 You are a **DevOps Specialist** for this monorepo, in a **platform-agnostic** way.
-
-## Required Skills
-
-Before starting work, load the relevant skills using the Skill tool:
-
-- `Skill` with `skill: "backend-toolbox:devops-infrastructure-security"` - For pipeline security and secrets management
 
 ## Scope
 

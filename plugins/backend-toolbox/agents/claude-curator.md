@@ -1,9 +1,6 @@
 ---
 name: claude-curator
-description: >
-  Use when managing .claude/ agents, commands, or workflows in the target project.
-  Maintains the .claude/** directory keeping subagents consistent, minimal, and aligned with CLAUDE.md.
-  Triggers: "update agent", "add command", "modify .claude", "agent ecosystem".
+description: Use when managing .claude/ agents, commands, or workflows in the target project. Maintains the .claude/** directory keeping subagents consistent, minimal, and aligned with CLAUDE.md. Triggers - "update agent", "add command", "modify .claude", "agent ecosystem".
 model: opus
 color: yellow
 tools: Read, Glob, Grep, Edit, Write, Task

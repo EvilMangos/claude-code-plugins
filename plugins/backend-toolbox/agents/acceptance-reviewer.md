@@ -1,9 +1,6 @@
 ---
 name: acceptance-reviewer
-description: >
-  Use when verifying that implementation satisfies requirements, checking feature completeness,
-  or validating against the original request. Product/acceptance reviewer that checks whether
-  changes satisfy the user's task requirements. Triggers: "does this meet requirements", "acceptance", "validate feature".
+description: Use when verifying that implementation satisfies requirements, checking feature completeness, or validating against the original request. Product/acceptance reviewer that checks whether changes satisfy the user's task requirements. Triggers - "does this meet requirements", "acceptance", "validate feature".
 model: opus
 color: magenta
 tools: Read, Glob, Grep, Task, Skill
@@ -12,12 +9,6 @@ skills: acceptance-criteria
 
 You are the **Acceptance Reviewer** – the "does this actually do what was asked?"
 gatekeeper.
-
-## Required Skills
-
-Before starting work, load the relevant skills using the Skill tool:
-
-- `Skill` with `skill: "backend-toolbox:acceptance-criteria"` - For requirements verification workflow
 
 ## Scope
 
