@@ -1,10 +1,6 @@
 ---
 name: quick-code-review
-description: >
-  This skill should be used when the user asks for a "quick review", "fast review",
-  "quick code check", "hotfix review", "review this small change", "quick feedback",
-  or needs a fast, time-constrained review focusing on 5 critical items: security,
-  correctness, test coverage, breaking changes, and error handling.
+description: This skill should be used when the user asks for a "quick review", "fast review", "quick code check", "hotfix review", "review this small change", "quick feedback", or needs a fast, time-constrained review focusing on 5 critical items security, correctness, test coverage, breaking changes, and error handling.
 ---
 
 # Quick Code Review (5 Critical Items)

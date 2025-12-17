@@ -1,15 +1,6 @@
 ---
 name: test-best-practices
-description: >
-  This skill should be used when the user asks to "write tests", "add tests",
-  "improve tests", "refactor tests", "review test quality", "fix flaky tests",
-  "mock dependencies", "test this function", "what should I test", "how should
-  I structure my tests", "what's the best way to mock this dependency", "how do
-  I organize test fixtures", "what should I name this test", "how do I test
-  async code", "how much test coverage do I need", "my tests are brittle", or
-  needs guidance on testing patterns (AAA, test doubles), test isolation,
-  mocking strategies, fixture organization, test naming, async testing, and
-  coverage decisions.
+description: This skill should be used when the user asks to "write tests", "add tests", "improve tests", "refactor tests", "review test quality", "fix flaky tests", "mock dependencies", "test this function", "what should I test", "how should I structure my tests", "what's the best way to mock this dependency", "how do I organize test fixtures", "what should I name this test", "how do I test async code", "how much test coverage do I need", "my tests are brittle", or needs guidance on testing patterns (AAA, test doubles), test isolation, mocking strategies, fixture organization, test naming, async testing, and coverage decisions.
 ---
 
 # Test Best Practices Guide

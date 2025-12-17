@@ -1,11 +1,6 @@
 ---
 name: algorithm-efficiency
-description: >
-  This skill should be used when the user asks to "optimize this algorithm", "improve time complexity",
-  "reduce space complexity", "this code is slow", "Big O analysis", "choose the right data structure",
-  "optimize this loop", "memoization", "reduce memory usage", "why is this function slow", or needs
-  guidance on algorithmic efficiency, complexity analysis, data structure selection, and code-level
-  performance optimization.
+description: This skill should be used when the user asks to "optimize this algorithm", "improve time complexity", "reduce space complexity", "this code is slow", "Big O analysis", "choose the right data structure", "optimize this loop", "memoization", "reduce memory usage", "why is this function slow", or needs guidance on algorithmic efficiency, complexity analysis, data structure selection, and code-level performance optimization.
 ---
 
 # Algorithm & Code Efficiency

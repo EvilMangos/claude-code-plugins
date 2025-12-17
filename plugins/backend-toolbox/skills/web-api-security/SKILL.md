@@ -1,11 +1,6 @@
 ---
 name: web-api-security
-description: >
-  This skill should be used when the user asks to "secure my API", "prevent XSS",
-  "SQL injection prevention", "fix CORS issues", "CSRF protection", "secure authentication",
-  "input validation security", "OWASP vulnerabilities", "web security best practices", "security review",
-  "check for vulnerabilities", "harden my web app", "implement JWT", "set up token refresh",
-  "add rate limiting", "implement OAuth", or needs guidance on preventing common web application security flaws.
+description: This skill should be used when the user asks to "secure my API", "prevent XSS", "SQL injection prevention", "fix CORS issues", "CSRF protection", "secure authentication", "input validation security", "OWASP vulnerabilities", "web security best practices", "security review", "check for vulnerabilities", "harden my web app", "implement JWT", "set up token refresh", "add rate limiting", "implement OAuth", or needs guidance on preventing common web application security flaws.
 ---
 
 # Web & API Security

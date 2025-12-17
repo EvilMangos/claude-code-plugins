@@ -1,10 +1,6 @@
 ---
 name: backend-performance
-description: >
-  This skill should be used when the user asks to "optimize my API", "improve database performance",
-  "fix slow queries", "reduce response time", "add caching", "fix memory leak", "profile my backend",
-  "N+1 query problem", "connection pooling", "optimize server performance", or needs guidance on
-  backend performance optimization, database tuning, caching strategies, and server-side efficiency.
+description: This skill should be used when the user asks to "optimize my API", "improve database performance", "fix slow queries", "reduce response time", "add caching", "fix memory leak", "profile my backend", "N+1 query problem", "connection pooling", "optimize server performance", or needs guidance on backend performance optimization, database tuning, caching strategies, and server-side efficiency.
 ---
 
 # Backend Performance Optimization
