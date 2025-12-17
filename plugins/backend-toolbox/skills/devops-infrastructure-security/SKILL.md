@@ -1,12 +1,6 @@
 ---
 name: devops-infrastructure-security
-description: >
- This skill should be used when user asks about "secure my pipeline", "secrets management", "container security",
-  "CI/CD security", "dependency vulnerabilities", "supply chain security", "cloud security",
-  "infrastructure security", "secure my deployment", "harden containers", "secure environment variables",
-  "protect API keys", "scan for vulnerabilities", "security audit", "SAST", "DAST", "SBOM",
-  "image scanning", "credential rotation", "least privilege", "security hardening", "zero trust",
-  or need guidance on securing DevOps workflows, infrastructure, containers, or deployment pipelines.
+description: This skill should be used when user asks about "secure my pipeline", "secrets management", "container security", "CI/CD security", "dependency vulnerabilities", "supply chain security", "cloud security", "infrastructure security", "secure my deployment", "harden containers", "secure environment variables", "protect API keys", "scan for vulnerabilities", "security audit", "SAST", "DAST", "SBOM", "image scanning", "credential rotation", "least privilege", "security hardening", "zero trust", or need guidance on securing DevOps workflows, infrastructure, containers, or deployment pipelines.
 ---
 
 # DevOps & Infrastructure Security
