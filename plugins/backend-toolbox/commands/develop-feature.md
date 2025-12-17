@@ -17,7 +17,7 @@ The user request is:
 This workflow uses background agents to minimize context window usage:
 
 1. **Each agent runs in background** (`run_in_background: true`)
-2. **Each agent writes full report to file** (`.workflow/{step}-{name}.md`)
+2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{step}-{name}.md`)
 3. **Each agent returns brief status** (STATUS, FILE, SUMMARY, NEXT_INPUT)
 4. **Orchestrator only sees status** - full context stays in files
 5. **Next agent reads previous files** - gets context from disk
@@ -25,21 +25,53 @@ This workflow uses background agents to minimize context window usage:
 **Critical: Always include these instructions in every agent prompt:**
 ```
 You MUST use the workflow-report-format skill for output formatting.
-Write your FULL report to: .workflow/{step}-{name}.md
+
+## Workflow Directory
+WORKFLOW_DIR: {WORKFLOW_DIR}
+
+Write your FULL report to: {WORKFLOW_DIR}/{step}-{name}.md
 Return ONLY the brief orchestrator response (max 10 lines) as your final output.
+```
+
+## Task ID Generation
+
+Before starting, generate a unique task ID for this workflow:
+
+```
+TASK_ID = develop-feature-{slug}-{timestamp}
+```
+
+Where:
+- `slug`: URL-safe version of feature description (lowercase, hyphens, max 30 chars)
+  - Example: "User Authentication" → `user-authentication`
+  - Example: "Add OAuth2 support for mobile apps" → `add-oauth2-support-for-mobile`
+- `timestamp`: Unix timestamp in seconds (e.g., `1702834567`)
+
+Example: `develop-feature-user-auth-1702834567`
+
+Set the workflow directory:
+```
+WORKFLOW_DIR = .workflow/{TASK_ID}
 ```
 
 ## Workflow State Directory
 
-Before starting, initialize the workflow directory:
+Initialize the workflow directory with the generated task ID:
 
 ```bash
-mkdir -p .workflow/loop-iterations
+mkdir -p {WORKFLOW_DIR}/loop-iterations
 ```
 
-Create `.workflow/metadata.json`:
+Also ensure `.workflow/.gitignore` exists (create once if needed):
+```bash
+echo '*' > .workflow/.gitignore 2>/dev/null || true
+```
+
+Create `{WORKFLOW_DIR}/metadata.json`:
 ```json
 {
+  "taskId": "{TASK_ID}",
+  "command": "develop-feature",
   "feature": "$ARGUMENTS",
   "started": "{ISO timestamp}",
   "currentStep": 1,
@@ -58,17 +90,20 @@ Task tool:
   prompt: |
     You MUST use the workflow-report-format skill.
 
+    ## Workflow Directory
+    WORKFLOW_DIR: {WORKFLOW_DIR}
+
     ## Your Task
     {task description}
 
     ## Input Files to Read
-    {list of .workflow/*.md files to read}
+    {list of {WORKFLOW_DIR}/*.md files to read}
 
     ## Output
-    1. Write FULL report to: .workflow/{step}-{name}.md
+    1. Write FULL report to: {WORKFLOW_DIR}/{step}-{name}.md
     2. Return ONLY this format:
        STATUS: {PASS|PARTIAL|FAIL|DONE}
-       FILE: .workflow/{step}-{name}.md
+       FILE: {WORKFLOW_DIR}/{step}-{name}.md
        SUMMARY: {one sentence}
        NEXT_INPUT: {comma-separated file list for next agent}
        ---
@@ -85,18 +120,23 @@ Parse the STATUS from the response to decide next action.
 
 ### Step 0: Initialize
 
-1. Create `.workflow/` directory
-2. Create `metadata.json`
-3. Restate the feature in your own words
-4. Identify affected domains/packages
-5. List assumptions if anything is ambiguous
-6. Derive behavioral requirements (REQ-1, REQ-2, etc.)
+1. Generate TASK_ID (see "Task ID Generation" above)
+2. Set `WORKFLOW_DIR = .workflow/{TASK_ID}`
+3. Create `{WORKFLOW_DIR}/` directory and `{WORKFLOW_DIR}/loop-iterations/`
+4. Create `.workflow/.gitignore` if it doesn't exist
+5. Create `metadata.json`
+6. Restate the feature in your own words
+7. Identify affected domains/packages
+8. List assumptions if anything is ambiguous
+9. Derive behavioral requirements (REQ-1, REQ-2, etc.)
 
-Write requirements to `.workflow/00-requirements.md`:
+Write requirements to `{WORKFLOW_DIR}/00-requirements.md`:
 ```markdown
 # Feature Requirements
 
 **Feature:** $ARGUMENTS
+**Task ID:** {TASK_ID}
+**Workflow Directory:** {WORKFLOW_DIR}
 
 ## Assumptions
 - {assumption}
@@ -115,14 +155,17 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Create implementation and testing plan for the feature.
 
   ## Input
-  Read: .workflow/00-requirements.md
+  Read: {WORKFLOW_DIR}/00-requirements.md
 
   ## Output
-  1. Write FULL report to: .workflow/01-plan.md
+  1. Write FULL report to: {WORKFLOW_DIR}/01-plan.md
   2. Return brief status only
 ```
 
@@ -137,6 +180,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Design and write tests for the planned behavior (RED stage).
   - Normal paths
@@ -147,10 +193,10 @@ prompt: |
   Use /run-tests with the narrowest scope.
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md
 
   ## Output
-  1. Write FULL report to: .workflow/02-tests-design.md
+  1. Write FULL report to: {WORKFLOW_DIR}/02-tests-design.md
   2. Return brief status only
 ```
 
@@ -165,15 +211,18 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Review the tests for quality. Apply your loaded skills.
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md, .workflow/02-tests-design.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/02-tests-design.md
 
   ## Output
-  1. Write FULL report to: .workflow/03-tests-review.md
+  1. Write FULL report to: {WORKFLOW_DIR}/03-tests-review.md
   2. Return brief status only
 ```
 
@@ -181,7 +230,7 @@ Wait with `TaskOutput(block: true)`.
 
 **Loop Logic:**
 - If STATUS is PARTIAL or FAIL:
-  1. Launch automation-qa to fix tests (reads .workflow/03-tests-review.md)
+  1. Launch automation-qa to fix tests (reads {WORKFLOW_DIR}/03-tests-review.md)
   2. Re-run tests-reviewer
   3. Repeat until PASS
 - Do NOT proceed to implementation until PASS
@@ -195,6 +244,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Implement the feature to make tests pass (GREEN stage).
   - Work in small incremental steps
@@ -202,10 +254,10 @@ prompt: |
   - Continue until all feature tests are GREEN
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md, .workflow/02-tests-design.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/02-tests-design.md
 
   ## Output
-  1. Write FULL report to: .workflow/04-implementation.md
+  1. Write FULL report to: {WORKFLOW_DIR}/04-implementation.md
   2. Return brief status only
 ```
 
@@ -220,6 +272,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Run broader test scope and assess stability:
   - Identify regression risks
@@ -229,10 +284,10 @@ prompt: |
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md, .workflow/04-implementation.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/05-stabilization.md
+  1. Write FULL report to: {WORKFLOW_DIR}/05-stabilization.md
   2. Return brief status only
 ```
 
@@ -254,6 +309,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Verify all requirements are met:
   - Check each REQ-N against implementation
@@ -262,10 +320,10 @@ prompt: |
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-stabilization.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/05-stabilization.md
 
   ## Output
-  1. Write FULL report to: .workflow/06-acceptance.md
+  1. Write FULL report to: {WORKFLOW_DIR}/06-acceptance.md
   2. Return brief status only
 ```
 
@@ -291,6 +349,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Analyze the implementation for performance issues.
   Apply your loaded skills (`backend-performance`, `algorithm-efficiency`).
@@ -301,10 +362,10 @@ prompt: |
   This is review iteration 1 (initial review).
 
   ## Input
-  Read: .workflow/04-implementation.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/07-performance.md
+  1. Write FULL report to: {WORKFLOW_DIR}/07-performance.md
   2. Return brief status only
 ```
 
@@ -315,6 +376,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Re-review performance after fixes were applied.
   Check if BLOCKING issues from previous review are resolved.
@@ -324,12 +388,12 @@ prompt: |
 
   ## Input
   Read:
-  - .workflow/07-performance.md (original findings)
-  - .workflow/loop-iterations/07-performance-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md (current implementation)
+  - {WORKFLOW_DIR}/07-performance.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/07-performance-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md (current implementation)
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/07-performance-review-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-review-{iteration}.md
   2. Return brief status only
 ```
 
@@ -344,6 +408,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Fix the BLOCKING performance issues identified in the review.
   Run /run-tests after each fix to ensure behavior is preserved.
@@ -352,13 +419,13 @@ prompt: |
   This is fix iteration {iteration}.
 
   ## Input
-  Read: {latest review file - either .workflow/07-performance.md or .workflow/loop-iterations/07-performance-review-{iteration}.md}
+  Read: {latest review file - either {WORKFLOW_DIR}/07-performance.md or {WORKFLOW_DIR}/loop-iterations/07-performance-review-{iteration}.md}
 
   ## Focus On
   Address ONLY the BLOCKING issues. NON-BLOCKING issues are deferred.
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/07-performance-fix-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-{iteration}.md
   2. Return brief status only
 ```
 
@@ -381,6 +448,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Analyze the implementation for security vulnerabilities.
   Apply your loaded skill (`web-api-security`).
@@ -391,10 +461,10 @@ prompt: |
   This is review iteration 1 (initial review).
 
   ## Input
-  Read: .workflow/04-implementation.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/08-security.md
+  1. Write FULL report to: {WORKFLOW_DIR}/08-security.md
   2. Return brief status only
 ```
 
@@ -405,6 +475,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Re-review security after fixes were applied.
   Check if BLOCKING vulnerabilities from previous review are resolved.
@@ -414,12 +487,12 @@ prompt: |
 
   ## Input
   Read:
-  - .workflow/08-security.md (original findings)
-  - .workflow/loop-iterations/08-security-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md (current implementation)
+  - {WORKFLOW_DIR}/08-security.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/08-security-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md (current implementation)
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/08-security-review-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/08-security-review-{iteration}.md
   2. Return brief status only
 ```
 
@@ -434,6 +507,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Fix the BLOCKING security vulnerabilities identified in the review.
   Run /run-tests after each fix to ensure behavior is preserved.
@@ -442,13 +518,13 @@ prompt: |
   This is fix iteration {iteration}.
 
   ## Input
-  Read: {latest review file - either .workflow/08-security.md or .workflow/loop-iterations/08-security-review-{iteration}.md}
+  Read: {latest review file - either {WORKFLOW_DIR}/08-security.md or {WORKFLOW_DIR}/loop-iterations/08-security-review-{iteration}.md}
 
   ## Focus On
   Address ONLY the BLOCKING vulnerabilities. NON-BLOCKING hardening is deferred.
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/08-security-fix-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/08-security-fix-{iteration}.md
   2. Return brief status only
 ```
 
@@ -467,6 +543,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Perform behavior-preserving cleanup.
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
@@ -474,10 +553,10 @@ prompt: |
   Record larger refactors as follow-up tasks, don't do them now.
 
   ## Input
-  Read: .workflow/04-implementation.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/09-refactoring.md
+  1. Write FULL report to: {WORKFLOW_DIR}/09-refactoring.md
   2. Return brief status only
 ```
 
@@ -496,6 +575,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Review the code for quality issues.
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
@@ -510,10 +592,10 @@ prompt: |
   This is review iteration 1 (initial review).
 
   ## Input
-  Read: .workflow/04-implementation.md, .workflow/09-refactoring.md
+  Read: {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/09-refactoring.md
 
   ## Output
-  1. Write FULL report to: .workflow/10-code-review.md
+  1. Write FULL report to: {WORKFLOW_DIR}/10-code-review.md
   2. Return brief status only
 ```
 
@@ -524,6 +606,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Re-review code quality after fixes were applied.
   Check if BLOCKING issues from previous review are resolved.
@@ -533,12 +618,12 @@ prompt: |
 
   ## Input
   Read:
-  - .workflow/10-code-review.md (original findings)
-  - .workflow/loop-iterations/10-code-review-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md, .workflow/09-refactoring.md (current state)
+  - {WORKFLOW_DIR}/10-code-review.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/09-refactoring.md (current state)
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/10-code-review-review-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/10-code-review-review-{iteration}.md
   2. Return brief status only
 ```
 
@@ -553,7 +638,7 @@ Parse BLOCKING issues by route from review file:
 **For functional issues:**
 1. Launch automation-qa to add/update tests (RED)
 2. Launch backend-developer to fix (GREEN)
-3. Write combined fix report to `.workflow/loop-iterations/10-code-review-fix-{iteration}.md`
+3. Write combined fix report to `{WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration}.md`
 
 **For structural issues:**
 ```
@@ -561,6 +646,9 @@ subagent_type: refactorer
 run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
   Fix the BLOCKING structural/design issues identified in code review.
@@ -576,7 +664,7 @@ prompt: |
   Address ONLY the BLOCKING structural issues marked "ROUTE: structural".
 
   ## Output
-  1. Write FULL report to: .workflow/loop-iterations/10-code-review-fix-{iteration}.md
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration}.md
   2. Return brief status only
 ```
 
@@ -595,6 +683,9 @@ run_in_background: true
 prompt: |
   Use the workflow-report-format skill.
 
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
   ## Task
   Update documentation impacted by the change:
   - README usage examples
@@ -605,10 +696,10 @@ prompt: |
   Keep changes minimal and tied to implemented behavior.
 
   ## Input
-  Read: .workflow/00-requirements.md, .workflow/01-plan.md, .workflow/04-implementation.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/11-documentation.md
+  1. Write FULL report to: {WORKFLOW_DIR}/11-documentation.md
   2. Return brief status only
 ```
 
@@ -616,15 +707,20 @@ Wait with `TaskOutput(block: true)`.
 
 ### Step 12: Finalize
 
-Update `.workflow/metadata.json`:
+Update `{WORKFLOW_DIR}/metadata.json`:
 ```json
 {
+  "taskId": "{TASK_ID}",
+  "command": "develop-feature",
+  "feature": "$ARGUMENTS",
+  "started": "{original start timestamp}",
+  "currentStep": 12,
   "status": "completed",
   "completedAt": "{ISO timestamp}"
 }
 ```
 
-The workflow-completion hook will generate the final summary by reading `.workflow/` files.
+The workflow-completion hook will generate the final summary by reading `{WORKFLOW_DIR}/` files.
 
 ---
 
@@ -640,7 +736,7 @@ The workflow-completion hook will generate the final summary by reading `.workfl
    - Always wait with `TaskOutput(block: true)` before next step
 
 3. **File-based context:**
-   - Agents write full reports to files
+   - Agents write full reports to files in `{WORKFLOW_DIR}/`
    - Agents return only brief status to orchestrator
    - Next agent reads previous agent's files
 
@@ -649,6 +745,7 @@ The workflow-completion hook will generate the final summary by reading `.workfl
 
 5. **Skill usage:**
    - Every agent prompt MUST mention `workflow-report-format` skill
+   - Every agent prompt MUST include `WORKFLOW_DIR: {WORKFLOW_DIR}`
 
 6. **Verify output files:**
    - After each `TaskOutput`, verify the reported FILE exists
@@ -662,7 +759,7 @@ The workflow-completion hook will generate the final summary by reading `.workfl
 
 8. **Missing input file protocol:**
    - If an agent cannot find a required input file:
-     1. Agent lists `.workflow/` directory contents
+     1. Agent lists `{WORKFLOW_DIR}/` directory contents
      2. Agent attempts to identify alternative file (name variations)
      3. If found: use it and log warning in Handoff Notes
      4. If not found: return `STATUS: ERROR` with file listing
@@ -670,7 +767,12 @@ The workflow-completion hook will generate the final summary by reading `.workfl
 
 9. **Write failure protocol:**
    - If an agent cannot write its output file:
-     1. Agent attempts recovery (mkdir -p .workflow/loop-iterations)
+     1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR}/loop-iterations)
      2. If still fails: return `STATUS: ERROR` with error details
      3. NEVER return DONE/PASS if file was not written
    - Orchestrator halts and reports to user with recovery steps
+
+10. **Task isolation:**
+    - Each workflow MUST use its own unique subdirectory under `.workflow/`
+    - Never write to `.workflow/` root (except `.gitignore`)
+    - This allows multiple workflows to run concurrently
