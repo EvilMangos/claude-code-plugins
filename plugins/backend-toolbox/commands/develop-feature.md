@@ -170,10 +170,10 @@ Read: {WORKFLOW_DIR}/{name}-report.md
 
 Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/requirements-report.md`
 
-Launch in background:
+Launch in foreground:
 ```
 subagent_type: business-analyst
-run_in_background: true
+run_in_background: false
 prompt: |
   Use the workflow-report-format skill.
 
