@@ -51,9 +51,10 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
 ```
 
 This script:
-1. Removes any stale report from previous iteration
-2. Polls every 10 seconds until the report file appears
-3. Returns when the file is ready
+1. Polls every 10 seconds until the report file appears
+2. Returns when the file is ready
+
+Note: Stale reports are not an issue because each workflow run uses a unique TASK_ID directory.
 
 For multiple files (parallel agents):
 ```bash
@@ -91,7 +92,7 @@ WORKFLOW_DIR = .workflow/{TASK_ID}
 Initialize the workflow directory with the generated task ID:
 
 ```bash
-mkdir -p {WORKFLOW_DIR}/loop-iterations
+mkdir -p {WORKFLOW_DIR}
 ```
 
 Create `{WORKFLOW_DIR}/metadata.json`:
@@ -110,6 +111,12 @@ Create `{WORKFLOW_DIR}/metadata.json`:
 
 For EVERY agent, use this pattern:
 
+**Step 1: Remove stale report (ensures wait-for-report.sh waits for fresh output):**
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
+
+**Step 2: Launch the agent:**
 ```
 Task tool:
   subagent_type: {agent-name}
@@ -138,12 +145,12 @@ Task tool:
        {2-5 bullet key points}
 ```
 
-Then wait for completion using the script:
+**Step 3: Wait for completion:**
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
 ```
 
-Then read the short report and parse the STATUS to decide next action:
+**Step 4: Read the short report and parse STATUS to decide next action:**
 ```
 Read: {WORKFLOW_DIR}/{name}-report.md
 ```
@@ -156,10 +163,12 @@ Read: {WORKFLOW_DIR}/{name}-report.md
 
 1. Generate TASK_ID (see "Task ID Generation" above)
 2. Set `WORKFLOW_DIR = .workflow/{TASK_ID}`
-3. Create `{WORKFLOW_DIR}/` directory and `{WORKFLOW_DIR}/loop-iterations/`
+3. Create `{WORKFLOW_DIR}/` directory
 4. Create `metadata.json`
 
 ### Step 1: Requirements Analysis (business-analyst)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/requirements-report.md`
 
 Launch in background:
 ```
@@ -198,6 +207,8 @@ Read: `{WORKFLOW_DIR}/requirements-report.md`
 
 ### Step 2: Planning (plan-creator)
 
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/plan-report.md`
+
 Launch in background:
 ```
 subagent_type: plan-creator
@@ -223,6 +234,8 @@ Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/plan-repo
 Read: `{WORKFLOW_DIR}/plan-report.md`
 
 ### Step 3: Test Design - RED Stage (automation-qa)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/tests-design-report.md`
 
 Launch in background:
 ```
@@ -261,6 +274,8 @@ Read: `{WORKFLOW_DIR}/tests-design-report.md`
 
 ### Step 4: Test Quality Gate (tests-reviewer)
 
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/tests-review-report.md`
+
 Launch in background:
 ```
 subagent_type: tests-reviewer
@@ -292,6 +307,8 @@ Read: `{WORKFLOW_DIR}/tests-review-report.md`
 - Do NOT proceed to implementation until PASS
 
 ### Step 5: Implementation - GREEN Stage (backend-developer)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/implementation-report.md`
 
 Launch in background:
 ```
@@ -328,6 +345,8 @@ Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/implement
 Read: `{WORKFLOW_DIR}/implementation-report.md`
 
 ### Step 6: Stabilization Gate (automation-qa)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/stabilization-report.md`
 
 Launch in background:
 ```
@@ -368,6 +387,8 @@ Read: `{WORKFLOW_DIR}/stabilization-report.md`
 
 ### Step 7: Acceptance Review (acceptance-reviewer)
 
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/acceptance-report.md`
+
 Launch in background:
 ```
 subagent_type: acceptance-reviewer
@@ -405,6 +426,8 @@ Read: `{WORKFLOW_DIR}/acceptance-report.md`
   4. Repeat until PASS
 
 ### Step 8: Performance & Security Check (Parallel)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
 
 Launch BOTH agents IN PARALLEL (single message, multiple Task tool calls):
 
@@ -470,6 +493,8 @@ Read: `{WORKFLOW_DIR}/performance-report.md` and `{WORKFLOW_DIR}/security-report
 
 ### Step 9: Refactoring (refactorer)
 
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/refactoring-report.md`
+
 Launch in background:
 ```
 subagent_type: refactorer
@@ -500,6 +525,8 @@ Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/refactori
 Read: `{WORKFLOW_DIR}/refactoring-report.md`
 
 ### Step 10: Code Review (code-reviewer)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/code-review-report.md`
 
 Launch in background:
 ```
@@ -547,6 +574,8 @@ Read: `{WORKFLOW_DIR}/code-review-report.md`
 **Loop Exit:** STATUS is PASS, only NON-BLOCKING remain, iteration > 5 (max), or user accepts trade-offs
 
 ### Step 11: Documentation (documentation-updater)
+
+Remove: `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/documentation-report.md`
 
 Launch in background:
 ```
@@ -606,9 +635,10 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
 
 2. **Background agents with file-based signaling:**
    - All agents MUST run with `run_in_background: true`
-   - Do NOT use TaskOutput - use `wait-for-report.sh` script instead
+   - Do NOT use TaskOutput - use scripts instead
+   - **Before launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/{name}-report.md`
    - **After launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md`
-   - The script removes stale files and polls until the new report appears
+   - The wait script polls until the report file appears
    - Then read the signal file to get STATUS
 
 3. **Dual-file output:**
@@ -644,7 +674,7 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
 
 9. **Write failure protocol:**
    - If an agent cannot write its output files:
-     1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR}/loop-iterations)
+     1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR})
      2. If still fails: write `STATUS: ERROR` to its `-report.md` with error details
      3. NEVER write DONE/PASS to `-report.md` if full report was not written
    - Orchestrator halts and reports to user with recovery steps

@@ -44,9 +44,7 @@ Each workflow creates its own subdirectory under `.workflow/`:
 │   ├── metadata.json
 │   ├── requirements.md
 │   ├── plan.md
-│   ├── tests-design.md
-│   └── loop-iterations/
-│       └── ...
+│   └── tests-design.md
 ├── fix-bug-login-timeout-1702834890/
 │   ├── metadata.json
 │   ├── requirements.md
@@ -80,7 +78,6 @@ WORKFLOW_DIR: .workflow/{task-id}
 All file operations use this directory:
 - Read from: {WORKFLOW_DIR}/*.md
 - Write to: {WORKFLOW_DIR}/{name}.md
-- Loop files: {WORKFLOW_DIR}/loop-iterations/
 ```
 
 ### File Report Paths
@@ -115,10 +112,7 @@ Within a workflow, each step produces two files:
 ├── code-review.md                 # Full report: code-reviewer output
 ├── code-review-report.md          # Signal: code-review status
 ├── documentation.md               # Full report: documentation-updater output
-├── documentation-report.md        # Signal: documentation status
-└── loop-iterations/               # For reflection loops
-    ├── performance-fix-1.md
-    └── performance-review-2.md
+└── documentation-report.md        # Signal: documentation status
 ```
 
 ## Two-Part Output Pattern
@@ -147,7 +141,7 @@ NEXT_INPUT: List of files the next agent should read
 ${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
 ```
 
-The script removes any stale file from previous iterations before polling, ensuring the orchestrator waits for the fresh output.
+The script polls every 10 seconds until the file appears. Stale files are not an issue because each workflow run uses a unique TASK_ID directory.
 
 ## Standard File Report Structure
 
@@ -755,12 +749,14 @@ NEXT_INPUT: {WORKFLOW_DIR}/documentation.md
 
 Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must be fixed before proceeding.
 
-### Loop Flow
+### Loop Flow (File Overwriting)
+
+Reports are **overwritten** on each iteration - we care about the final passing state, not the history.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  REVIEWER (e.g., performance-specialist)                            │
-│  - Reads implementation                                             │
+│  - Reads: {WORKFLOW_DIR}/implementation.md                          │
 │  - Writes: {WORKFLOW_DIR}/performance.md                            │
 │  - Returns: STATUS: FAIL, BLOCKING issues: 2                        │
 └─────────────────────────────────────────────────────────────────────┘
@@ -769,56 +765,53 @@ Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must b
 ┌─────────────────────────────────────────────────────────────────────┐
 │  FIXER (e.g., backend-developer)                                    │
 │  - Reads: {WORKFLOW_DIR}/performance.md (the findings)              │
-│  - Fixes BLOCKING issues                                            │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md      │
+│  - Fixes BLOCKING issues in code                                    │
+│  - Overwrites: {WORKFLOW_DIR}/implementation.md                     │
 │  - Returns: STATUS: DONE                                            │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  REVIEWER (iteration 2)                                             │
-│  - Reads: {WORKFLOW_DIR}/performance.md (original)                  │
-│  - Reads: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md       │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/performance-review-2.md   │
+│  REVIEWER (re-run)                                                  │
+│  - Reads: {WORKFLOW_DIR}/implementation.md (updated)                │
+│  - Overwrites: {WORKFLOW_DIR}/performance.md                        │
 │  - Returns: STATUS: PASS (or FAIL → continue loop)                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### File Naming Convention for Loops
+### File Paths (Overwrite Pattern)
+
+All iterations use the same file paths:
 
 ```
 {WORKFLOW_DIR}/
-├── performance.md                              # Initial review (iteration 1)
-└── loop-iterations/
-    ├── performance-fix-1.md                    # Fix attempt after iteration 1
-    ├── performance-review-2.md                 # Review iteration 2
-    ├── performance-fix-2.md                    # Fix attempt after iteration 2
-    └── performance-review-3.md                 # Review iteration 3 (hopefully PASS)
+├── implementation.md    # Updated by fixer on each iteration
+├── implementation-report.md
+├── performance.md       # Overwritten by reviewer on each iteration
+└── performance-report.md
 ```
 
-Pattern: `{name}-{action}-{iteration}.md`
-- `action`: `fix` (fixer agent) or `review` (reviewer agent)
-- `iteration`: incrementing number
+Benefits:
+- Simpler orchestrator logic (no iteration tracking)
+- Agents always read/write predictable paths
+- Final state is what matters
 
 ### Orchestrator Responsibilities in Loops
 
-The orchestrator MUST pass to agents:
+The orchestrator MUST:
 
-1. **WORKFLOW_DIR** - The full path to this workflow's directory
-2. **Iteration number** - So the agent knows what filename to use
-3. **Files to read** - Previous findings and any fix reports
-4. **Specific task** - What BLOCKING issues to address
+1. **Pass WORKFLOW_DIR** - The full path to this workflow's directory
+2. **Specify files to read** - Previous findings
+3. **Specify task** - What BLOCKING issues to address
+4. **Track iteration count internally** (for max iteration limit)
 
-Example orchestrator prompt for fixer (iteration 1):
+Example orchestrator prompt for fixer:
 ```
 ## Workflow Directory
 WORKFLOW_DIR: .workflow/develop-feature-user-auth-1702834567
 
 ## Task
 Fix the BLOCKING performance issues identified in the review.
-
-## Iteration
-This is fix iteration 1.
 
 ## Input Files
 Read: {WORKFLOW_DIR}/performance.md
@@ -827,11 +820,11 @@ Read: {WORKFLOW_DIR}/performance.md
 Address ONLY the BLOCKING issues listed. Do not address NON-BLOCKING.
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md
-2. Return brief status only
+1. Write FULL report to: {WORKFLOW_DIR}/implementation.md (overwrite)
+2. Write SHORT status to: {WORKFLOW_DIR}/implementation-report.md
 ```
 
-Example orchestrator prompt for reviewer (iteration 2):
+Example orchestrator prompt for re-review:
 ```
 ## Workflow Directory
 WORKFLOW_DIR: .workflow/develop-feature-user-auth-1702834567
@@ -839,82 +832,13 @@ WORKFLOW_DIR: .workflow/develop-feature-user-auth-1702834567
 ## Task
 Re-review performance after fixes were applied.
 
-## Iteration
-This is review iteration 2.
-
 ## Input Files
 Read:
-- {WORKFLOW_DIR}/performance.md (original findings)
-- {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md (what was fixed)
-- {WORKFLOW_DIR}/implementation.md (current implementation state)
+- {WORKFLOW_DIR}/implementation.md (updated with fixes)
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/performance-review-2.md
-2. Return brief status only
-```
-
-### Fix Report Template (for loops)
-
-```markdown
-# {Step Name} Fix Report
-
-**Status:** DONE
-**Agent:** {fixer-agent-name}
-**Timestamp:** {ISO timestamp}
-**Iteration:** Fix {N}
-**Input Files:** {as specified in orchestrator prompt}
-
-## Issues Addressed
-
-### BLOCKING Issue 1: {title from review}
-- **Original Finding:** {quote from review}
-- **Fix Applied:** {description of fix}
-- **Files Modified:** `path/to/file.ts:42`
-- **Test Verification:** `/run-tests {pattern}` → PASS
-
-### BLOCKING Issue 2: {title from review}
-- **Original Finding:** {quote from review}
-- **Fix Applied:** {description of fix}
-- **Files Modified:** `path/to/file.ts:100`
-- **Test Verification:** `/run-tests {pattern}` → PASS
-
-## Issues NOT Addressed
-- NON-BLOCKING issues deferred (as instructed)
-
-## Handoff Notes
-- Ready for re-review
-- All BLOCKING issues from iteration {N} addressed
-```
-
-### Re-Review Report Template (for loops)
-
-```markdown
-# {Step Name} Re-Review Report
-
-**Status:** PASS | PARTIAL | FAIL
-**Agent:** {reviewer-agent-name}
-**Timestamp:** {ISO timestamp}
-**Iteration:** Review {N}
-**Input Files:** {as specified in orchestrator prompt}
-
-## Previous Issues Status
-
-| Issue | Original Status | Current Status | Notes |
-|-------|-----------------|----------------|-------|
-| {issue 1} | BLOCKING | ✅ RESOLVED | Fix verified |
-| {issue 2} | BLOCKING | ⚠️ PARTIAL | Still needs work |
-| {issue 3} | NON-BLOCKING | ⏸️ DEFERRED | Not in scope |
-
-## New Issues Found (if any)
-- {any new issues discovered}
-
-## Verdict
-- **PASS**: All BLOCKING resolved, ready to proceed
-- **PARTIAL**: {N} BLOCKING issues remain (continue loop)
-- **FAIL**: {N} BLOCKING issues remain (continue loop)
-
-## Handoff Notes
-- {what's needed if loop continues}
+1. Write FULL report to: {WORKFLOW_DIR}/performance.md (overwrite)
+2. Write SHORT status to: {WORKFLOW_DIR}/performance-report.md
 ```
 
 ### Loop Termination
@@ -928,9 +852,9 @@ The orchestrator exits the loop when:
 If max iterations reached without PASS:
 ```
 STATUS: PARTIAL
-FILE: {WORKFLOW_DIR}/loop-iterations/performance-review-{N}.md
+FILE: {WORKFLOW_DIR}/performance.md
 SUMMARY: Max iterations reached with {X} BLOCKING issues remaining
-NEXT_INPUT: {WORKFLOW_DIR}/loop-iterations/performance-review-{N}.md
+NEXT_INPUT: {WORKFLOW_DIR}/performance.md
 ---
 - Loop exhausted after {N} iterations
 - Remaining BLOCKING: {list}
@@ -949,7 +873,6 @@ When an agent attempts to read a required input file that doesn't exist:
 
 ```bash
 ls -la {WORKFLOW_DIR}/
-ls -la {WORKFLOW_DIR}/loop-iterations/  # if checking loop files
 ```
 
 ### Step 2: Identify Alternatives
@@ -1059,7 +982,7 @@ When an agent cannot create or write to its output file:
 
 If `{WORKFLOW_DIR}/` doesn't exist, try to create it:
 ```bash
-mkdir -p {WORKFLOW_DIR}/loop-iterations
+mkdir -p {WORKFLOW_DIR}
 ```
 
 If permission denied, check current directory:
@@ -1124,7 +1047,7 @@ When orchestrator receives `STATUS: ERROR` due to write failure:
 
    To recover:
    - Check directory permissions: ls -la {WORKFLOW_DIR}/
-   - Ensure directory exists: mkdir -p {WORKFLOW_DIR}/loop-iterations
+   - Ensure directory exists: mkdir -p {WORKFLOW_DIR}
    - Check disk space: df -h .
    - Re-run the failed step after fixing permissions
    ```

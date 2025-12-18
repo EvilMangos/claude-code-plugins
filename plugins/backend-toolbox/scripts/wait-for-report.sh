@@ -1,9 +1,12 @@
 #!/bin/bash
-# wait-for-report.sh - Remove stale report(s) and wait for new one(s)
+# wait-for-report.sh - Wait for report file(s) to be created by background agent(s)
 #
 # Usage: wait-for-report.sh [--interval N] <report-file> [report-file2 ...]
 #   --interval N:  Seconds between checks (default: 10)
 #   report-file:   Path(s) to the -report.md file(s) to wait for
+#
+# Note: This script only waits for files to appear. Cleanup of stale reports
+#       should be done BEFORE launching background agents, not during polling.
 #
 # Examples:
 #   wait-for-report.sh .workflow/task-123/implementation-report.md
@@ -33,11 +36,6 @@ if [ ${#FILES[@]} -eq 0 ]; then
   echo "Usage: wait-for-report.sh [--interval N] <report-file> [report-file2 ...]" >&2
   exit 1
 fi
-
-# Remove stale reports from previous iteration
-for FILE in "${FILES[@]}"; do
-  rm -f "$FILE"
-done
 
 # Poll until all report files appear
 all_ready() {
