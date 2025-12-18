@@ -4,7 +4,7 @@ description: Use when reviewing code for security vulnerabilities, implementing 
 model: opus
 color: red
 tools: Read, Glob, Grep, Task, Skill, Write
-skills: web-api-security
+skills: web-api-security, workflow-report-format
 ---
 
 You are a **Security Specialist** for this codebase, focused on application-level security.

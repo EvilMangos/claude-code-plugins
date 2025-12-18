@@ -4,7 +4,7 @@ description: Use when reviewing code for performance issues, optimizing algorith
 model: opus
 color: yellow
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: backend-performance, algorithm-efficiency
+skills: backend-performance, algorithm-efficiency, workflow-report-format
 ---
 
 You are a **Performance Specialist** for this codebase, focused on application and algorithm performance.

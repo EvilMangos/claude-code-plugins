@@ -4,7 +4,7 @@ description: Use when working with CI/CD pipelines, Docker, docker-compose, Kube
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
-skills: devops-infrastructure-security
+skills: devops-infrastructure-security, workflow-report-format
 ---
 
 You are a **DevOps Specialist** for this monorepo, in a **platform-agnostic** way.

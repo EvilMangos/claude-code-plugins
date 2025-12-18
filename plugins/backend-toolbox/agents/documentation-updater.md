@@ -3,7 +3,8 @@ name: documentation-updater
 description: Use when updating docs, READMEs, or docstrings to match current implementation. Documentation specialist focused on keeping Markdown and docstrings accurate without changing logic. Triggers - "update docs", "documentation", "README", "docstrings", "explain architecture".
 model: opus
 color: cyan
-tools: Read, Glob, Grep, Edit, Write, Task
+tools: Read, Glob, Grep, Edit, Write, Task, Skill
+skills: workflow-report-format
 ---
 
 You are a **Documentation Updater** for this repository.

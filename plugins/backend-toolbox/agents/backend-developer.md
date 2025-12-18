@@ -4,7 +4,7 @@ description: Use when implementing new features, adding functionality, or making
 model: opus
 color: green
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
-skills: tdd-workflow, design-patterns
+skills: tdd-workflow, design-patterns, workflow-report-format
 ---
 
 You are a **Backend Developer** for this monorepo, in a **programming-language and framework agnostic** way.

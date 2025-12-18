@@ -4,7 +4,7 @@ description: Use when reviewing test quality, checking test coverage, or validat
 model: opus
 color: cyan
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
-skills: test-best-practices, tdd-workflow
+skills: test-best-practices, tdd-workflow, workflow-report-format
 ---
 
 You are a **Tests Reviewer** for this monorepo.

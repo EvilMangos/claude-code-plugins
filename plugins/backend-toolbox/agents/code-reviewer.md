@@ -4,7 +4,7 @@ description: Use when reviewing code changes, checking architecture alignment, o
 model: opus
 color: red
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: code-review-checklist, design-assessment
+skills: code-review-checklist, design-assessment, workflow-report-format
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.
