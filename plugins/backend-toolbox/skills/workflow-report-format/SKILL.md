@@ -42,14 +42,14 @@ Each workflow creates its own subdirectory under `.workflow/`:
 .workflow/
 ├── develop-feature-user-auth-1702834567/
 │   ├── metadata.json
-│   ├── 00-requirements.md
-│   ├── 01-plan.md
-│   ├── 02-tests-design.md
+│   ├── requirements.md
+│   ├── plan.md
+│   ├── tests-design.md
 │   └── loop-iterations/
 │       └── ...
 ├── fix-bug-login-timeout-1702834890/
 │   ├── metadata.json
-│   ├── 00-requirements.md
+│   ├── requirements.md
 │   └── ...
 └── .gitignore                  # Should contain: *
 ```
@@ -63,11 +63,11 @@ WORKFLOW_DIR: .workflow/{task-id}
 ```
 
 **All file paths are relative to WORKFLOW_DIR.** When agents see instructions like:
-- "Write to: `{WORKFLOW_DIR}/04-implementation.md`"
-- "Read: `{WORKFLOW_DIR}/01-plan.md`"
+- "Write to: `{WORKFLOW_DIR}/implementation.md`"
+- "Read: `{WORKFLOW_DIR}/plan.md`"
 
 They use the actual path like:
-- `.workflow/develop-feature-user-auth-1702834567/04-implementation.md`
+- `.workflow/develop-feature-user-auth-1702834567/implementation.md`
 
 ### Agent Prompt Requirements
 
@@ -79,7 +79,7 @@ WORKFLOW_DIR: .workflow/{task-id}
 
 All file operations use this directory:
 - Read from: {WORKFLOW_DIR}/*.md
-- Write to: {WORKFLOW_DIR}/{step}-{name}.md
+- Write to: {WORKFLOW_DIR}/{name}.md
 - Loop files: {WORKFLOW_DIR}/loop-iterations/
 ```
 
@@ -90,21 +90,21 @@ Within a workflow, the standard files are:
 ```
 {WORKFLOW_DIR}/
 ├── metadata.json              # Workflow metadata (feature name, start time, current step)
-├── 00-requirements.md         # Initial requirements
-├── 01-plan.md                 # plan-creator output
-├── 02-tests-design.md         # automation-qa test design output
-├── 03-tests-review.md         # tests-reviewer output
-├── 04-implementation.md       # backend-developer output
-├── 05-stabilization.md        # automation-qa stabilization output
-├── 06-acceptance.md           # acceptance-reviewer output
-├── 07-performance.md          # performance-specialist output
-├── 08-security.md             # application-security-specialist output
-├── 09-refactoring.md          # refactorer output
-├── 10-code-review.md          # code-reviewer output
-├── 11-documentation.md        # documentation-updater output
+├── requirements.md            # Initial requirements
+├── plan.md                    # plan-creator output
+├── tests-design.md            # automation-qa test design output
+├── tests-review.md            # tests-reviewer output
+├── implementation.md          # backend-developer output
+├── stabilization.md           # automation-qa stabilization output
+├── acceptance.md              # acceptance-reviewer output
+├── performance.md             # performance-specialist output
+├── security.md                # application-security-specialist output
+├── refactoring.md             # refactorer output
+├── code-review.md             # code-reviewer output
+├── documentation.md           # documentation-updater output
 └── loop-iterations/           # For reflection loops
-    ├── 07-performance-fix-1.md
-    └── 07-performance-review-2.md
+    ├── performance-fix-1.md
+    └── performance-review-2.md
 ```
 
 ## Two-Part Output Pattern
@@ -113,7 +113,7 @@ Every agent in the workflow produces TWO outputs:
 
 ### Part 1: File Report (Full Details)
 
-Written to `{WORKFLOW_DIR}/{step}-{name}.md`. Contains everything the next agent needs.
+Written to `{WORKFLOW_DIR}/{name}.md`. Contains everything the next agent needs.
 
 ### Part 2: Orchestrator Response (Brief Status)
 
@@ -121,7 +121,7 @@ Returned as agent response. Maximum 10 lines. Format:
 
 ```
 STATUS: PASS | PARTIAL | FAIL | DONE
-FILE: {WORKFLOW_DIR}/{step}-{name}.md
+FILE: {WORKFLOW_DIR}/{name}.md
 SUMMARY: One sentence describing outcome
 NEXT_INPUT: List of files the next agent should read
 ---
@@ -159,7 +159,7 @@ See agent-specific templates below.
 
 ## Agent-Specific Templates
 
-### plan-creator → `.workflow/01-plan.md`
+### plan-creator → `plan.md`
 
 ```markdown
 # Planning Report
@@ -167,7 +167,7 @@ See agent-specific templates below.
 **Status:** DONE
 **Agent:** plan-creator
 **Timestamp:** {ISO}
-**Input Files:** user request, relevant source files
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Brief description of the feature
@@ -203,9 +203,9 @@ See agent-specific templates below.
 **Orchestrator Response:**
 ```
 STATUS: DONE
-FILE: .workflow/01-plan.md
+FILE: {WORKFLOW_DIR}/plan.md
 SUMMARY: Created implementation plan with {N} requirements and {M} steps
-NEXT_INPUT: .workflow/01-plan.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md
 ---
 - {N} requirements identified
 - {M} implementation steps planned
@@ -214,7 +214,7 @@ NEXT_INPUT: .workflow/01-plan.md
 
 ---
 
-### automation-qa (Test Design) → `.workflow/02-tests-design.md`
+### automation-qa (Test Design) → `tests-design.md`
 
 ```markdown
 # Test Design Report
@@ -222,7 +222,7 @@ NEXT_INPUT: .workflow/01-plan.md
 **Status:** DONE
 **Agent:** automation-qa
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Tests designed for {N} requirements
@@ -259,9 +259,9 @@ NEXT_INPUT: .workflow/01-plan.md
 **Orchestrator Response:**
 ```
 STATUS: DONE
-FILE: .workflow/02-tests-design.md
+FILE: {WORKFLOW_DIR}/tests-design.md
 SUMMARY: Designed {N} tests covering {M} requirements, verified RED stage
-NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
 ---
 - {N} tests created in {M} files
 - All tests fail as expected (RED confirmed)
@@ -270,7 +270,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md
 
 ---
 
-### tests-reviewer → `.workflow/03-tests-review.md`
+### tests-reviewer → `tests-review.md`
 
 ```markdown
 # Test Review Report
@@ -278,7 +278,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** tests-reviewer
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md, .workflow/02-tests-design.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -315,9 +315,9 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/03-tests-review.md
+FILE: {WORKFLOW_DIR}/tests-review.md
 SUMMARY: {PASS: Tests approved | PARTIAL/FAIL: {N} blocking issues found}
-NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md, .workflow/03-tests-review.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md, {WORKFLOW_DIR}/tests-review.md
 ---
 - {N}/{M} requirements covered
 - Blocking issues: {count or "none"}
@@ -326,7 +326,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md, .workflow/03-tes
 
 ---
 
-### backend-developer → `.workflow/04-implementation.md`
+### backend-developer → `implementation.md`
 
 ```markdown
 # Implementation Report
@@ -334,7 +334,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md, .workflow/03-tes
 **Status:** DONE
 **Agent:** backend-developer
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md, .workflow/02-tests-design.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Implemented {N} requirements
@@ -372,9 +372,9 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/02-tests-design.md, .workflow/03-tes
 **Orchestrator Response:**
 ```
 STATUS: DONE
-FILE: .workflow/04-implementation.md
+FILE: {WORKFLOW_DIR}/implementation.md
 SUMMARY: Implemented feature in {N} steps, all {M} tests pass (GREEN)
-NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
 ---
 - {N} files modified
 - {M} tests passing
@@ -383,7 +383,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md
 
 ---
 
-### automation-qa (Stabilization) → `.workflow/05-stabilization.md`
+### automation-qa (Stabilization) → `stabilization.md`
 
 ```markdown
 # Stabilization Report
@@ -391,7 +391,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** automation-qa
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md, .workflow/04-implementation.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -427,9 +427,9 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/05-stabilization.md
+FILE: {WORKFLOW_DIR}/stabilization.md
 SUMMARY: {PASS: Stabilization complete | PARTIAL/FAIL: {N} issues found}
-NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-stabilization.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/stabilization.md
 ---
 - Broader test run: {N} passed, {M} failed
 - Additional tests needed: {YES|NO}
@@ -438,7 +438,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-s
 
 ---
 
-### acceptance-reviewer → `.workflow/06-acceptance.md`
+### acceptance-reviewer → `acceptance.md`
 
 ```markdown
 # Acceptance Review Report
@@ -446,7 +446,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-s
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** acceptance-reviewer
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-stabilization.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -475,9 +475,9 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/05-s
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/06-acceptance.md
+FILE: {WORKFLOW_DIR}/acceptance.md
 SUMMARY: {PASS: All requirements met | PARTIAL/FAIL: {N} gaps found}
-NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/06-acceptance.md
+NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/acceptance.md
 ---
 - Requirements: {N}/{M} met
 - Blocking gaps: {count or "none"}
@@ -486,7 +486,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/06-a
 
 ---
 
-### performance-specialist → `.workflow/07-performance.md`
+### performance-specialist → `performance.md`
 
 ```markdown
 # Performance Review Report
@@ -494,7 +494,7 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/06-a
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** performance-specialist
 **Timestamp:** {ISO}
-**Input Files:** .workflow/04-implementation.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -524,9 +524,9 @@ NEXT_INPUT: .workflow/01-plan.md, .workflow/04-implementation.md, .workflow/06-a
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/07-performance.md
+FILE: {WORKFLOW_DIR}/performance.md
 SUMMARY: {PASS: No blocking issues | PARTIAL/FAIL: {N} blocking issues}
-NEXT_INPUT: .workflow/04-implementation.md, .workflow/07-performance.md
+NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/performance.md
 ---
 - Blocking: {count}
 - Non-blocking: {count}
@@ -535,7 +535,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/07-performance.md
 
 ---
 
-### application-security-specialist → `.workflow/08-security.md`
+### application-security-specialist → `security.md`
 
 ```markdown
 # Security Review Report
@@ -543,7 +543,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/07-performance.md
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** application-security-specialist
 **Timestamp:** {ISO}
-**Input Files:** .workflow/04-implementation.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -580,9 +580,9 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/07-performance.md
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/08-security.md
+FILE: {WORKFLOW_DIR}/security.md
 SUMMARY: {PASS: No vulnerabilities | PARTIAL/FAIL: {N} blocking vulnerabilities}
-NEXT_INPUT: .workflow/04-implementation.md, .workflow/08-security.md
+NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/security.md
 ---
 - Blocking: {count}
 - Non-blocking: {count}
@@ -591,7 +591,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/08-security.md
 
 ---
 
-### refactorer → `.workflow/09-refactoring.md`
+### refactorer → `refactoring.md`
 
 ```markdown
 # Refactoring Report
@@ -599,7 +599,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/08-security.md
 **Status:** DONE
 **Agent:** refactorer
 **Timestamp:** {ISO}
-**Input Files:** .workflow/04-implementation.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - {N} refactoring steps completed
@@ -631,9 +631,9 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/08-security.md
 **Orchestrator Response:**
 ```
 STATUS: DONE
-FILE: .workflow/09-refactoring.md
+FILE: {WORKFLOW_DIR}/refactoring.md
 SUMMARY: Completed {N} refactoring steps, all tests pass
-NEXT_INPUT: .workflow/04-implementation.md, .workflow/09-refactoring.md
+NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/refactoring.md
 ---
 - {N} refactoring steps
 - {M} files modified
@@ -642,7 +642,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/09-refactoring.md
 
 ---
 
-### code-reviewer → `.workflow/10-code-review.md`
+### code-reviewer → `code-review.md`
 
 ```markdown
 # Code Review Report
@@ -650,7 +650,7 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/09-refactoring.md
 **Status:** PASS | PARTIAL | FAIL
 **Agent:** code-reviewer
 **Timestamp:** {ISO}
-**Input Files:** .workflow/04-implementation.md, .workflow/09-refactoring.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - Verdict: {PASS|PARTIAL|FAIL}
@@ -678,9 +678,9 @@ NEXT_INPUT: .workflow/04-implementation.md, .workflow/09-refactoring.md
 **Orchestrator Response:**
 ```
 STATUS: PASS | PARTIAL | FAIL
-FILE: .workflow/10-code-review.md
+FILE: {WORKFLOW_DIR}/code-review.md
 SUMMARY: {PASS: Approved | PARTIAL/FAIL: {N} blocking issues}
-NEXT_INPUT: .workflow/10-code-review.md
+NEXT_INPUT: {WORKFLOW_DIR}/code-review.md
 ---
 - Blocking: {count}
 - Non-blocking: {count}
@@ -689,7 +689,7 @@ NEXT_INPUT: .workflow/10-code-review.md
 
 ---
 
-### documentation-updater → `.workflow/11-documentation.md`
+### documentation-updater → `documentation.md`
 
 ```markdown
 # Documentation Update Report
@@ -697,7 +697,7 @@ NEXT_INPUT: .workflow/10-code-review.md
 **Status:** DONE
 **Agent:** documentation-updater
 **Timestamp:** {ISO}
-**Input Files:** .workflow/01-plan.md, .workflow/04-implementation.md
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Summary
 - {N} documentation files updated
@@ -720,9 +720,9 @@ NEXT_INPUT: .workflow/10-code-review.md
 **Orchestrator Response:**
 ```
 STATUS: DONE
-FILE: .workflow/11-documentation.md
+FILE: {WORKFLOW_DIR}/documentation.md
 SUMMARY: Updated {N} documentation files
-NEXT_INPUT: .workflow/11-documentation.md
+NEXT_INPUT: {WORKFLOW_DIR}/documentation.md
 ---
 - {N} files updated
 - {list of files}
@@ -740,25 +740,25 @@ Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must b
 ┌─────────────────────────────────────────────────────────────────────┐
 │  REVIEWER (e.g., performance-specialist)                            │
 │  - Reads implementation                                             │
-│  - Writes: {WORKFLOW_DIR}/07-performance.md                         │
+│  - Writes: {WORKFLOW_DIR}/performance.md                            │
 │  - Returns: STATUS: FAIL, BLOCKING issues: 2                        │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼ (FAIL → loop)
 ┌─────────────────────────────────────────────────────────────────────┐
 │  FIXER (e.g., backend-developer)                                    │
-│  - Reads: {WORKFLOW_DIR}/07-performance.md (the findings)           │
+│  - Reads: {WORKFLOW_DIR}/performance.md (the findings)              │
 │  - Fixes BLOCKING issues                                            │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md   │
+│  - Writes: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md      │
 │  - Returns: STATUS: DONE                                            │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  REVIEWER (iteration 2)                                             │
-│  - Reads: {WORKFLOW_DIR}/07-performance.md (original)               │
-│  - Reads: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md    │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/07-performance-review-2.md│
+│  - Reads: {WORKFLOW_DIR}/performance.md (original)                  │
+│  - Reads: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md       │
+│  - Writes: {WORKFLOW_DIR}/loop-iterations/performance-review-2.md   │
 │  - Returns: STATUS: PASS (or FAIL → continue loop)                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -767,15 +767,15 @@ Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must b
 
 ```
 {WORKFLOW_DIR}/
-├── 07-performance.md                           # Initial review (iteration 1)
+├── performance.md                              # Initial review (iteration 1)
 └── loop-iterations/
-    ├── 07-performance-fix-1.md                 # Fix attempt after iteration 1
-    ├── 07-performance-review-2.md              # Review iteration 2
-    ├── 07-performance-fix-2.md                 # Fix attempt after iteration 2
-    └── 07-performance-review-3.md              # Review iteration 3 (hopefully PASS)
+    ├── performance-fix-1.md                    # Fix attempt after iteration 1
+    ├── performance-review-2.md                 # Review iteration 2
+    ├── performance-fix-2.md                    # Fix attempt after iteration 2
+    └── performance-review-3.md                 # Review iteration 3 (hopefully PASS)
 ```
 
-Pattern: `{step}-{name}-{action}-{iteration}.md`
+Pattern: `{name}-{action}-{iteration}.md`
 - `action`: `fix` (fixer agent) or `review` (reviewer agent)
 - `iteration`: incrementing number
 
@@ -800,13 +800,13 @@ Fix the BLOCKING performance issues identified in the review.
 This is fix iteration 1.
 
 ## Input Files
-Read: {WORKFLOW_DIR}/07-performance.md
+Read: {WORKFLOW_DIR}/performance.md
 
 ## Focus On
 Address ONLY the BLOCKING issues listed. Do not address NON-BLOCKING.
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md
+1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md
 2. Return brief status only
 ```
 
@@ -823,12 +823,12 @@ This is review iteration 2.
 
 ## Input Files
 Read:
-- {WORKFLOW_DIR}/07-performance.md (original findings)
-- {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md (what was fixed)
-- {WORKFLOW_DIR}/04-implementation.md (current implementation state)
+- {WORKFLOW_DIR}/performance.md (original findings)
+- {WORKFLOW_DIR}/loop-iterations/performance-fix-1.md (what was fixed)
+- {WORKFLOW_DIR}/implementation.md (current implementation state)
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-review-2.md
+1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/performance-review-2.md
 2. Return brief status only
 ```
 
@@ -841,7 +841,7 @@ Read:
 **Agent:** {fixer-agent-name}
 **Timestamp:** {ISO timestamp}
 **Iteration:** Fix {N}
-**Input Files:** {review file that identified issues}
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Issues Addressed
 
@@ -874,7 +874,7 @@ Read:
 **Agent:** {reviewer-agent-name}
 **Timestamp:** {ISO timestamp}
 **Iteration:** Review {N}
-**Input Files:** {original review + fix reports}
+**Input Files:** {as specified in orchestrator prompt}
 
 ## Previous Issues Status
 
@@ -907,9 +907,9 @@ The orchestrator exits the loop when:
 If max iterations reached without PASS:
 ```
 STATUS: PARTIAL
-FILE: .workflow/loop-iterations/07-performance-review-{N}.md
+FILE: {WORKFLOW_DIR}/loop-iterations/performance-review-{N}.md
 SUMMARY: Max iterations reached with {X} BLOCKING issues remaining
-NEXT_INPUT: .workflow/loop-iterations/07-performance-review-{N}.md
+NEXT_INPUT: {WORKFLOW_DIR}/loop-iterations/performance-review-{N}.md
 ---
 - Loop exhausted after {N} iterations
 - Remaining BLOCKING: {list}
@@ -934,13 +934,13 @@ ls -la {WORKFLOW_DIR}/loop-iterations/  # if checking loop files
 ### Step 2: Identify Alternatives
 
 Check if the required file exists under a different name or iteration:
-- Expected: `{WORKFLOW_DIR}/07-performance.md`
-- Found: `{WORKFLOW_DIR}/07-perf.md` or `{WORKFLOW_DIR}/07-performance-review.md`
+- Expected: `{WORKFLOW_DIR}/performance.md`
+- Found: `{WORKFLOW_DIR}/perf.md` or `{WORKFLOW_DIR}/performance-review.md`
 
 Common mismatches:
 - Abbreviated names (`perf` vs `performance`)
 - Missing iteration suffix (`-review-2` vs `-2`)
-- Wrong step number
+- Typos in name
 
 ### Step 3: Decision
 
@@ -949,7 +949,7 @@ Common mismatches:
 - Log the discrepancy in the report's Handoff Notes:
   ```
   ## Handoff Notes
-  - WARNING: Expected `{WORKFLOW_DIR}/07-performance.md`, used `{WORKFLOW_DIR}/07-perf.md` instead
+  - WARNING: Expected `{WORKFLOW_DIR}/performance.md`, used `{WORKFLOW_DIR}/perf.md` instead
   ```
 
 **If no matching file exists:**
@@ -959,10 +959,10 @@ The agent MUST stop and return an error status:
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Required input file missing: {WORKFLOW_DIR}/04-implementation.md
+SUMMARY: Required input file missing: {WORKFLOW_DIR}/implementation.md
 NEXT_INPUT: none
 ---
-- Expected file: {WORKFLOW_DIR}/04-implementation.md
+- Expected file: {WORKFLOW_DIR}/implementation.md
 - Files in {WORKFLOW_DIR}/: [list actual files found]
 - Cannot proceed without this input
 - WORKFLOW HALTED - orchestrator must investigate
@@ -1051,10 +1051,10 @@ The agent MUST return an error status (do NOT return DONE/PASS with a non-existe
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Cannot write output file: {WORKFLOW_DIR}/04-implementation.md
+SUMMARY: Cannot write output file: {WORKFLOW_DIR}/implementation.md
 NEXT_INPUT: none
 ---
-- Attempted to write: {WORKFLOW_DIR}/04-implementation.md
+- Attempted to write: {WORKFLOW_DIR}/implementation.md
 - Error: Permission denied (or: Directory does not exist, etc.)
 - Recovery attempted: mkdir -p {WORKFLOW_DIR}/ → failed
 - Current directory: /path/to/repo
@@ -1068,7 +1068,7 @@ NEXT_INPUT: none
 Bad (causes downstream failure):
 ```
 STATUS: DONE
-FILE: {WORKFLOW_DIR}/04-implementation.md  ← file doesn't actually exist!
+FILE: {WORKFLOW_DIR}/implementation.md  ← file doesn't actually exist!
 SUMMARY: Implementation complete
 ```
 
@@ -1076,7 +1076,7 @@ Good (halts immediately with clear error):
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Write failed: {WORKFLOW_DIR}/04-implementation.md - Permission denied
+SUMMARY: Write failed: {WORKFLOW_DIR}/implementation.md - Permission denied
 ```
 
 ### Orchestrator Response to Write Failures

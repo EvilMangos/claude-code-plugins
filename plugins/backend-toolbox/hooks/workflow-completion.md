@@ -59,14 +59,14 @@ Read the relevant `{WORKFLOW_DIR}/*.md` files to compile the summary (where `WOR
 ### For /develop-feature
 
 Read these files to extract information:
-- `{WORKFLOW_DIR}/00-requirements.md` - Feature name and requirements
-- `{WORKFLOW_DIR}/01-plan.md` - Implementation plan
-- `{WORKFLOW_DIR}/04-implementation.md` - Files modified, tests passing
-- `{WORKFLOW_DIR}/06-acceptance.md` - Acceptance verdict
-- `{WORKFLOW_DIR}/07-performance.md` - Performance verdict
-- `{WORKFLOW_DIR}/08-security.md` - Security verdict
-- `{WORKFLOW_DIR}/10-code-review.md` - Code review verdict
-- `{WORKFLOW_DIR}/11-documentation.md` - Documentation updates
+- `{WORKFLOW_DIR}/requirements.md` - Feature name and requirements
+- `{WORKFLOW_DIR}/plan.md` - Implementation plan
+- `{WORKFLOW_DIR}/implementation.md` - Files modified, tests passing
+- `{WORKFLOW_DIR}/acceptance.md` - Acceptance verdict
+- `{WORKFLOW_DIR}/performance.md` - Performance verdict
+- `{WORKFLOW_DIR}/security.md` - Security verdict
+- `{WORKFLOW_DIR}/code-review.md` - Code review verdict
+- `{WORKFLOW_DIR}/documentation.md` - Documentation updates
 
 Generate:
 
@@ -74,46 +74,46 @@ Generate:
 ## Workflow Complete: Feature Development
 
 **Task ID:** [from metadata.json]
-**Feature:** [from 00-requirements.md]
+**Feature:** [from requirements.md]
 
 ### What was implemented
 
-- [from 04-implementation.md Summary section]
+- [from implementation.md Summary section]
 
 ### Files touched
 
-- [from 04-implementation.md Files Modified section]
+- [from implementation.md Files Modified section]
 
 ### Tests
 
-- [from 02-tests-design.md - test files and count]
-- Run command: [from 04-implementation.md]
+- [from tests-design.md - test files and count]
+- Run command: [from implementation.md]
 
 ### Review Outcomes
 
 | Review | Verdict |
 |--------|---------|
-| Tests-reviewer | [from 03-tests-review.md] |
-| Acceptance | [from 06-acceptance.md] |
-| Performance | [from 07-performance.md] |
-| Security | [from 08-security.md] |
-| Code-review | [from 10-code-review.md] |
+| Tests-reviewer | [from tests-review.md] |
+| Acceptance | [from acceptance.md] |
+| Performance | [from performance.md] |
+| Security | [from security.md] |
+| Code-review | [from code-review.md] |
 
 ### Documentation
 
-- [from 11-documentation.md]
+- [from documentation.md]
 
 ### Follow-up
 
-- [from 09-refactoring.md Follow-up Tasks section]
+- [from refactoring.md Follow-up Tasks section]
 - [any NON-BLOCKING issues from reviews]
 ```
 
 ### For /refactor
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Refactoring scope
-- `{WORKFLOW_DIR}/09-refactoring.md` - Changes made
+- `{WORKFLOW_DIR}/requirements.md` - Refactoring scope
+- `{WORKFLOW_DIR}/refactoring.md` - Changes made
 
 Generate:
 
@@ -121,12 +121,12 @@ Generate:
 ## Workflow Complete: Refactor
 
 **Task ID:** [from metadata.json]
-**Scope:** [from 00-requirements.md]
-**Goals:** [from 00-requirements.md]
+**Scope:** [from requirements.md]
+**Goals:** [from requirements.md]
 
 ### Files changed
 
-- [from 09-refactoring.md Files Modified section]
+- [from refactoring.md Files Modified section]
 
 ### Confirmation
 
@@ -135,22 +135,22 @@ Generate:
 
 ### Test commands used
 
-- [from 09-refactoring.md Refactoring Log - test runs]
+- [from refactoring.md Refactoring Log - test runs]
 
 ### Key improvements
 
-- [from 09-refactoring.md Summary section]
+- [from refactoring.md Summary section]
 
 ### Follow-up
 
-- [from 09-refactoring.md Follow-up Tasks section]
+- [from refactoring.md Follow-up Tasks section]
 ```
 
 ### For /refactor-tests
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Test refactoring scope
-- `{WORKFLOW_DIR}/02-tests-design.md` - Test changes
+- `{WORKFLOW_DIR}/requirements.md` - Test refactoring scope
+- `{WORKFLOW_DIR}/tests-design.md` - Test changes
 
 Generate:
 
@@ -158,8 +158,8 @@ Generate:
 ## Workflow Complete: Test Refactor
 
 **Task ID:** [from metadata.json]
-**Scope:** [from 00-requirements.md]
-**Goals:** [from 00-requirements.md]
+**Scope:** [from requirements.md]
+**Goals:** [from requirements.md]
 
 ### Files changed
 
@@ -182,8 +182,8 @@ Generate:
 ### For /fix-bug
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Bug description
-- `{WORKFLOW_DIR}/04-implementation.md` - Fix details
+- `{WORKFLOW_DIR}/requirements.md` - Bug description
+- `{WORKFLOW_DIR}/implementation.md` - Fix details
 
 Generate:
 
@@ -191,12 +191,12 @@ Generate:
 ## Workflow Complete: Bug Fix
 
 **Task ID:** [from metadata.json]
-**Bug:** [from 00-requirements.md]
+**Bug:** [from requirements.md]
 **Root cause:** [from implementation notes]
 
 ### Fix applied
 
-- [from 04-implementation.md]
+- [from implementation.md]
 
 ### Files modified
 
@@ -241,8 +241,8 @@ If a workflow directory exists but workflow is incomplete, report:
 ## Workflow Interrupted
 
 **Task ID:** [from metadata.json]
-**Feature:** [from metadata.json or 00-requirements.md]
-**Last completed step:** [highest numbered file in {WORKFLOW_DIR}/]
+**Feature:** [from metadata.json or requirements.md]
+**Last completed step:** [from metadata.json current_step field]
 
 ### Progress so far
 

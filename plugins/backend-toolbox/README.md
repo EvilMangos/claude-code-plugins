@@ -96,7 +96,8 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 1. Install the plugin
 2. Create `/run-tests` command in your project that wraps your test runner
-3. Optionally create CLAUDE.md for project-specific rules
+3. Add `.workflow` to your project's `.gitignore` (workflow commands store temporary state there)
+4. Optionally create CLAUDE.md for project-specific rules
 
 ## Installation
 
