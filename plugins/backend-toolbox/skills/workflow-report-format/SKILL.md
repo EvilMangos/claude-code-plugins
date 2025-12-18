@@ -12,85 +12,13 @@ This skill standardizes how agents communicate in background-orchestrated workfl
 
 This keeps orchestrator context minimal while preserving full agent outputs for subsequent agents.
 
-## Multi-Instance Support
+## Workflow State Directory
 
-Multiple Claude Code instances can run workflows concurrently in the same repository. Each workflow gets its own isolated subdirectory.
-
-### Task ID Generation
-
-When a workflow starts, the orchestrator generates a unique task ID:
-
-```
-{command}-{slug}-{timestamp}
-```
-
-Components:
-- `command`: The workflow command name (`develop-feature`, `fix-bug`, etc.)
-- `slug`: URL-safe version of feature/task description (lowercase, hyphens, max 30 chars)
-- `timestamp`: Unix timestamp (seconds)
-
-Examples:
-- `develop-feature-user-auth-1702834567`
-- `fix-bug-login-timeout-1702834890`
-- `refactor-payment-module-1702835012`
-
-### Workflow Directory Structure
-
-Each workflow creates its own subdirectory under `.workflow/`:
+All workflow artifacts go in `.workflow/` at repository root:
 
 ```
 .workflow/
-├── develop-feature-user-auth-1702834567/
-│   ├── metadata.json
-│   ├── 00-requirements.md
-│   ├── 01-plan.md
-│   ├── 02-tests-design.md
-│   └── loop-iterations/
-│       └── ...
-├── fix-bug-login-timeout-1702834890/
-│   ├── metadata.json
-│   ├── 00-requirements.md
-│   └── ...
-└── .gitignore                  # Should contain: *
-```
-
-### WORKFLOW_DIR Variable
-
-The orchestrator passes the full workflow directory path to every agent:
-
-```
-WORKFLOW_DIR: .workflow/{task-id}
-```
-
-**All file paths are relative to WORKFLOW_DIR.** When agents see instructions like:
-- "Write to: `{WORKFLOW_DIR}/04-implementation.md`"
-- "Read: `{WORKFLOW_DIR}/01-plan.md`"
-
-They use the actual path like:
-- `.workflow/develop-feature-user-auth-1702834567/04-implementation.md`
-
-### Agent Prompt Requirements
-
-Every agent prompt MUST include:
-
-```
-## Workflow Directory
-WORKFLOW_DIR: .workflow/{task-id}
-
-All file operations use this directory:
-- Read from: {WORKFLOW_DIR}/*.md
-- Write to: {WORKFLOW_DIR}/{step}-{name}.md
-- Loop files: {WORKFLOW_DIR}/loop-iterations/
-```
-
-### File Report Paths
-
-Within a workflow, the standard files are:
-
-```
-{WORKFLOW_DIR}/
 ├── metadata.json              # Workflow metadata (feature name, start time, current step)
-├── 00-requirements.md         # Initial requirements
 ├── 01-plan.md                 # plan-creator output
 ├── 02-tests-design.md         # automation-qa test design output
 ├── 03-tests-review.md         # tests-reviewer output
@@ -103,8 +31,8 @@ Within a workflow, the standard files are:
 ├── 10-code-review.md          # code-reviewer output
 ├── 11-documentation.md        # documentation-updater output
 └── loop-iterations/           # For reflection loops
-    ├── 07-performance-fix-1.md
-    └── 07-performance-review-2.md
+    ├── 07-performance-2.md    # Second iteration
+    └── 08-security-2.md       # Second iteration
 ```
 
 ## Two-Part Output Pattern
@@ -113,7 +41,7 @@ Every agent in the workflow produces TWO outputs:
 
 ### Part 1: File Report (Full Details)
 
-Written to `{WORKFLOW_DIR}/{step}-{name}.md`. Contains everything the next agent needs.
+Written to `.workflow/{step}-{name}.md`. Contains everything the next agent needs.
 
 ### Part 2: Orchestrator Response (Brief Status)
 
@@ -121,7 +49,7 @@ Returned as agent response. Maximum 10 lines. Format:
 
 ```
 STATUS: PASS | PARTIAL | FAIL | DONE
-FILE: {WORKFLOW_DIR}/{step}-{name}.md
+FILE: .workflow/{step}-{name}.md
 SUMMARY: One sentence describing outcome
 NEXT_INPUT: List of files the next agent should read
 ---
@@ -740,25 +668,25 @@ Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must b
 ┌─────────────────────────────────────────────────────────────────────┐
 │  REVIEWER (e.g., performance-specialist)                            │
 │  - Reads implementation                                             │
-│  - Writes: {WORKFLOW_DIR}/07-performance.md                         │
+│  - Writes: .workflow/07-performance.md                              │
 │  - Returns: STATUS: FAIL, BLOCKING issues: 2                        │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼ (FAIL → loop)
 ┌─────────────────────────────────────────────────────────────────────┐
 │  FIXER (e.g., backend-developer)                                    │
-│  - Reads: {WORKFLOW_DIR}/07-performance.md (the findings)           │
+│  - Reads: .workflow/07-performance.md (the findings)                │
 │  - Fixes BLOCKING issues                                            │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md   │
+│  - Writes: .workflow/loop-iterations/07-performance-fix-1.md        │
 │  - Returns: STATUS: DONE                                            │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  REVIEWER (iteration 2)                                             │
-│  - Reads: {WORKFLOW_DIR}/07-performance.md (original)               │
-│  - Reads: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md    │
-│  - Writes: {WORKFLOW_DIR}/loop-iterations/07-performance-review-2.md│
+│  - Reads: .workflow/07-performance.md (original)                    │
+│  - Reads: .workflow/loop-iterations/07-performance-fix-1.md         │
+│  - Writes: .workflow/loop-iterations/07-performance-review-2.md     │
 │  - Returns: STATUS: PASS (or FAIL → continue loop)                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -766,7 +694,7 @@ Reflection loops occur when a reviewer returns PARTIAL or FAIL and issues must b
 ### File Naming Convention for Loops
 
 ```
-{WORKFLOW_DIR}/
+.workflow/
 ├── 07-performance.md                           # Initial review (iteration 1)
 └── loop-iterations/
     ├── 07-performance-fix-1.md                 # Fix attempt after iteration 1
@@ -783,16 +711,12 @@ Pattern: `{step}-{name}-{action}-{iteration}.md`
 
 The orchestrator MUST pass to agents:
 
-1. **WORKFLOW_DIR** - The full path to this workflow's directory
-2. **Iteration number** - So the agent knows what filename to use
-3. **Files to read** - Previous findings and any fix reports
-4. **Specific task** - What BLOCKING issues to address
+1. **Iteration number** - So the agent knows what filename to use
+2. **Files to read** - Previous findings and any fix reports
+3. **Specific task** - What BLOCKING issues to address
 
 Example orchestrator prompt for fixer (iteration 1):
 ```
-## Workflow Directory
-WORKFLOW_DIR: .workflow/develop-feature-user-auth-1702834567
-
 ## Task
 Fix the BLOCKING performance issues identified in the review.
 
@@ -800,21 +724,18 @@ Fix the BLOCKING performance issues identified in the review.
 This is fix iteration 1.
 
 ## Input Files
-Read: {WORKFLOW_DIR}/07-performance.md
+Read: .workflow/07-performance.md
 
 ## Focus On
 Address ONLY the BLOCKING issues listed. Do not address NON-BLOCKING.
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md
+1. Write FULL report to: .workflow/loop-iterations/07-performance-fix-1.md
 2. Return brief status only
 ```
 
 Example orchestrator prompt for reviewer (iteration 2):
 ```
-## Workflow Directory
-WORKFLOW_DIR: .workflow/develop-feature-user-auth-1702834567
-
 ## Task
 Re-review performance after fixes were applied.
 
@@ -823,12 +744,12 @@ This is review iteration 2.
 
 ## Input Files
 Read:
-- {WORKFLOW_DIR}/07-performance.md (original findings)
-- {WORKFLOW_DIR}/loop-iterations/07-performance-fix-1.md (what was fixed)
-- {WORKFLOW_DIR}/04-implementation.md (current implementation state)
+- .workflow/07-performance.md (original findings)
+- .workflow/loop-iterations/07-performance-fix-1.md (what was fixed)
+- .workflow/04-implementation.md (current implementation state)
 
 ## Output
-1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-review-2.md
+1. Write FULL report to: .workflow/loop-iterations/07-performance-review-2.md
 2. Return brief status only
 ```
 
@@ -927,15 +848,15 @@ When an agent attempts to read a required input file that doesn't exist:
 ### Step 1: List Directory Contents
 
 ```bash
-ls -la {WORKFLOW_DIR}/
-ls -la {WORKFLOW_DIR}/loop-iterations/  # if checking loop files
+ls -la .workflow/
+ls -la .workflow/loop-iterations/  # if checking loop files
 ```
 
 ### Step 2: Identify Alternatives
 
 Check if the required file exists under a different name or iteration:
-- Expected: `{WORKFLOW_DIR}/07-performance.md`
-- Found: `{WORKFLOW_DIR}/07-perf.md` or `{WORKFLOW_DIR}/07-performance-review.md`
+- Expected: `.workflow/07-performance.md`
+- Found: `.workflow/07-perf.md` or `.workflow/07-performance-review.md`
 
 Common mismatches:
 - Abbreviated names (`perf` vs `performance`)
@@ -949,7 +870,7 @@ Common mismatches:
 - Log the discrepancy in the report's Handoff Notes:
   ```
   ## Handoff Notes
-  - WARNING: Expected `{WORKFLOW_DIR}/07-performance.md`, used `{WORKFLOW_DIR}/07-perf.md` instead
+  - WARNING: Expected `.workflow/07-performance.md`, used `.workflow/07-perf.md` instead
   ```
 
 **If no matching file exists:**
@@ -959,11 +880,11 @@ The agent MUST stop and return an error status:
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Required input file missing: {WORKFLOW_DIR}/04-implementation.md
+SUMMARY: Required input file missing: .workflow/04-implementation.md
 NEXT_INPUT: none
 ---
-- Expected file: {WORKFLOW_DIR}/04-implementation.md
-- Files in {WORKFLOW_DIR}/: [list actual files found]
+- Expected file: .workflow/04-implementation.md
+- Files in .workflow/: [list actual files found]
 - Cannot proceed without this input
 - WORKFLOW HALTED - orchestrator must investigate
 ```
@@ -984,9 +905,8 @@ When orchestrator receives `STATUS: ERROR`:
 
    Agent: {agent-name}
    Missing file: {file path}
-   Workflow directory: {WORKFLOW_DIR}
 
-   Available files in {WORKFLOW_DIR}/:
+   Available files in .workflow/:
    - {list files}
 
    Possible causes:
@@ -1024,7 +944,7 @@ When an agent cannot create or write to its output file:
 
 **Common causes:**
 - Permission denied (directory not writable)
-- `{WORKFLOW_DIR}/` directory doesn't exist
+- `.workflow/` directory doesn't exist
 - Disk full
 - Path contains invalid characters
 - File locked by another process
@@ -1033,9 +953,9 @@ When an agent cannot create or write to its output file:
 
 ### Step 1: Attempt Recovery
 
-If `{WORKFLOW_DIR}/` doesn't exist, try to create it:
+If `.workflow/` doesn't exist, try to create it:
 ```bash
-mkdir -p {WORKFLOW_DIR}/loop-iterations
+mkdir -p .workflow/loop-iterations
 ```
 
 If permission denied, check current directory:
@@ -1051,12 +971,12 @@ The agent MUST return an error status (do NOT return DONE/PASS with a non-existe
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Cannot write output file: {WORKFLOW_DIR}/04-implementation.md
+SUMMARY: Cannot write output file: .workflow/04-implementation.md
 NEXT_INPUT: none
 ---
-- Attempted to write: {WORKFLOW_DIR}/04-implementation.md
+- Attempted to write: .workflow/04-implementation.md
 - Error: Permission denied (or: Directory does not exist, etc.)
-- Recovery attempted: mkdir -p {WORKFLOW_DIR}/ → failed
+- Recovery attempted: mkdir -p .workflow/ → failed
 - Current directory: /path/to/repo
 - WORKFLOW HALTED - orchestrator must investigate
 ```
@@ -1068,7 +988,7 @@ NEXT_INPUT: none
 Bad (causes downstream failure):
 ```
 STATUS: DONE
-FILE: {WORKFLOW_DIR}/04-implementation.md  ← file doesn't actually exist!
+FILE: .workflow/04-implementation.md  ← file doesn't actually exist!
 SUMMARY: Implementation complete
 ```
 
@@ -1076,7 +996,7 @@ Good (halts immediately with clear error):
 ```
 STATUS: ERROR
 FILE: none
-SUMMARY: Write failed: {WORKFLOW_DIR}/04-implementation.md - Permission denied
+SUMMARY: Write failed: .workflow/04-implementation.md - Permission denied
 ```
 
 ### Orchestrator Response to Write Failures
@@ -1086,21 +1006,20 @@ When orchestrator receives `STATUS: ERROR` due to write failure:
 1. **HALT workflow immediately**
 2. **Check directory permissions:**
    ```bash
-   ls -la {WORKFLOW_DIR}/
-   touch {WORKFLOW_DIR}/test-write && rm {WORKFLOW_DIR}/test-write
+   ls -la .workflow/
+   touch .workflow/test-write && rm .workflow/test-write
    ```
 3. **Report to user:**
    ```
    WORKFLOW HALTED - Write Failure
 
    Agent: {agent-name}
-   Workflow directory: {WORKFLOW_DIR}
    Could not write: {file path}
    Error: {error message}
 
    To recover:
-   - Check directory permissions: ls -la {WORKFLOW_DIR}/
-   - Ensure directory exists: mkdir -p {WORKFLOW_DIR}/loop-iterations
+   - Check directory permissions: ls -la .workflow/
+   - Ensure .workflow/ exists: mkdir -p .workflow/loop-iterations
    - Check disk space: df -h .
    - Re-run the failed step after fixing permissions
    ```

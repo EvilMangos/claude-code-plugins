@@ -7,7 +7,7 @@ hooks:
 
 # Workflow Completion Hook
 
-When a TDD workflow command completes, generate a structured summary by reading from workflow files.
+When a TDD workflow command completes, generate a structured summary by reading from `.workflow/` files.
 
 ## Applies To
 
@@ -19,61 +19,33 @@ Trigger summary for these commands:
 - `/fix-bug`
 - `/devops-change`
 
-## Detection (Multi-Instance Aware)
+## Detection
 
-Workflows are stored in subdirectories under `.workflow/`:
+Check if `.workflow/metadata.json` exists and has `"status": "completed"`.
 
-```
-.workflow/
-├── develop-feature-user-auth-1702834567/
-│   └── metadata.json
-├── fix-bug-login-timeout-1702834890/
-│   └── metadata.json
-└── .gitignore
-```
-
-### Step 1: Find Workflow Directories
-
-List all subdirectories in `.workflow/`:
-```bash
-ls -d .workflow/*/ 2>/dev/null
-```
-
-### Step 2: Check Each for Completion
-
-For each subdirectory, check if `metadata.json` exists and has `"status": "completed"`:
-```bash
-cat .workflow/{task-id}/metadata.json
-```
-
-### Step 3: Generate Summary for Completed Workflows
-
-For each completed workflow, generate the appropriate summary based on the `command` field in `metadata.json`.
-
-If a workflow directory exists but status is not "completed", the workflow was interrupted - report partial progress.
+If the workflow directory exists but status is not completed, the workflow was interrupted - report partial progress.
 
 ## Summary Generation
 
-Read the relevant `{WORKFLOW_DIR}/*.md` files to compile the summary (where `WORKFLOW_DIR = .workflow/{task-id}`):
+Read the relevant `.workflow/*.md` files to compile the summary:
 
 ### For /develop-feature
 
 Read these files to extract information:
-- `{WORKFLOW_DIR}/00-requirements.md` - Feature name and requirements
-- `{WORKFLOW_DIR}/01-plan.md` - Implementation plan
-- `{WORKFLOW_DIR}/04-implementation.md` - Files modified, tests passing
-- `{WORKFLOW_DIR}/06-acceptance.md` - Acceptance verdict
-- `{WORKFLOW_DIR}/07-performance.md` - Performance verdict
-- `{WORKFLOW_DIR}/08-security.md` - Security verdict
-- `{WORKFLOW_DIR}/10-code-review.md` - Code review verdict
-- `{WORKFLOW_DIR}/11-documentation.md` - Documentation updates
+- `.workflow/00-requirements.md` - Feature name and requirements
+- `.workflow/01-plan.md` - Implementation plan
+- `.workflow/04-implementation.md` - Files modified, tests passing
+- `.workflow/06-acceptance.md` - Acceptance verdict
+- `.workflow/07-performance.md` - Performance verdict
+- `.workflow/08-security.md` - Security verdict
+- `.workflow/10-code-review.md` - Code review verdict
+- `.workflow/11-documentation.md` - Documentation updates
 
 Generate:
 
 ```markdown
 ## Workflow Complete: Feature Development
 
-**Task ID:** [from metadata.json]
 **Feature:** [from 00-requirements.md]
 
 ### What was implemented
@@ -112,15 +84,14 @@ Generate:
 ### For /refactor
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Refactoring scope
-- `{WORKFLOW_DIR}/09-refactoring.md` - Changes made
+- `.workflow/00-requirements.md` - Refactoring scope
+- `.workflow/09-refactoring.md` - Changes made
 
 Generate:
 
 ```markdown
 ## Workflow Complete: Refactor
 
-**Task ID:** [from metadata.json]
 **Scope:** [from 00-requirements.md]
 **Goals:** [from 00-requirements.md]
 
@@ -149,15 +120,14 @@ Generate:
 ### For /refactor-tests
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Test refactoring scope
-- `{WORKFLOW_DIR}/02-tests-design.md` - Test changes
+- `.workflow/00-requirements.md` - Test refactoring scope
+- `.workflow/02-tests-design.md` - Test changes
 
 Generate:
 
 ```markdown
 ## Workflow Complete: Test Refactor
 
-**Task ID:** [from metadata.json]
 **Scope:** [from 00-requirements.md]
 **Goals:** [from 00-requirements.md]
 
@@ -182,15 +152,14 @@ Generate:
 ### For /fix-bug
 
 Read:
-- `{WORKFLOW_DIR}/00-requirements.md` - Bug description
-- `{WORKFLOW_DIR}/04-implementation.md` - Fix details
+- `.workflow/00-requirements.md` - Bug description
+- `.workflow/04-implementation.md` - Fix details
 
 Generate:
 
 ```markdown
 ## Workflow Complete: Bug Fix
 
-**Task ID:** [from metadata.json]
 **Bug:** [from 00-requirements.md]
 **Root cause:** [from implementation notes]
 
@@ -217,32 +186,29 @@ Generate:
 After generating the summary, offer to clean up:
 
 ```
-Workflow artifacts are in `{WORKFLOW_DIR}/`. Would you like to:
+Workflow artifacts are in `.workflow/`. Would you like to:
 - Keep them for reference
-- Delete this workflow only (rm -rf {WORKFLOW_DIR}/)
-- Delete all completed workflows (finds all with status: completed)
+- Delete them (rm -rf .workflow/)
 ```
 
 ## When NOT to Trigger
 
 Do not generate summary when:
 
-- No workflow subdirectories exist in `.workflow/`
-- No `metadata.json` files found in subdirectories
+- `.workflow/metadata.json` doesn't exist
 - Session ends without completing a workflow command
 - User interrupts mid-workflow (status != "completed")
 - Simple queries or non-workflow commands were used
 
 ## Partial Progress Report
 
-If a workflow directory exists but workflow is incomplete, report:
+If `.workflow/` exists but workflow is incomplete, report:
 
 ```markdown
 ## Workflow Interrupted
 
-**Task ID:** [from metadata.json]
 **Feature:** [from metadata.json or 00-requirements.md]
-**Last completed step:** [highest numbered file in {WORKFLOW_DIR}/]
+**Last completed step:** [highest numbered file in .workflow/]
 
 ### Progress so far
 
@@ -250,29 +216,7 @@ If a workflow directory exists but workflow is incomplete, report:
 
 ### To resume
 
-The workflow state is preserved in `{WORKFLOW_DIR}/`. You can:
+The workflow state is preserved in `.workflow/`. You can:
 - Continue from where you left off
-- Start fresh with `rm -rf {WORKFLOW_DIR}/` and re-run the command
+- Start fresh with `rm -rf .workflow/` and re-run the command
 ```
-
-## Multiple Workflows
-
-If multiple workflow directories exist, report each separately:
-
-```markdown
-## Workflow Status Summary
-
-Found {N} workflow(s) in `.workflow/`:
-
-### Completed
-- `develop-feature-user-auth-1702834567` - User Authentication (completed)
-- `fix-bug-login-timeout-1702834890` - Login Timeout Fix (completed)
-
-### In Progress
-- `develop-feature-payment-1702835012` - Payment Integration (step 4/12)
-
-### Interrupted
-- `refactor-api-1702830000` - API Refactor (interrupted at step 3)
-```
-
-For completed workflows, generate individual summaries. For in-progress or interrupted workflows, show status only.
