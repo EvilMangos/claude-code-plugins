@@ -1,7 +1,7 @@
 ---
 description: Develops a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, performance check, security check, refactoring, code review, and documentation updates.
 argument-hint: [ feature-description ]
-allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand, Bash
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand, Bash, AskUserQuestion
 ---
 
 # Feature Development Workflow (Background Agent Orchestration)
@@ -120,44 +120,41 @@ Parse the STATUS from the response to decide next action.
 3. Create `{WORKFLOW_DIR}/` directory and `{WORKFLOW_DIR}/loop-iterations/`
 4. Create `metadata.json`
 
-### Step 1: Requirements Analysis
+### Step 1: Requirements Analysis (business-analyst)
 
-**This step loops until all ambiguities are resolved.**
-
-#### Step 1a: Identify Ambiguities
-1. Restate the feature in your own words
-2. Identify affected domains/packages
-3. List ALL ambiguous points, unclear terms, or missing details
-4. If no ambiguities → proceed to Step 1c
-
-#### Step 1b: Clarification Loop
-1. Ask user ALL identified questions using AskUserQuestion tool
-2. Review user's answers for clarity
-3. If any answers introduce new ambiguities or are unclear:
-   - List the new/remaining ambiguous points
-   - Loop back: ask follow-up questions
-4. Repeat until ALL ambiguities are fully resolved
-
-#### Step 1c: Derive Requirements
-1. Derive behavioral requirements (REQ-1, REQ-2, etc.) based on clarified understanding
-2. Write requirements to `{WORKFLOW_DIR}/requirements.md`
-
-Write requirements to `{WORKFLOW_DIR}/requirements.md`:
-```markdown
-# Feature Requirements
-
-**Feature:** $ARGUMENTS
-**Task ID:** {TASK_ID}
-**Workflow Directory:** {WORKFLOW_DIR}
-
-## Clarifications
-- Q: {question asked} → A: {user's answer}
-- Q: {follow-up question} → A: {user's answer}
-
-## Requirements
-1. REQ-1: {requirement}
-2. REQ-2: {requirement}
+Launch in background:
 ```
+subagent_type: business-analyst
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Analyze the feature request and create specific requirements:
+  - Restate the feature in your own words
+  - Identify affected domains/packages
+  - List ALL ambiguous points, unclear terms, or missing details
+  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
+  - Review answers; if unclear or introduce new ambiguities, ask follow-ups
+  - Derive behavioral requirements (REQ-1, REQ-2, etc.)
+
+  ## Feature Request
+  $ARGUMENTS
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/requirements.md
+     Include:
+     - Feature Understanding (your restatement)
+     - Affected Domains/Components
+     - Clarifications (Q&A pairs if any)
+     - Behavioral Requirements (REQ-1, REQ-2, etc.)
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
 
 ### Step 2: Planning (plan-creator)
 
