@@ -1,8 +1,10 @@
 ---
 description: Develops a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, performance check, security check, refactoring, code review, and documentation updates.
 argument-hint: [ feature-description ]
-allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand, Bash, AskUserQuestion
 ---
+
+# Feature Development Workflow (Background Agent Orchestration)
 
 You are orchestrating a multistep **TDD** feature workflow for this repository.
 
@@ -10,242 +12,644 @@ The user request is:
 
 > $ARGUMENTS
 
-You MUST follow this workflow strictly and delegate to the named subagents at each step.
-Do not do a subagent's work in the main agent.
+## Architecture: Background Agents with File-Based Context
 
-Required subagents:
+This workflow uses background agents to minimize context window usage:
 
-- plan-creator
-- automation-qa
-- tests-reviewer
-- backend-developer
-- acceptance-reviewer
-- performance-specialist
-- application-security-specialist
-- refactorer
-- code-reviewer
-- documentation-updater
+1. **Each agent runs in background** (`run_in_background: true`)
+2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{name}.md`)
+3. **Each agent writes short status to signal file** (`{WORKFLOW_DIR}/{name}-report.md`)
+4. **Orchestrator polls for signal file** - no TaskOutput needed
+5. **Orchestrator reads only the short report** - full context stays in files
+6. **Next agent reads previous full reports** - gets context from disk
 
-## Testing
+**Critical: Always include these instructions in every agent prompt:**
+```
+You MUST use the workflow-report-format skill for output formatting.
 
-Use `/run-tests <path-or-pattern>` to run tests throughout this workflow. The SessionStart hook verifies this command
-exists.
+## Workflow Directory
+WORKFLOW_DIR: {WORKFLOW_DIR}
 
-## Workflow
+## Output Files
+1. Write your FULL report to: {WORKFLOW_DIR}/{name}.md
+2. Write your SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+   The short report MUST contain ONLY:
+   STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
+   FILE: {WORKFLOW_DIR}/{name}.md
+   SUMMARY: {one sentence}
+   NEXT_INPUT: {comma-separated file list for next agent}
+   ---
+   {2-5 bullet key points}
+```
 
-### 1) Clarify & high-level understanding (main agent)
+## Waiting for Agent Completion
 
-- Restate the feature in your own words.
-- Identify affected domains/packages.
-- If anything is ambiguous, list assumptions explicitly.
-- Derive a list of **behavioral requirements** (inputs, outputs, edge cases, errors).
+Do NOT use TaskOutput. Instead, use the `wait-for-report.sh` script:
 
-### 2) Planning (delegate to `plan-creator`)
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
 
-- Invoke `plan-creator` to:
-    - Explore the relevant code.
-    - Produce a step-by-step implementation and testing plan.
-    - Map each requirement to concrete code areas and test locations.
-    - Highlight risks and open questions.
-- Adopt or lightly refine the plan.
-- Ensure the plan clearly separates:
-    - **Test steps** (what tests to write/update, where).
-    - **Implementation steps** (what logic to add/change, where).
+This script:
+1. Removes any stale report from previous iteration
+2. Polls every 10 seconds until the report file appears
+3. Returns when the file is ready
 
-### 3) TDD — Test design & RED stage (delegate to `automation-qa`)
+For multiple files (parallel agents):
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/file1-report.md {WORKFLOW_DIR}/file2-report.md
+```
 
-- Before changing any implementation, invoke `automation-qa` to:
-    - Design and write/update tests for the planned behavior:
-        - Normal paths
-        - Edge cases
-        - Error conditions
-    - Place tests in the appropriate test files and fixtures.
-    - Provide **exact `/run-tests` invocations** to run just these tests (smallest scope).
-- After tests are created/updated:
-    - Run the suggested `/run-tests` commands against the current implementation to confirm they **fail** (RED).
-- If tests pass unexpectedly:
-    - Loop with `automation-qa` to strengthen expectations and/or adjust scenarios.
-    - Re-run the RED `/run-tests` commands.
+Then read the short report file to get the STATUS and decide next action:
+```
+Read: {WORKFLOW_DIR}/{name}-report.md
+```
 
-### 4) Test quality review gate (delegate to `tests-reviewer`)
+## Task ID Generation
 
-- Immediately after the RED stage, invoke `tests-reviewer` to review:
-    - Requirements → tests mapping completeness
-    - Correctness: tests verify the right observable behavior
-    - Strength: assertions would fail for realistic bugs
-    - Determinism & flake risk
-- The `tests-reviewer` must return a verdict: **PASS / PARTIAL / FAIL**.
-- If verdict is PARTIAL or FAIL:
-    - Loop back to `automation-qa` to tighten/fix tests
-    - Re-run the RED `/run-tests` commands
-    - Re-run `tests-reviewer`
-- Do not proceed to implementation until verdict is PASS.
+Before starting, generate a unique task ID for this workflow:
 
-### 5) TDD — Implementation & GREEN stage (delegate to `backend-developer`)
+```
+TASK_ID = develop-feature-{slug}-{timestamp}
+```
 
-- Pass to `backend-developer`:
-    - The plan
-    - The requirements list
-    - The current failing tests and the exact `/run-tests` invocations
-- The `backend-developer` must implement in small, incremental steps.
-- After each small step, the `backend-developer` must:
-    1. Describe what changed (files, functions)
-    2. Specify the smallest relevant `/run-tests` invocation to run now
-- You MUST run that `/run-tests` invocation after each step.
-- If tests fail:
-    - Continue with minimal changes until green.
-    - Only adjust tests by looping with `automation-qa` (tests-first) if the tests are genuinely wrong.
-- Continue until all feature-related tests are green.
+Where:
+- `slug`: URL-safe version of feature description (lowercase, hyphens, max 30 chars)
+  - Example: "User Authentication" → `user-authentication`
+  - Example: "Add OAuth2 support for mobile apps" → `add-oauth2-support-for-mobile`
+- `timestamp`: Unix timestamp in seconds (e.g., `1702834567`)
 
-### 6) Broader testing & stabilization gate (MANDATORY) (delegate to `automation-qa`)
+Example: `develop-feature-user-auth-1702834567`
 
-- This step is required. Do not proceed to Acceptance Review until it is completed.
-- Re-invoke `automation-qa` and require it to return:
-    - “Additional regression/integration tests needed?” (YES/NO + reasons)
-    - A broader `/run-tests` invocation to run (reasonable scope; e.g., package-level)
-    - A stabilization verdict: **PASS / PARTIAL / FAIL**
-- You MUST:
-    1. Run the broader `/run-tests` invocation and summarize the output
-    2. If verdict is PARTIAL or FAIL, loop using strict TDD:
-        - `automation-qa` updates/extends tests (RED)
-        - Run `/run-tests` to confirm RED
-        - `backend-developer` makes minimal changes (GREEN; run tests after each step)
-        - Re-run the broader `/run-tests`
-        - Re-run `automation-qa` for a new verdict
-- If `automation-qa` cannot be invoked (quota/error), STOP and report the workflow is blocked.
+Set the workflow directory:
+```
+WORKFLOW_DIR = .workflow/{TASK_ID}
+```
 
-### 7) Acceptance review (delegate to `acceptance-reviewer`)
+## Workflow State Directory
 
-- Provide `acceptance-reviewer`:
-    - The original request (`$ARGUMENTS` and clarifications)
-    - The plan from `plan-creator`
-    - A summary of implementation + tests (including key `/run-tests` invocations)
-    - Evidence from Step 6 (broader invocation + result summary + automation-qa verdict)
-- Have the subagent:
-    - Check whether all requirements are met
-    - Produce a verdict: **PASS / PARTIAL / FAIL** with a requirements checklist
-- If there are functional gaps:
-    - Loop back using strict TDD:
-        - `automation-qa` (tests first, RED)
-        - run `/run-tests` to confirm RED
-        - `backend-developer` (minimal implementation, GREEN with tests after each step)
-        - stabilization gate (Step 6) as needed
-        - re-run acceptance review
+Initialize the workflow directory with the generated task ID:
 
-### 8) Performance check loop (`performance-specialist` ↔ `backend-developer`)
+```bash
+mkdir -p {WORKFLOW_DIR}/loop-iterations
+```
 
-- After acceptance review passes, enter a performance review loop:
+Create `{WORKFLOW_DIR}/metadata.json`:
+```json
+{
+  "taskId": "{TASK_ID}",
+  "command": "develop-feature",
+  "feature": "$ARGUMENTS",
+  "started": "{ISO timestamp}",
+  "currentStep": 1,
+  "status": "in_progress"
+}
+```
 
-**Loop start:**
+## Agent Invocation Pattern
 
-1. Invoke `performance-specialist` to analyze the implementation for performance concerns:
-    - Algorithmic complexity (time and space)
-    - Database query efficiency (N+1 queries, missing indexes, excessive joins)
-    - Memory allocation patterns and potential leaks
-    - I/O bottlenecks and blocking operations
-    - Caching opportunities
-    - Concurrency and parallelization potential
-2. The `performance-specialist` must return:
-    - A list of findings with details and suggested fixes
-    - Classification for each: **BLOCKING** (must fix) or **NON-BLOCKING** (optional optimization)
-    - A verdict: **PASS / PARTIAL / FAIL**
-      **If BLOCKING issues found:**
-3. Pass the BLOCKING findings to `backend-developer` with:
-    - The specific performance issues identified
-    - The suggested fixes from `performance-specialist`
-    - Relevant `/run-tests` invocations to verify behavior is preserved
-4. `backend-developer` implements fixes (small steps, run `/run-tests` after each step)
-5. **Go back to Loop start**
-    - re-invoke `performance-specialist` for a new review
+For EVERY agent, use this pattern:
 
-**Loop exit condition:**
+```
+Task tool:
+  subagent_type: {agent-name}
+  run_in_background: true
+  prompt: |
+    You MUST use the workflow-report-format skill.
 
-- Verdict is PASS, or only NON-BLOCKING issues remain
-- Do not proceed to security check until loop exits
+    ## Workflow Directory
+    WORKFLOW_DIR: {WORKFLOW_DIR}
 
-### 9) Security check loop (`application-security-specialist` ↔ `backend-developer`)
+    ## Your Task
+    {task description}
 
-- After performance check loop exits, enter a security review loop:
+    ## Input Files to Read
+    {list of {WORKFLOW_DIR}/*.md files to read}
 
-**Loop start:**
+    ## Output
+    1. Write FULL report to: {WORKFLOW_DIR}/{name}.md
+    2. Write SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+       The short report MUST contain ONLY:
+       STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
+       FILE: {WORKFLOW_DIR}/{name}.md
+       SUMMARY: {one sentence}
+       NEXT_INPUT: {comma-separated file list for next agent}
+       ---
+       {2-5 bullet key points}
+```
 
-1. Invoke `application-security-specialist` to analyze the implementation for security vulnerabilities:
-    - Input validation and sanitization
-    - Authentication and authorization checks
-    - Injection vulnerabilities (SQL, command, LDAP, etc.)
-    - Sensitive data handling (logging, storage, transmission)
-    - Error handling and information disclosure
-    - Dependency vulnerabilities
-    - OWASP Top 10 compliance
-2. The `application-security-specialist` must return:
-    - A list of findings with details, severity, and recommended fixes
-    - Classification for each: **BLOCKING** (vulnerability must be fixed) or **NON-BLOCKING** (hardening recommendation)
-    - A verdict: **PASS / PARTIAL / FAIL**
+Then wait for completion using the script:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
 
-**If BLOCKING issues found:** 3. Pass the BLOCKING findings to `backend-developer` with: - The specific security
-vulnerabilities identified - The recommended fixes from `application-security-specialist` - Relevant `/run-tests`
-invocations to verify behavior is preserved 4. `backend-developer` implements fixes (small steps, run `/run-tests` after
-each step) 5. **Go back to Loop start** — re-invoke `application-security-specialist` for a new review
+Then read the short report and parse the STATUS to decide next action:
+```
+Read: {WORKFLOW_DIR}/{name}-report.md
+```
 
-**Loop exit condition:**
+---
 
-- Verdict is PASS, or only NON-BLOCKING issues remain
-- Do not proceed to refactoring until loop exits
+## Workflow Steps
 
-### 10) Refactoring (delegate to `refactorer`, with tests after each step)
+### Step 0: Initialize
 
-- Once the security check loop exits, invoke `refactorer` for behavior-preserving cleanup:
-    - Improve structure, naming, separation of concerns
-    - Remove duplication, clarify control flow
-    - Keep external behavior identical
-- The `refactorer` must follow a small-steps + tests loop:
-    - Before each refactor step: state what will change and why
-    - After each refactor step:
-        - specify the smallest relevant `/run-tests` invocation
-        - you MUST run it
-        - if it fails, fix or revert
-- If larger refactors are discovered:
-    - Record them as follow-up tasks instead of doing them now.
+1. Generate TASK_ID (see "Task ID Generation" above)
+2. Set `WORKFLOW_DIR = .workflow/{TASK_ID}`
+3. Create `{WORKFLOW_DIR}/` directory and `{WORKFLOW_DIR}/loop-iterations/`
+4. Create `metadata.json`
 
-### 11) Code review with reflection loop (delegate to `code-reviewer`)
+### Step 1: Requirements Analysis (business-analyst)
 
-- Invoke `code-reviewer` once refactoring is green.
-- `code-reviewer` should evaluate:
-    - Architecture alignment
-    - Maintainability
-    - Style
-    - Test design quality
-- Findings must be classified:
-    - BLOCKING (must fix)
-    - NON-BLOCKING (nice-to-have)
-- For BLOCKING issues, apply a reflection loop:
-    - Functional issue:
-        - route to `automation-qa` (tests first, RED) + run `/run-tests`
-        - then `backend-developer` (minimal fix, GREEN with tests after each step)
-    - Structural/style/design issue:
-        - route to `refactorer` (small refactor) + run `/run-tests` after each step
-- Re-invoke `code-reviewer` after fixes.
-- Repeat until no blocking issues remain, or the user explicitly accepts remaining trade-offs.
+Launch in background:
+```
+subagent_type: business-analyst
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
 
-### 12) Update documentation (delegate to `documentation-updater`)
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
 
-- Once code review has no blocking issues, invoke `documentation-updater` to update any documentation impacted by the
-  change:
-    - README usage examples
-    - configuration/env var references
-    - architecture notes / module boundaries
-    - any runbooks that now drift
-- Keep doc changes minimal and strictly tied to the implemented behavior.
-- If documentation changes include any code changes (they usually should not), run an appropriate `/run-tests` once
-  afterward.
+  ## Task
+  Analyze the feature request and create specific requirements:
+  - Restate the feature in your own words
+  - Identify affected domains/packages
+  - List ALL ambiguous points, unclear terms, or missing details
+  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
+  - Review answers; if unclear or introduce new ambiguities, ask follow-ups
+  - Derive behavioral requirements (REQ-1, REQ-2, etc.)
 
-The workflow-completion hook will generate the final summary when the workflow completes.
+  ## Feature Request
+  $ARGUMENTS
 
-## Non-negotiable constraints
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/requirements.md
+     Include:
+     - Feature Understanding (your restatement)
+     - Affected Domains/Components
+     - Clarifications (Q&A pairs if any)
+     - Behavioral Requirements (REQ-1, REQ-2, etc.)
+  2. Write SHORT status to: {WORKFLOW_DIR}/requirements-report.md
+```
 
-- TDD is mandatory:
-    - tests before implementation
-    - tests reviewed (tests-reviewer PASS) before implementation begins
-    - after every implementation or refactor step, run the smallest relevant `/run-tests`
-- Prefer narrow `/run-tests` invocations unless a broader run is required by the workflow.
-- Do not introduce features beyond what the user requested in `$ARGUMENTS`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/requirements-report.md`
+Read: `{WORKFLOW_DIR}/requirements-report.md`
+
+### Step 2: Planning (plan-creator)
+
+Launch in background:
+```
+subagent_type: plan-creator
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Create implementation and testing plan for the feature.
+
+  ## Input
+  Read: {WORKFLOW_DIR}/requirements.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/plan.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/plan-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/plan-report.md`
+Read: `{WORKFLOW_DIR}/plan-report.md`
+
+### Step 3: Test Design - RED Stage (automation-qa)
+
+Launch in background:
+```
+subagent_type: automation-qa
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Design and write tests for the planned behavior (RED stage).
+  - Normal paths
+  - Edge cases
+  - Error conditions
+
+  After writing tests, run them to confirm they FAIL (RED).
+  Use /run-tests with the narrowest scope.
+
+  ## Input
+  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md
+  Optional (read if present - contains reviewer feedback requiring new/updated tests):
+  - {WORKFLOW_DIR}/tests-review.md
+  - {WORKFLOW_DIR}/stabilization.md
+  - {WORKFLOW_DIR}/acceptance.md
+  - {WORKFLOW_DIR}/code-review.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/tests-design.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/tests-design-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-design-report.md`
+Read: `{WORKFLOW_DIR}/tests-design-report.md`
+
+### Step 4: Test Quality Gate (tests-reviewer)
+
+Launch in background:
+```
+subagent_type: tests-reviewer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Review the tests for quality. Apply your loaded skills.
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/tests-review.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/tests-review-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-review-report.md`
+Read: `{WORKFLOW_DIR}/tests-review-report.md`
+
+**Loop Logic:**
+- If STATUS is PASS → proceed to Step 5
+- If STATUS is PARTIAL or FAIL → go to Step 3, then re-run Step 4
+- Do NOT proceed to implementation until PASS
+
+### Step 5: Implementation - GREEN Stage (backend-developer)
+
+Launch in background:
+```
+subagent_type: backend-developer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Implement the feature to make tests pass (GREEN stage).
+  - Work in small incremental steps
+  - Run /run-tests after each step
+  - Continue until all feature tests are GREEN
+
+  ## Input
+  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
+  Optional (read if present - contains reviewer feedback requiring fixes):
+  - {WORKFLOW_DIR}/tests-review.md
+  - {WORKFLOW_DIR}/stabilization.md
+  - {WORKFLOW_DIR}/acceptance.md
+  - {WORKFLOW_DIR}/performance.md
+  - {WORKFLOW_DIR}/security.md
+  - {WORKFLOW_DIR}/code-review.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/implementation.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/implementation-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/implementation-report.md`
+Read: `{WORKFLOW_DIR}/implementation-report.md`
+
+### Step 6: Stabilization Gate (automation-qa)
+
+Launch in background:
+```
+subagent_type: automation-qa
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Run broader test scope and assess stability:
+  - Identify regression risks
+  - Run package-level or broader /run-tests
+  - Report if additional tests are needed
+
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/stabilization.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/stabilization-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/stabilization-report.md`
+Read: `{WORKFLOW_DIR}/stabilization-report.md`
+
+**Loop Logic (TDD):**
+- If STATUS is PASS → proceed to Step 7
+- If STATUS is PARTIAL or FAIL:
+  1. Go to Step 3 (automation-qa writes/updates tests for issues - RED)
+  2. Go to Step 5 (backend-developer fixes - GREEN)
+  3. Re-run Step 6
+  4. Repeat until PASS
+
+### Step 7: Acceptance Review (acceptance-reviewer)
+
+Launch in background:
+```
+subagent_type: acceptance-reviewer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Verify all requirements are met:
+  - Check each REQ-N against implementation
+  - Identify functional gaps
+
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/stabilization.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/acceptance.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/acceptance-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/acceptance-report.md`
+Read: `{WORKFLOW_DIR}/acceptance-report.md`
+
+**Loop Logic (TDD):**
+- If STATUS is PASS → proceed to Step 8
+- If STATUS is PARTIAL or FAIL:
+  1. Go to Step 3 (automation-qa adds tests for gaps - RED)
+  2. Go to Step 5 (backend-developer implements - GREEN)
+  3. Re-run Step 7
+  4. Repeat until PASS
+
+### Step 8: Performance & Security Check (Parallel)
+
+Launch BOTH agents IN PARALLEL (single message, multiple Task tool calls):
+
+**First Task call (performance-specialist):**
+```
+subagent_type: performance-specialist
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Analyze the implementation for performance issues.
+  Apply your loaded skills (`backend-performance`, `algorithm-efficiency`).
+  Classify findings as BLOCKING or NON-BLOCKING.
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Required: {WORKFLOW_DIR}/implementation.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/performance.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/performance-report.md
+```
+
+**Second Task call (application-security-specialist) - SAME MESSAGE:**
+```
+subagent_type: application-security-specialist
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Analyze the implementation for security vulnerabilities.
+  Apply your loaded skill (`web-api-security`).
+  Classify findings as BLOCKING or NON-BLOCKING.
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Required: {WORKFLOW_DIR}/implementation.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/security.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/security-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
+Read: `{WORKFLOW_DIR}/performance-report.md` and `{WORKFLOW_DIR}/security-report.md`
+
+**Loop Logic:**
+- If BOTH statuses are PASS → proceed to Step 9
+- If EITHER status is PARTIAL or FAIL with BLOCKING issues:
+  1. Go to Step 5 (backend-developer fixes BLOCKING issues from both reviews)
+  2. Re-run Step 8
+  3. Repeat until BOTH PASS or only NON-BLOCKING remain
+
+**Loop Exit:** BOTH statuses are PASS, only NON-BLOCKING remain, or iteration > 5 (max)
+
+### Step 9: Refactoring (refactorer)
+
+Launch in background:
+```
+subagent_type: refactorer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Perform behavior-preserving cleanup.
+  Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
+  Run /run-tests after each refactor step.
+  Record larger refactors as follow-up tasks, don't do them now.
+
+  ## Input
+  Required: {WORKFLOW_DIR}/implementation.md
+  Optional (read if present - contains structural issues to address):
+  - {WORKFLOW_DIR}/code-review.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/refactoring.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/refactoring-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/refactoring-report.md`
+Read: `{WORKFLOW_DIR}/refactoring-report.md`
+
+### Step 10: Code Review (code-reviewer)
+
+Launch in background:
+```
+subagent_type: code-reviewer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Review the code for quality issues.
+  Apply your loaded skills (`code-review-checklist`, `design-assessment`).
+  Classify findings as BLOCKING or NON-BLOCKING.
+  For each BLOCKING issue, specify route:
+  - "ROUTE: functional" → needs tests + implementation fix
+  - "ROUTE: structural" → needs refactoring
+
+  Return verdict: PASS / PARTIAL / FAIL
+
+  ## Input
+  Required: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/refactoring.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/code-review.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/code-review-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/code-review-report.md`
+Read: `{WORKFLOW_DIR}/code-review-report.md`
+
+**Loop Logic (with routing):**
+- If STATUS is PASS → proceed to Step 11
+- If STATUS is PARTIAL or FAIL with BLOCKING issues:
+  - Parse BLOCKING issues by route from code-review.md
+  - **For functional issues (ROUTE: functional):**
+    1. Go to Step 3 (automation-qa adds/updates tests - RED)
+    2. Go to Step 5 (backend-developer fixes - GREEN)
+  - **For structural issues (ROUTE: structural):**
+    1. Go to Step 9 (refactorer addresses structural issues)
+  - Re-run Step 10
+  - Repeat until PASS or only NON-BLOCKING remain
+
+**Loop Exit:** STATUS is PASS, only NON-BLOCKING remain, iteration > 5 (max), or user accepts trade-offs
+
+### Step 11: Documentation (documentation-updater)
+
+Launch in background:
+```
+subagent_type: documentation-updater
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Update documentation impacted by the change:
+  - README usage examples
+  - Configuration/env var references
+  - Architecture notes
+  - Runbooks
+
+  Keep changes minimal and tied to implemented behavior.
+
+  ## Input
+  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/documentation.md
+  2. Write SHORT status to: {WORKFLOW_DIR}/documentation-report.md
+```
+
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/documentation-report.md`
+Read: `{WORKFLOW_DIR}/documentation-report.md`
+
+### Step 12: Finalize
+
+Update `{WORKFLOW_DIR}/metadata.json`:
+```json
+{
+  "taskId": "{TASK_ID}",
+  "command": "develop-feature",
+  "feature": "$ARGUMENTS",
+  "started": "{original start timestamp}",
+  "currentStep": 12,
+  "status": "completed",
+  "completedAt": "{ISO timestamp}"
+}
+```
+
+The workflow-completion hook will generate the final summary by reading `{WORKFLOW_DIR}/` files.
+
+---
+
+## Non-Negotiable Constraints
+
+1. **TDD is mandatory:**
+   - Tests before implementation
+   - Tests reviewed (PASS) before implementation begins
+   - /run-tests after every implementation or refactor step
+
+2. **Background agents with file-based signaling:**
+   - All agents MUST run with `run_in_background: true`
+   - Do NOT use TaskOutput - use `wait-for-report.sh` script instead
+   - **After launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md`
+   - The script removes stale files and polls until the new report appears
+   - Then read the signal file to get STATUS
+
+3. **Dual-file output:**
+   - Agents write FULL report to `{WORKFLOW_DIR}/{name}.md`
+   - Agents write SHORT status to `{WORKFLOW_DIR}/{name}-report.md`
+   - Orchestrator only reads the short `-report.md` files
+   - Next agent reads previous agent's full `.md` reports
+
+4. **No scope creep:**
+   - Do not introduce features beyond $ARGUMENTS
+
+5. **Skill usage:**
+   - Every agent prompt MUST mention `workflow-report-format` skill
+   - Every agent prompt MUST include `WORKFLOW_DIR: {WORKFLOW_DIR}`
+
+6. **Verify output files:**
+   - After polling completes, verify the full report FILE exists
+   - If file missing: HALT and report error to user
+
+7. **Handle STATUS: ERROR:**
+   - If any agent's `-report.md` contains `STATUS: ERROR`, HALT the workflow immediately
+   - Do NOT proceed to the next step
+   - Do NOT retry the failed agent
+   - Report to user with details from the error response
+
+8. **Missing input file protocol:**
+   - If an agent cannot find a required input file:
+     1. Agent lists `{WORKFLOW_DIR}/` directory contents
+     2. Agent attempts to identify alternative file (name variations)
+     3. If found: use it and log warning in Handoff Notes
+     4. If not found: write `STATUS: ERROR` to its `-report.md` with file listing
+   - Orchestrator halts and reports to user
+
+9. **Write failure protocol:**
+   - If an agent cannot write its output files:
+     1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR}/loop-iterations)
+     2. If still fails: write `STATUS: ERROR` to its `-report.md` with error details
+     3. NEVER write DONE/PASS to `-report.md` if full report was not written
+   - Orchestrator halts and reports to user with recovery steps
+
+10. **Task isolation:**
+    - Each workflow MUST use its own unique subdirectory under `.workflow/`
+    - Never write to `.workflow/` root
+    - This allows multiple workflows to run concurrently
