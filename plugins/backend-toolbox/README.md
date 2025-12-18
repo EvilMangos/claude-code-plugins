@@ -14,13 +14,14 @@ A comprehensive TDD and code quality framework for Claude Code.
 - `/run-tests` command in target project's `.claude/commands/run-tests.md`
 - CLAUDE.md for project-specific rules (for steward/curator agents)
 
-## Agents (13)
+## Agents (14)
 
 ### Core Workflow
 
 | Agent                 | Role                              | Color   |
 |-----------------------|-----------------------------------|---------|
 | plan-creator          | Step-by-step implementation plans | magenta |
+| business-analyst      | Requirements clarification        | cyan    |
 | automation-qa         | Test design, RED stage            | blue    |
 | tests-reviewer        | Test quality gate                 | cyan    |
 | backend-developer     | Implementation, GREEN stage       | green   |
@@ -44,8 +45,9 @@ A comprehensive TDD and code quality framework for Claude Code.
 | claude-md-steward | CLAUDE.md maintenance  | blue   |
 | claude-curator    | .claude/** maintenance | yellow |
 
-## Commands (7)
+## Commands (8)
 
+- `/code-review` - Comprehensive code review (tests, quality, security, performance)
 - `/develop-feature` - Full TDD workflow (planning, tests, implementation, review, docs)
 - `/devops-change` - DevOps workflow for CI/CD, Docker, K8s, Terraform changes
 - `/fix-bug` - Structured bug-fixing workflow (reproduction, root cause, TDD, review)
@@ -54,7 +56,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 - `/refresh-documentation` - Sync READMEs with repository reality
 - `/refresh-claude-md` - Audit CLAUDE.md against repo state
 
-## Skills (12)
+## Skills (13)
 
 ### Testing & TDD
 
@@ -76,6 +78,10 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **devops-infrastructure-security** - Secrets management, container hardening
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
+
+### Workflow
+
+- **workflow-report-format** - Standard format for multi-agent workflow reports
 
 ## Hooks (5)
 
