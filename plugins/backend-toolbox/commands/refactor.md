@@ -118,13 +118,26 @@ Invoke `code-reviewer` with:
 - what changed (high-level)
 - the test commands run
 
-If code-reviewer reports BLOCKING issues:
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-- Loop to **Planning**:
-    - `plan-creator` updates the plan to address issues
-    - `refactorer` applies fixes step-by-step with `/run-tests` after each step
-    - re-run code-reviewer
-      Repeat until no blocking issues remain (or the user explicitly accepts trade-offs).
+You MUST NOT proceed to Step 5 unless no BLOCKING issues remain.
+
+- Do NOT rationalize skipping this gate ("issues are minor", "refactor is good", etc.)
+- Do NOT use your own judgment to override this gate
+- BLOCKING issues mean the loop MUST execute - no exceptions
+
+```
+LOOP while BLOCKING issues remain (max 5 iterations):
+  IF code-reviewer reports BLOCKING issues:
+    1. Invoke plan-creator to update the plan to address issues
+    2. Invoke refactorer to apply fixes step-by-step with /run-tests after each step
+    3. Re-invoke code-reviewer
+    4. Check for remaining BLOCKING issues
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 5 after no BLOCKING issues remain.**
 
 ### 5) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
 
@@ -135,12 +148,26 @@ Acceptance criteria for refactor work:
 - scope is reasonable for the provided scope (path or entire codebase)
 - code quality improved per stated goals
 
-If acceptance is PARTIAL/FAIL:
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-- Loop to **Planning**:
-    - `plan-creator` proposes minimal corrective steps
-    - `refactorer` applies them with tests after each step
-    - re-run acceptance-reviewer
+You MUST NOT proceed to Step 6 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("mostly acceptable", "minor gaps", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while acceptance verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke plan-creator to propose minimal corrective steps
+    2. Invoke refactorer to apply them with tests after each step
+    3. Re-invoke acceptance-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 6 after verdict == PASS.**
 
 ### 6) Update Documentation (delegate to `documentation-updater`)
 

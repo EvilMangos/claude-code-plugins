@@ -94,11 +94,27 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
     - Is the test assertion specific enough?
     - Will the test remain valuable after the fix (regression prevention)?
 - Verdict: **PASS / PARTIAL / FAIL**
-- If PARTIAL or FAIL:
-    - Loop with `automation-qa` to improve the test.
-    - Re-run RED verification.
-    - Re-run `tests-reviewer`.
-- Do not proceed until verdict is PASS.
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 7 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("tests are adequate", "core tests pass", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke automation-qa to improve the test based on feedback
+    2. Re-run RED verification (confirm test still fails)
+    3. Re-invoke tests-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
 
 ### 7) Apply fix / GREEN stage (delegate to `backend-developer`)
 
@@ -121,12 +137,28 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
     - Provide a broader `/run-tests` invocation (package-level or module-level).
     - Return a stabilization verdict: **PASS / PARTIAL / FAIL**
 - You MUST run the broader `/run-tests` invocation.
-- If verdict is PARTIAL or FAIL:
-    - Loop using TDD:
-        - `automation-qa` creates/updates tests (RED).
-        - `backend-developer` fixes (GREEN).
-    - Re-run broader tests.
-    - Re-run `automation-qa` for new verdict.
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 9 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("will address later", "minor issues", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke automation-qa to create/update tests for issues (RED)
+    2. Invoke backend-developer to fix (GREEN)
+    3. Re-run broader /run-tests
+    4. Re-invoke automation-qa for stabilization verdict
+    5. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 9 after verdict == PASS.**
 
 ### 9) Acceptance test (delegate to `acceptance-reviewer`)
 
@@ -139,9 +171,27 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
     - Verify the original bug is fixed.
     - Check no new issues were introduced.
     - Produce verdict: **PASS / PARTIAL / FAIL**
-- If there are gaps:
-    - Loop back using TDD as needed.
-    - Re-run acceptance review.
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 10 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("bug is fixed", "acceptance mostly met", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL (gaps identified):
+    1. Invoke automation-qa to add tests for gaps (RED)
+    2. Invoke backend-developer to fix gaps (GREEN)
+    3. Re-invoke acceptance-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 10 after verdict == PASS.**
 
 ### 10) Quick code review (delegate to `code-reviewer`)
 
@@ -153,11 +203,31 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
 - Findings classified as:
     - **BLOCKING** (must fix)
     - **NON-BLOCKING** (nice-to-have)
-- For BLOCKING issues, apply a reflection loop:
-    - Functional issue: `automation-qa` (tests) + `backend-developer` (fix).
-    - Structural/style issue: `refactorer` (cleanup) + run `/run-tests`.
-- Re-invoke `code-reviewer` after fixes.
-- Repeat until no blocking issues remain.
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 11 unless no BLOCKING issues remain.
+
+- Do NOT rationalize skipping this gate ("issues are minor", "code is acceptable", etc.)
+- Do NOT use your own judgment to override this gate
+- BLOCKING issues mean the loop MUST execute - no exceptions
+
+```
+LOOP while BLOCKING issues remain (max 5 iterations):
+  IF BLOCKING issues exist:
+    1. FOR EACH functional BLOCKING issue:
+       - Invoke automation-qa to add/update tests (RED)
+       - Invoke backend-developer to fix (GREEN)
+    2. FOR EACH structural/style BLOCKING issue:
+       - Invoke refactorer for cleanup
+       - Run /run-tests
+    3. Re-invoke code-reviewer
+    4. Check for remaining BLOCKING issues
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 11 after no BLOCKING issues remain.**
 
 ### 11) Refactoring (conditional, delegate to `refactorer`)
 

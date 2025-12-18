@@ -153,12 +153,26 @@ Invoke `tests-reviewer` with:
 
 `tests-reviewer` must return: **PASS / PARTIAL / FAIL**.
 
-If PARTIAL/FAIL:
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-- Loop to **Planning**:
-    - `plan-creator` updates the plan to address feedback
-    - `automation-qa` applies fixes step-by-step with `/run-tests` after each step
-    - re-run `tests-reviewer`
+You MUST NOT proceed to Step 5 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("tests are adequate", "will fix later", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke plan-creator to update the plan to address feedback
+    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    3. Re-invoke tests-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 5 after verdict == PASS.**
 
 ### 5) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
 
@@ -166,9 +180,26 @@ Invoke `code-reviewer` with:
 
 - plan + summary of changes + tests run
 
-If `code-reviewer` reports BLOCKING issues:
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-- Loop to **Planning** (same loop as above), then re-run code review.
+You MUST NOT proceed to Step 6 unless no BLOCKING issues remain.
+
+- Do NOT rationalize skipping this gate ("issues are minor", "code is acceptable", etc.)
+- Do NOT use your own judgment to override this gate
+- BLOCKING issues mean the loop MUST execute - no exceptions
+
+```
+LOOP while BLOCKING issues remain (max 5 iterations):
+  IF code-reviewer reports BLOCKING issues:
+    1. Invoke plan-creator to update the plan to address issues
+    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    3. Re-invoke code-reviewer
+    4. Check for remaining BLOCKING issues
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 6 after no BLOCKING issues remain.**
 
 ### 6) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
 
@@ -179,9 +210,26 @@ Acceptance criteria for this command:
 - Refactor scope stayed within the requested test scope
 - Test code quality improved (structure/readability/determinism)
 
-If acceptance is PARTIAL/FAIL:
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-- Loop to **Planning** → `automation-qa` step-by-step → re-run acceptance.
+You MUST NOT proceed to Step 7 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("mostly acceptable", "minor gaps", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while acceptance verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke plan-creator to propose corrective steps
+    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    3. Re-invoke acceptance-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
 
 ### 7) Update Documentation (delegate to `documentation-updater`)
 

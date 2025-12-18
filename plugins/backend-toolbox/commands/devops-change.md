@@ -85,10 +85,26 @@ This workflow does NOT handle:
     - PASS: Changes meet quality and security standards
     - PARTIAL: Minor issues that should be addressed
     - FAIL: Critical issues that must be fixed
-- If verdict is PARTIAL or FAIL:
-    - Loop back to `devops-specialist` to fix the identified issues
-    - Re-run the quality review
-    - Repeat until verdict is PASS
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 5 unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("issues are minor", "config is acceptable", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke devops-specialist to fix the identified issues
+    2. Re-invoke code-reviewer for quality review
+    3. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 5 after verdict == PASS.**
 
 ### 5) Acceptance review (delegate to `acceptance-reviewer`)
 
@@ -101,11 +117,27 @@ This workflow does NOT handle:
     - Check whether all requirements from the original request are met
     - Verify expected outcomes are achieved
     - Produce a verdict: **PASS / PARTIAL / FAIL** with a requirements checklist
-- If verdict is PARTIAL or FAIL:
-    - Loop back to `devops-specialist` to address gaps
-    - Re-run quality review (Step 4) if changes are significant
-    - Re-run acceptance review
-    - Repeat until verdict is PASS or user accepts current state
+
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT complete the workflow unless verdict == PASS.
+
+- Do NOT rationalize skipping this gate ("mostly meets requirements", "good enough", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while verdict != PASS (max 5 iterations):
+  IF verdict is PARTIAL or FAIL:
+    1. Invoke devops-specialist to address gaps
+    2. IF changes are significant: Re-invoke code-reviewer for quality review (Step 4)
+    3. Re-invoke acceptance-reviewer
+    4. Check verdict again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Workflow completes only after verdict == PASS.**
 
 ## Non-negotiable constraints
 

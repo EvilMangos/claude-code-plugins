@@ -301,10 +301,26 @@ prompt: |
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-review-report.md`
 Read: `{WORKFLOW_DIR}/tests-review-report.md`
 
-**Loop Logic:**
-- If STATUS is PASS → proceed to Step 5
-- If STATUS is PARTIAL or FAIL → go to Step 3, then re-run Step 4
-- Do NOT proceed to implementation until PASS
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 5 unless STATUS == PASS.
+
+- Do NOT rationalize skipping this gate ("tests are adequate", "will fix later", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while STATUS != PASS (max 5 iterations):
+  IF STATUS is PARTIAL or FAIL:
+    1. Execute Step 3 (automation-qa updates tests based on feedback)
+    2. Execute Step 4 (tests-reviewer re-reviews)
+    3. Read {WORKFLOW_DIR}/tests-review-report.md again
+    4. Check STATUS again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 5 after STATUS == PASS.**
 
 ### Step 5: Implementation - GREEN Stage (backend-developer)
 
@@ -377,13 +393,27 @@ prompt: |
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/stabilization-report.md`
 Read: `{WORKFLOW_DIR}/stabilization-report.md`
 
-**Loop Logic (TDD):**
-- If STATUS is PASS → proceed to Step 7
-- If STATUS is PARTIAL or FAIL:
-  1. Go to Step 3 (automation-qa writes/updates tests for issues - RED)
-  2. Go to Step 5 (backend-developer fixes - GREEN)
-  3. Re-run Step 6
-  4. Repeat until PASS
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 7 unless STATUS == PASS.
+
+- Do NOT rationalize skipping this gate ("will address later", "minor issues", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while STATUS != PASS (max 5 iterations):
+  IF STATUS is PARTIAL or FAIL:
+    1. Execute Step 3 (automation-qa writes/updates tests for issues - RED)
+    2. Execute Step 5 (backend-developer fixes - GREEN)
+    3. Execute Step 6 (automation-qa re-runs stabilization check)
+    4. Read {WORKFLOW_DIR}/stabilization-report.md again
+    5. Check STATUS again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 7 after STATUS == PASS.**
 
 ### Step 7: Acceptance Review (acceptance-reviewer)
 
@@ -417,13 +447,27 @@ prompt: |
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/acceptance-report.md`
 Read: `{WORKFLOW_DIR}/acceptance-report.md`
 
-**Loop Logic (TDD):**
-- If STATUS is PASS → proceed to Step 8
-- If STATUS is PARTIAL or FAIL:
-  1. Go to Step 3 (automation-qa adds tests for gaps - RED)
-  2. Go to Step 5 (backend-developer implements - GREEN)
-  3. Re-run Step 7
-  4. Repeat until PASS
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+
+You MUST NOT proceed to Step 8 unless STATUS == PASS.
+
+- Do NOT rationalize skipping this gate ("requirements mostly met", "minor gaps", etc.)
+- Do NOT use your own judgment to override this gate
+- PARTIAL means the loop MUST execute - no exceptions
+
+```
+LOOP while STATUS != PASS (max 5 iterations):
+  IF STATUS is PARTIAL or FAIL:
+    1. Execute Step 3 (automation-qa adds tests for gaps - RED)
+    2. Execute Step 5 (backend-developer implements - GREEN)
+    3. Execute Step 7 (acceptance-reviewer re-checks)
+    4. Read {WORKFLOW_DIR}/acceptance-report.md again
+    5. Check STATUS again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 8 after STATUS == PASS.**
 
 ### Step 8: Performance & Security Check (Parallel)
 
@@ -482,14 +526,26 @@ prompt: |
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
 Read: `{WORKFLOW_DIR}/performance-report.md` and `{WORKFLOW_DIR}/security-report.md`
 
-**Loop Logic:**
-- If BOTH statuses are PASS → proceed to Step 9
-- If EITHER status is PARTIAL or FAIL with BLOCKING issues:
-  1. Go to Step 5 (backend-developer fixes BLOCKING issues from both reviews)
-  2. Re-run Step 8
-  3. Repeat until BOTH PASS or only NON-BLOCKING remain
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-**Loop Exit:** BOTH statuses are PASS, only NON-BLOCKING remain, or iteration > 5 (max)
+You MUST NOT proceed to Step 9 unless BOTH STATUS == PASS (or only NON-BLOCKING issues remain).
+
+- Do NOT rationalize skipping this gate ("performance is acceptable", "security is minor", etc.)
+- Do NOT use your own judgment to override this gate
+- BLOCKING issues mean the loop MUST execute - no exceptions
+
+```
+LOOP while EITHER STATUS has BLOCKING issues (max 5 iterations):
+  IF performance-report or security-report has STATUS PARTIAL/FAIL with BLOCKING issues:
+    1. Execute Step 5 (backend-developer fixes BLOCKING issues from both reviews)
+    2. Execute Step 8 (re-run both performance and security checks)
+    3. Read {WORKFLOW_DIR}/performance-report.md and {WORKFLOW_DIR}/security-report.md again
+    4. Check both STATUS values again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 9 after BOTH STATUS == PASS (or only NON-BLOCKING remain).**
 
 ### Step 9: Refactoring (refactorer)
 
@@ -559,19 +615,31 @@ prompt: |
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/code-review-report.md`
 Read: `{WORKFLOW_DIR}/code-review-report.md`
 
-**Loop Logic (with routing):**
-- If STATUS is PASS → proceed to Step 11
-- If STATUS is PARTIAL or FAIL with BLOCKING issues:
-  - Parse BLOCKING issues by route from code-review.md
-  - **For functional issues (ROUTE: functional):**
-    1. Go to Step 3 (automation-qa adds/updates tests - RED)
-    2. Go to Step 5 (backend-developer fixes - GREEN)
-  - **For structural issues (ROUTE: structural):**
-    1. Go to Step 9 (refactorer addresses structural issues)
-  - Re-run Step 10
-  - Repeat until PASS or only NON-BLOCKING remain
+**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-**Loop Exit:** STATUS is PASS, only NON-BLOCKING remain, iteration > 5 (max), or user accepts trade-offs
+You MUST NOT proceed to Step 11 unless STATUS == PASS (or only NON-BLOCKING issues remain).
+
+- Do NOT rationalize skipping this gate ("code is good enough", "issues are minor", etc.)
+- Do NOT use your own judgment to override this gate
+- BLOCKING issues mean the loop MUST execute - no exceptions
+
+```
+LOOP while STATUS has BLOCKING issues (max 5 iterations):
+  IF STATUS is PARTIAL or FAIL with BLOCKING issues:
+    1. Read {WORKFLOW_DIR}/code-review.md to parse BLOCKING issues by route
+    2. FOR EACH functional issue (ROUTE: functional):
+       - Execute Step 3 (automation-qa adds/updates tests - RED)
+       - Execute Step 5 (backend-developer fixes - GREEN)
+    3. FOR EACH structural issue (ROUTE: structural):
+       - Execute Step 9 (refactorer addresses structural issues)
+    4. Execute Step 10 (code-reviewer re-reviews)
+    5. Read {WORKFLOW_DIR}/code-review-report.md again
+    6. Check STATUS again
+  END IF
+END LOOP
+```
+
+**HARD STOP: Only proceed to Step 11 after STATUS == PASS (or only NON-BLOCKING remain).**
 
 ### Step 11: Documentation (documentation-updater)
 
