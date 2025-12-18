@@ -62,6 +62,11 @@ Initialize the workflow directory with the generated task ID:
 mkdir -p {WORKFLOW_DIR}/loop-iterations
 ```
 
+Also ensure `.workflow/.gitignore` exists (create once if needed):
+```bash
+echo '*' > .workflow/.gitignore 2>/dev/null || true
+```
+
 Create `{WORKFLOW_DIR}/metadata.json`:
 ```json
 {
@@ -118,31 +123,14 @@ Parse the STATUS from the response to decide next action.
 1. Generate TASK_ID (see "Task ID Generation" above)
 2. Set `WORKFLOW_DIR = .workflow/{TASK_ID}`
 3. Create `{WORKFLOW_DIR}/` directory and `{WORKFLOW_DIR}/loop-iterations/`
-4. Create `metadata.json`
+4. Create `.workflow/.gitignore` if it doesn't exist
+5. Create `metadata.json`
+6. Restate the feature in your own words
+7. Identify affected domains/packages
+8. List assumptions if anything is ambiguous
+9. Derive behavioral requirements (REQ-1, REQ-2, etc.)
 
-### Step 1: Requirements Analysis
-
-**This step loops until all ambiguities are resolved.**
-
-#### Step 1a: Identify Ambiguities
-1. Restate the feature in your own words
-2. Identify affected domains/packages
-3. List ALL ambiguous points, unclear terms, or missing details
-4. If no ambiguities → proceed to Step 1c
-
-#### Step 1b: Clarification Loop
-1. Ask user ALL identified questions using AskUserQuestion tool
-2. Review user's answers for clarity
-3. If any answers introduce new ambiguities or are unclear:
-   - List the new/remaining ambiguous points
-   - Loop back: ask follow-up questions
-4. Repeat until ALL ambiguities are fully resolved
-
-#### Step 1c: Derive Requirements
-1. Derive behavioral requirements (REQ-1, REQ-2, etc.) based on clarified understanding
-2. Write requirements to `{WORKFLOW_DIR}/requirements.md`
-
-Write requirements to `{WORKFLOW_DIR}/requirements.md`:
+Write requirements to `{WORKFLOW_DIR}/00-requirements.md`:
 ```markdown
 # Feature Requirements
 
@@ -150,16 +138,15 @@ Write requirements to `{WORKFLOW_DIR}/requirements.md`:
 **Task ID:** {TASK_ID}
 **Workflow Directory:** {WORKFLOW_DIR}
 
-## Clarifications
-- Q: {question asked} → A: {user's answer}
-- Q: {follow-up question} → A: {user's answer}
+## Assumptions
+- {assumption}
 
 ## Requirements
 1. REQ-1: {requirement}
 2. REQ-2: {requirement}
 ```
 
-### Step 2: Planning (plan-creator)
+### Step 1: Planning (plan-creator)
 
 Launch in background:
 ```
@@ -175,16 +162,16 @@ prompt: |
   Create implementation and testing plan for the feature.
 
   ## Input
-  Read: {WORKFLOW_DIR}/requirements.md
+  Read: {WORKFLOW_DIR}/00-requirements.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/plan.md
+  1. Write FULL report to: {WORKFLOW_DIR}/01-plan.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-### Step 3: Test Design - RED Stage (automation-qa)
+### Step 2: Test Design - RED Stage (automation-qa)
 
 Launch in background:
 ```
@@ -206,21 +193,16 @@ prompt: |
   Use /run-tests with the narrowest scope.
 
   ## Input
-  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md
-  Optional (read if present - contains reviewer feedback requiring new/updated tests):
-  - {WORKFLOW_DIR}/tests-review.md
-  - {WORKFLOW_DIR}/stabilization.md
-  - {WORKFLOW_DIR}/acceptance.md
-  - {WORKFLOW_DIR}/code-review.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/tests-design.md
+  1. Write FULL report to: {WORKFLOW_DIR}/02-tests-design.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-### Step 4: Test Quality Gate (tests-reviewer)
+### Step 3: Test Quality Gate (tests-reviewer)
 
 Launch in background:
 ```
@@ -237,21 +219,23 @@ prompt: |
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/02-tests-design.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/tests-review.md
+  1. Write FULL report to: {WORKFLOW_DIR}/03-tests-review.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
 **Loop Logic:**
-- If STATUS is PASS → proceed to Step 5
-- If STATUS is PARTIAL or FAIL → go to Step 3, then re-run Step 4
+- If STATUS is PARTIAL or FAIL:
+  1. Launch automation-qa to fix tests (reads {WORKFLOW_DIR}/03-tests-review.md)
+  2. Re-run tests-reviewer
+  3. Repeat until PASS
 - Do NOT proceed to implementation until PASS
 
-### Step 5: Implementation - GREEN Stage (backend-developer)
+### Step 4: Implementation - GREEN Stage (backend-developer)
 
 Launch in background:
 ```
@@ -270,23 +254,16 @@ prompt: |
   - Continue until all feature tests are GREEN
 
   ## Input
-  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
-  Optional (read if present - contains reviewer feedback requiring fixes):
-  - {WORKFLOW_DIR}/tests-review.md
-  - {WORKFLOW_DIR}/stabilization.md
-  - {WORKFLOW_DIR}/acceptance.md
-  - {WORKFLOW_DIR}/performance.md
-  - {WORKFLOW_DIR}/security.md
-  - {WORKFLOW_DIR}/code-review.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/02-tests-design.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/implementation.md
+  1. Write FULL report to: {WORKFLOW_DIR}/04-implementation.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-### Step 6: Stabilization Gate (automation-qa)
+### Step 5: Stabilization Gate (automation-qa)
 
 Launch in background:
 ```
@@ -307,24 +284,23 @@ prompt: |
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/stabilization.md
+  1. Write FULL report to: {WORKFLOW_DIR}/05-stabilization.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
 **Loop Logic (TDD):**
-- If STATUS is PASS → proceed to Step 7
 - If STATUS is PARTIAL or FAIL:
-  1. Go to Step 3 (automation-qa writes/updates tests for issues - RED)
-  2. Go to Step 5 (backend-developer fixes - GREEN)
-  3. Re-run Step 6
+  1. automation-qa writes/updates tests (RED)
+  2. backend-developer fixes (GREEN)
+  3. Re-run stabilization
   4. Repeat until PASS
 
-### Step 7: Acceptance Review (acceptance-reviewer)
+### Step 6: Acceptance Review (acceptance-reviewer)
 
 Launch in background:
 ```
@@ -344,28 +320,29 @@ prompt: |
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/stabilization.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/05-stabilization.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/acceptance.md
+  1. Write FULL report to: {WORKFLOW_DIR}/06-acceptance.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
 **Loop Logic (TDD):**
-- If STATUS is PASS → proceed to Step 8
 - If STATUS is PARTIAL or FAIL:
-  1. Go to Step 3 (automation-qa adds tests for gaps - RED)
-  2. Go to Step 5 (backend-developer implements - GREEN)
-  3. Re-run Step 7
+  1. automation-qa adds tests for gaps (RED)
+  2. backend-developer implements (GREEN)
+  3. Re-run acceptance
   4. Repeat until PASS
 
-### Step 8: Performance & Security Check (Parallel)
+### Step 7: Performance Check Loop (performance-specialist ↔ backend-developer)
 
-Launch BOTH agents IN PARALLEL (single message, multiple Task tool calls):
+Initialize loop state: `iteration = 1`
 
-**First Task call (performance-specialist):**
+**Loop Start:**
+
+**If iteration == 1:** Launch initial review:
 ```
 subagent_type: performance-specialist
 run_in_background: true
@@ -381,15 +358,90 @@ prompt: |
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
 
+  ## Iteration
+  This is review iteration 1 (initial review).
+
   ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/performance.md
+  1. Write FULL report to: {WORKFLOW_DIR}/07-performance.md
   2. Return brief status only
 ```
 
-**Second Task call (application-security-specialist) - SAME MESSAGE:**
+**If iteration > 1:** Launch re-review:
+```
+subagent_type: performance-specialist
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Re-review performance after fixes were applied.
+  Check if BLOCKING issues from previous review are resolved.
+
+  ## Iteration
+  This is review iteration {iteration}.
+
+  ## Input
+  Read:
+  - {WORKFLOW_DIR}/07-performance.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/07-performance-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md (current implementation)
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-review-{iteration}.md
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
+
+**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
+
+Launch fixer:
+```
+subagent_type: backend-developer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Fix the BLOCKING performance issues identified in the review.
+  Run /run-tests after each fix to ensure behavior is preserved.
+
+  ## Iteration
+  This is fix iteration {iteration}.
+
+  ## Input
+  Read: {latest review file - either {WORKFLOW_DIR}/07-performance.md or {WORKFLOW_DIR}/loop-iterations/07-performance-review-{iteration}.md}
+
+  ## Focus On
+  Address ONLY the BLOCKING issues. NON-BLOCKING issues are deferred.
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/07-performance-fix-{iteration}.md
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
+Increment `iteration`.
+**Go back to Loop Start.**
+
+**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max)
+
+### Step 8: Security Check Loop (application-security-specialist ↔ backend-developer)
+
+Initialize loop state: `iteration = 1`
+
+**Loop Start:**
+
+**If iteration == 1:** Launch initial review:
 ```
 subagent_type: application-security-specialist
 run_in_background: true
@@ -405,24 +457,82 @@ prompt: |
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
 
+  ## Iteration
+  This is review iteration 1 (initial review).
+
   ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/security.md
+  1. Write FULL report to: {WORKFLOW_DIR}/08-security.md
   2. Return brief status only
 ```
 
-Wait for BOTH using `TaskOutput(block: true)` for each task ID.
+**If iteration > 1:** Launch re-review:
+```
+subagent_type: application-security-specialist
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
 
-**Loop Logic:**
-- If BOTH statuses are PASS → proceed to Step 9
-- If EITHER status is PARTIAL or FAIL with BLOCKING issues:
-  1. Go to Step 5 (backend-developer fixes BLOCKING issues from both reviews)
-  2. Re-run Step 8
-  3. Repeat until BOTH PASS or only NON-BLOCKING remain
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
 
-**Loop Exit:** BOTH statuses are PASS, only NON-BLOCKING remain, or iteration > 5 (max)
+  ## Task
+  Re-review security after fixes were applied.
+  Check if BLOCKING vulnerabilities from previous review are resolved.
+
+  ## Iteration
+  This is review iteration {iteration}.
+
+  ## Input
+  Read:
+  - {WORKFLOW_DIR}/08-security.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/08-security-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md (current implementation)
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/08-security-review-{iteration}.md
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
+
+**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
+
+Launch fixer:
+```
+subagent_type: backend-developer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Fix the BLOCKING security vulnerabilities identified in the review.
+  Run /run-tests after each fix to ensure behavior is preserved.
+
+  ## Iteration
+  This is fix iteration {iteration}.
+
+  ## Input
+  Read: {latest review file - either {WORKFLOW_DIR}/08-security.md or {WORKFLOW_DIR}/loop-iterations/08-security-review-{iteration}.md}
+
+  ## Focus On
+  Address ONLY the BLOCKING vulnerabilities. NON-BLOCKING hardening is deferred.
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/08-security-fix-{iteration}.md
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
+Increment `iteration`.
+**Go back to Loop Start.**
+
+**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max)
 
 ### Step 9: Refactoring (refactorer)
 
@@ -443,20 +553,22 @@ prompt: |
   Record larger refactors as follow-up tasks, don't do them now.
 
   ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
-  Optional (read if present - contains structural issues to address):
-  - {WORKFLOW_DIR}/code-review.md
+  Read: {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/refactoring.md
+  1. Write FULL report to: {WORKFLOW_DIR}/09-refactoring.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-### Step 10: Code Review (code-reviewer)
+### Step 10: Code Review Loop (code-reviewer)
 
-Launch in background:
+Initialize loop state: `iteration = 1`
+
+**Loop Start:**
+
+**If iteration == 1:** Launch initial review:
 ```
 subagent_type: code-reviewer
 run_in_background: true
@@ -471,34 +583,96 @@ prompt: |
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
   Classify findings as BLOCKING or NON-BLOCKING.
   For each BLOCKING issue, specify route:
-  - "ROUTE: functional" → needs tests + implementation fix
-  - "ROUTE: structural" → needs refactoring
+  - "ROUTE: functional" → needs automation-qa (tests) + backend-developer (fix)
+  - "ROUTE: structural" → needs refactorer
 
   Return verdict: PASS / PARTIAL / FAIL
 
+  ## Iteration
+  This is review iteration 1 (initial review).
+
   ## Input
-  Required: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/refactoring.md
+  Read: {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/09-refactoring.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/code-review.md
+  1. Write FULL report to: {WORKFLOW_DIR}/10-code-review.md
+  2. Return brief status only
+```
+
+**If iteration > 1:** Launch re-review:
+```
+subagent_type: code-reviewer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Re-review code quality after fixes were applied.
+  Check if BLOCKING issues from previous review are resolved.
+
+  ## Iteration
+  This is review iteration {iteration}.
+
+  ## Input
+  Read:
+  - {WORKFLOW_DIR}/10-code-review.md (original findings)
+  - {WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration-1}.md (latest fix)
+  - {WORKFLOW_DIR}/04-implementation.md, {WORKFLOW_DIR}/09-refactoring.md (current state)
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/10-code-review-review-{iteration}.md
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-**Loop Logic (with routing):**
-- If STATUS is PASS → proceed to Step 11
-- If STATUS is PARTIAL or FAIL with BLOCKING issues:
-  - Parse BLOCKING issues by route from code-review.md
-  - **For functional issues (ROUTE: functional):**
-    1. Go to Step 3 (automation-qa adds/updates tests - RED)
-    2. Go to Step 5 (backend-developer fixes - GREEN)
-  - **For structural issues (ROUTE: structural):**
-    1. Go to Step 9 (refactorer addresses structural issues)
-  - Re-run Step 10
-  - Repeat until PASS or only NON-BLOCKING remain
+**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
 
-**Loop Exit:** STATUS is PASS, only NON-BLOCKING remain, iteration > 5 (max), or user accepts trade-offs
+Parse BLOCKING issues by route from review file:
+- Functional issues (ROUTE: functional) → TDD loop
+- Structural issues (ROUTE: structural) → refactorer
+
+**For functional issues:**
+1. Launch automation-qa to add/update tests (RED)
+2. Launch backend-developer to fix (GREEN)
+3. Write combined fix report to `{WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration}.md`
+
+**For structural issues:**
+```
+subagent_type: refactorer
+run_in_background: true
+prompt: |
+  Use the workflow-report-format skill.
+
+  ## Workflow Directory
+  WORKFLOW_DIR: {WORKFLOW_DIR}
+
+  ## Task
+  Fix the BLOCKING structural/design issues identified in code review.
+  Run /run-tests after each refactor step.
+
+  ## Iteration
+  This is fix iteration {iteration}.
+
+  ## Input
+  Read: {latest review file}
+
+  ## Focus On
+  Address ONLY the BLOCKING structural issues marked "ROUTE: structural".
+
+  ## Output
+  1. Write FULL report to: {WORKFLOW_DIR}/loop-iterations/10-code-review-fix-{iteration}.md
+  2. Return brief status only
+```
+
+Wait with `TaskOutput(block: true)`.
+Increment `iteration`.
+**Go back to Loop Start.**
+
+**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max), or user accepts trade-offs
 
 ### Step 11: Documentation (documentation-updater)
 
@@ -522,10 +696,10 @@ prompt: |
   Keep changes minimal and tied to implemented behavior.
 
   ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+  Read: {WORKFLOW_DIR}/00-requirements.md, {WORKFLOW_DIR}/01-plan.md, {WORKFLOW_DIR}/04-implementation.md
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/documentation.md
+  1. Write FULL report to: {WORKFLOW_DIR}/11-documentation.md
   2. Return brief status only
 ```
 
@@ -600,5 +774,5 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
 
 10. **Task isolation:**
     - Each workflow MUST use its own unique subdirectory under `.workflow/`
-    - Never write to `.workflow/` root
+    - Never write to `.workflow/` root (except `.gitignore`)
     - This allows multiple workflows to run concurrently
