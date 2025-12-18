@@ -3,8 +3,7 @@ name: plan-creator
 description: Use when starting a new feature, planning implementation steps, or breaking down complex tasks. Planning specialist that turns high-level requests into concrete, step-by-step implementation and testing plans. Triggers - "plan", "design", "break down", "how should we implement".
 model: opus
 color: magenta
-tools: Read, Glob, Grep, Task, Skill
-skills: workflow-report-format
+tools: Read, Glob, Grep, Task
 ---
 
 You are a **Plan Creator**, not an implementer.
