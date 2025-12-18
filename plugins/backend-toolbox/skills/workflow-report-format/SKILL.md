@@ -7,10 +7,10 @@ version: 0.1.0
 # Workflow Report Format
 
 This skill standardizes how agents communicate in background-orchestrated workflows. Each agent:
-1. Writes **full report** to a designated file
-2. Returns **brief status** to the orchestrator
+1. Writes **full report** to a designated file (`{name}.md`)
+2. Writes **brief status** to a signal file (`{name}-report.md`)
 
-This keeps orchestrator context minimal while preserving full agent outputs for subsequent agents.
+The orchestrator polls for the signal file and reads only the brief status. This keeps orchestrator context minimal while preserving full agent outputs for subsequent agents.
 
 ## Multi-Instance Support
 
@@ -85,48 +85,69 @@ All file operations use this directory:
 
 ### File Report Paths
 
-Within a workflow, the standard files are:
+Within a workflow, each step produces two files:
+- **Full report:** `{name}.md` - detailed output for next agents
+- **Signal file:** `{name}-report.md` - brief status for orchestrator
 
 ```
 {WORKFLOW_DIR}/
-├── metadata.json              # Workflow metadata (feature name, start time, current step)
-├── requirements.md            # Initial requirements
-├── plan.md                    # plan-creator output
-├── tests-design.md            # automation-qa test design output
-├── tests-review.md            # tests-reviewer output
-├── implementation.md          # backend-developer output
-├── stabilization.md           # automation-qa stabilization output
-├── acceptance.md              # acceptance-reviewer output
-├── performance.md             # performance-specialist output
-├── security.md                # application-security-specialist output
-├── refactoring.md             # refactorer output
-├── code-review.md             # code-reviewer output
-├── documentation.md           # documentation-updater output
-└── loop-iterations/           # For reflection loops
+├── metadata.json                  # Workflow metadata (feature name, start time, current step)
+├── requirements.md                # Full report: initial requirements
+├── requirements-report.md         # Signal: requirements status
+├── plan.md                        # Full report: plan-creator output
+├── plan-report.md                 # Signal: plan status
+├── tests-design.md                # Full report: automation-qa test design
+├── tests-design-report.md         # Signal: tests-design status
+├── tests-review.md                # Full report: tests-reviewer output
+├── tests-review-report.md         # Signal: tests-review status
+├── implementation.md              # Full report: backend-developer output
+├── implementation-report.md       # Signal: implementation status
+├── stabilization.md               # Full report: automation-qa stabilization
+├── stabilization-report.md        # Signal: stabilization status
+├── acceptance.md                  # Full report: acceptance-reviewer output
+├── acceptance-report.md           # Signal: acceptance status
+├── performance.md                 # Full report: performance-specialist output
+├── performance-report.md          # Signal: performance status
+├── security.md                    # Full report: security-specialist output
+├── security-report.md             # Signal: security status
+├── refactoring.md                 # Full report: refactorer output
+├── refactoring-report.md          # Signal: refactoring status
+├── code-review.md                 # Full report: code-reviewer output
+├── code-review-report.md          # Signal: code-review status
+├── documentation.md               # Full report: documentation-updater output
+├── documentation-report.md        # Signal: documentation status
+└── loop-iterations/               # For reflection loops
     ├── performance-fix-1.md
     └── performance-review-2.md
 ```
 
 ## Two-Part Output Pattern
 
-Every agent in the workflow produces TWO outputs:
+Every agent in the workflow produces TWO files:
 
-### Part 1: File Report (Full Details)
+### Part 1: Full Report (`{name}.md`)
 
 Written to `{WORKFLOW_DIR}/{name}.md`. Contains everything the next agent needs.
 
-### Part 2: Orchestrator Response (Brief Status)
+### Part 2: Signal File (`{name}-report.md`)
 
-Returned as agent response. Maximum 10 lines. Format:
+Written to `{WORKFLOW_DIR}/{name}-report.md`. Brief status for the orchestrator. Maximum 10 lines. Format:
 
 ```
-STATUS: PASS | PARTIAL | FAIL | DONE
+STATUS: PASS | PARTIAL | FAIL | DONE | ERROR
 FILE: {WORKFLOW_DIR}/{name}.md
 SUMMARY: One sentence describing outcome
 NEXT_INPUT: List of files the next agent should read
 ---
 [Optional: 2-5 bullet key points]
 ```
+
+**Important:** The orchestrator polls for this signal file using:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
+
+The script removes any stale file from previous iterations before polling, ensuring the orchestrator waits for the fresh output.
 
 ## Standard File Report Structure
 
@@ -200,7 +221,7 @@ See agent-specific templates below.
 - Key patterns to follow: {patterns}
 ```
 
-**Orchestrator Response:**
+**Signal File (`plan-report.md`):**
 ```
 STATUS: DONE
 FILE: {WORKFLOW_DIR}/plan.md
@@ -256,7 +277,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md
 - Edge cases NOT covered (intentional): {list}
 ```
 
-**Orchestrator Response:**
+**Signal File (`tests-design-report.md`):**
 ```
 STATUS: DONE
 FILE: {WORKFLOW_DIR}/tests-design.md
@@ -312,7 +333,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
 - If PARTIAL/FAIL: automation-qa must address blocking issues first
 ```
 
-**Orchestrator Response:**
+**Signal File (`tests-review-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/tests-review.md
@@ -369,7 +390,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md, {WORKFLOW_DI
 - Potential security concern: {if any}
 ```
 
-**Orchestrator Response:**
+**Signal File (`implementation-report.md`):**
 ```
 STATUS: DONE
 FILE: {WORKFLOW_DIR}/implementation.md
@@ -424,7 +445,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
 - If PARTIAL/FAIL: Issues need TDD loop resolution
 ```
 
-**Orchestrator Response:**
+**Signal File (`stabilization-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/stabilization.md
@@ -472,7 +493,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_
 - If PARTIAL/FAIL: TDD loop needed for gaps
 ```
 
-**Orchestrator Response:**
+**Signal File (`acceptance-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/acceptance.md
@@ -521,7 +542,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_
 - If PARTIAL/FAIL: backend-developer must fix blocking issues
 ```
 
-**Orchestrator Response:**
+**Signal File (`performance-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/performance.md
@@ -577,7 +598,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/performance.md
 - If PARTIAL/FAIL: backend-developer must fix blocking vulnerabilities
 ```
 
-**Orchestrator Response:**
+**Signal File (`security-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/security.md
@@ -628,7 +649,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/security.md
 - Code quality improvements: {summary}
 ```
 
-**Orchestrator Response:**
+**Signal File (`refactoring-report.md`):**
 ```
 STATUS: DONE
 FILE: {WORKFLOW_DIR}/refactoring.md
@@ -675,7 +696,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/refactoring.md
 - If PARTIAL/FAIL: Route issues to appropriate agents
 ```
 
-**Orchestrator Response:**
+**Signal File (`code-review-report.md`):**
 ```
 STATUS: PASS | PARTIAL | FAIL
 FILE: {WORKFLOW_DIR}/code-review.md
@@ -717,7 +738,7 @@ NEXT_INPUT: {WORKFLOW_DIR}/code-review.md
 - No code changes made
 ```
 
-**Orchestrator Response:**
+**Signal File (`documentation-report.md`):**
 ```
 STATUS: DONE
 FILE: {WORKFLOW_DIR}/documentation.md
@@ -1000,16 +1021,19 @@ When orchestrator receives `STATUS: ERROR`:
 
 ### Prevention: Verify Output After Each Step
 
-After each `TaskOutput(block: true)`, the orchestrator SHOULD verify the output file exists:
+After the signal file appears, the orchestrator SHOULD verify the full report file exists:
 
 ```
-# After agent completes
-response = TaskOutput(block: true)
+# Wait for signal file
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
 
-# Parse the FILE from response
-expected_file = parse_file_from_response(response)
+# Read the signal file
+Read: {WORKFLOW_DIR}/{name}-report.md
 
-# Verify it exists before proceeding
+# Parse the FILE from signal
+expected_file = parse FILE field from signal
+
+# Verify full report exists before proceeding
 if not file_exists(expected_file):
     HALT with error: "Agent claimed to write {expected_file} but file not found"
 ```

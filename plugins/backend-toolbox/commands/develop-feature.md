@@ -17,10 +17,11 @@ The user request is:
 This workflow uses background agents to minimize context window usage:
 
 1. **Each agent runs in background** (`run_in_background: true`)
-2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{step}-{name}.md`)
-3. **Each agent returns brief status** (STATUS, FILE, SUMMARY, NEXT_INPUT)
-4. **Orchestrator only sees status** - full context stays in files
-5. **Next agent reads previous files** - gets context from disk
+2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{name}.md`)
+3. **Each agent writes short status to signal file** (`{WORKFLOW_DIR}/{name}-report.md`)
+4. **Orchestrator polls for signal file** - no TaskOutput needed
+5. **Orchestrator reads only the short report** - full context stays in files
+6. **Next agent reads previous full reports** - gets context from disk
 
 **Critical: Always include these instructions in every agent prompt:**
 ```
@@ -29,8 +30,39 @@ You MUST use the workflow-report-format skill for output formatting.
 ## Workflow Directory
 WORKFLOW_DIR: {WORKFLOW_DIR}
 
-Write your FULL report to: {WORKFLOW_DIR}/{step}-{name}.md
-Return ONLY the brief orchestrator response (max 10 lines) as your final output.
+## Output Files
+1. Write your FULL report to: {WORKFLOW_DIR}/{name}.md
+2. Write your SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+   The short report MUST contain ONLY:
+   STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
+   FILE: {WORKFLOW_DIR}/{name}.md
+   SUMMARY: {one sentence}
+   NEXT_INPUT: {comma-separated file list for next agent}
+   ---
+   {2-5 bullet key points}
+```
+
+## Waiting for Agent Completion
+
+Do NOT use TaskOutput. Instead, use the `wait-for-report.sh` script:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
+
+This script:
+1. Removes any stale report from previous iteration
+2. Polls every 10 seconds until the report file appears
+3. Returns when the file is ready
+
+For multiple files (parallel agents):
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/file1-report.md {WORKFLOW_DIR}/file2-report.md
+```
+
+Then read the short report file to get the STATUS and decide next action:
+```
+Read: {WORKFLOW_DIR}/{name}-report.md
 ```
 
 ## Task ID Generation
@@ -95,19 +127,26 @@ Task tool:
     {list of {WORKFLOW_DIR}/*.md files to read}
 
     ## Output
-    1. Write FULL report to: {WORKFLOW_DIR}/{step}-{name}.md
-    2. Return ONLY this format:
-       STATUS: {PASS|PARTIAL|FAIL|DONE}
-       FILE: {WORKFLOW_DIR}/{step}-{name}.md
+    1. Write FULL report to: {WORKFLOW_DIR}/{name}.md
+    2. Write SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+       The short report MUST contain ONLY:
+       STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
+       FILE: {WORKFLOW_DIR}/{name}.md
        SUMMARY: {one sentence}
        NEXT_INPUT: {comma-separated file list for next agent}
        ---
        {2-5 bullet key points}
 ```
 
-Then immediately call `TaskOutput` with `block: true` to wait for completion.
+Then wait for completion using the script:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md
+```
 
-Parse the STATUS from the response to decide next action.
+Then read the short report and parse the STATUS to decide next action:
+```
+Read: {WORKFLOW_DIR}/{name}-report.md
+```
 
 ---
 
@@ -151,10 +190,11 @@ prompt: |
      - Affected Domains/Components
      - Clarifications (Q&A pairs if any)
      - Behavioral Requirements (REQ-1, REQ-2, etc.)
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/requirements-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/requirements-report.md`
+Read: `{WORKFLOW_DIR}/requirements-report.md`
 
 ### Step 2: Planning (plan-creator)
 
@@ -176,10 +216,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/plan.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/plan-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/plan-report.md`
+Read: `{WORKFLOW_DIR}/plan-report.md`
 
 ### Step 3: Test Design - RED Stage (automation-qa)
 
@@ -212,10 +253,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/tests-design.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/tests-design-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-design-report.md`
+Read: `{WORKFLOW_DIR}/tests-design-report.md`
 
 ### Step 4: Test Quality Gate (tests-reviewer)
 
@@ -238,10 +280,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/tests-review.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/tests-review-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-review-report.md`
+Read: `{WORKFLOW_DIR}/tests-review-report.md`
 
 **Loop Logic:**
 - If STATUS is PASS → proceed to Step 5
@@ -278,10 +321,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/implementation.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/implementation-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/implementation-report.md`
+Read: `{WORKFLOW_DIR}/implementation-report.md`
 
 ### Step 6: Stabilization Gate (automation-qa)
 
@@ -308,10 +352,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/stabilization.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/stabilization-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/stabilization-report.md`
+Read: `{WORKFLOW_DIR}/stabilization-report.md`
 
 **Loop Logic (TDD):**
 - If STATUS is PASS → proceed to Step 7
@@ -345,10 +390,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/acceptance.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/acceptance-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/acceptance-report.md`
+Read: `{WORKFLOW_DIR}/acceptance-report.md`
 
 **Loop Logic (TDD):**
 - If STATUS is PASS → proceed to Step 8
@@ -383,7 +429,7 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/performance.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/performance-report.md
 ```
 
 **Second Task call (application-security-specialist) - SAME MESSAGE:**
@@ -407,10 +453,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/security.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/security-report.md
 ```
 
-Wait for BOTH using `TaskOutput(block: true)` for each task ID.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
+Read: `{WORKFLOW_DIR}/performance-report.md` and `{WORKFLOW_DIR}/security-report.md`
 
 **Loop Logic:**
 - If BOTH statuses are PASS → proceed to Step 9
@@ -446,10 +493,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/refactoring.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/refactoring-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/refactoring-report.md`
+Read: `{WORKFLOW_DIR}/refactoring-report.md`
 
 ### Step 10: Code Review (code-reviewer)
 
@@ -478,10 +526,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/code-review.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/code-review-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/code-review-report.md`
+Read: `{WORKFLOW_DIR}/code-review-report.md`
 
 **Loop Logic (with routing):**
 - If STATUS is PASS → proceed to Step 11
@@ -523,10 +572,11 @@ prompt: |
 
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/documentation.md
-  2. Return brief status only
+  2. Write SHORT status to: {WORKFLOW_DIR}/documentation-report.md
 ```
 
-Wait with `TaskOutput(block: true)`.
+Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/documentation-report.md`
+Read: `{WORKFLOW_DIR}/documentation-report.md`
 
 ### Step 12: Finalize
 
@@ -554,14 +604,18 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
    - Tests reviewed (PASS) before implementation begins
    - /run-tests after every implementation or refactor step
 
-2. **Background agents only:**
+2. **Background agents with file-based signaling:**
    - All agents MUST run with `run_in_background: true`
-   - Always wait with `TaskOutput(block: true)` before next step
+   - Do NOT use TaskOutput - use `wait-for-report.sh` script instead
+   - **After launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md`
+   - The script removes stale files and polls until the new report appears
+   - Then read the signal file to get STATUS
 
-3. **File-based context:**
-   - Agents write full reports to files in `{WORKFLOW_DIR}/`
-   - Agents return only brief status to orchestrator
-   - Next agent reads previous agent's files
+3. **Dual-file output:**
+   - Agents write FULL report to `{WORKFLOW_DIR}/{name}.md`
+   - Agents write SHORT status to `{WORKFLOW_DIR}/{name}-report.md`
+   - Orchestrator only reads the short `-report.md` files
+   - Next agent reads previous agent's full `.md` reports
 
 4. **No scope creep:**
    - Do not introduce features beyond $ARGUMENTS
@@ -571,11 +625,11 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
    - Every agent prompt MUST include `WORKFLOW_DIR: {WORKFLOW_DIR}`
 
 6. **Verify output files:**
-   - After each `TaskOutput`, verify the reported FILE exists
+   - After polling completes, verify the full report FILE exists
    - If file missing: HALT and report error to user
 
 7. **Handle STATUS: ERROR:**
-   - If any agent returns `STATUS: ERROR`, HALT the workflow immediately
+   - If any agent's `-report.md` contains `STATUS: ERROR`, HALT the workflow immediately
    - Do NOT proceed to the next step
    - Do NOT retry the failed agent
    - Report to user with details from the error response
@@ -585,14 +639,14 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
      1. Agent lists `{WORKFLOW_DIR}/` directory contents
      2. Agent attempts to identify alternative file (name variations)
      3. If found: use it and log warning in Handoff Notes
-     4. If not found: return `STATUS: ERROR` with file listing
+     4. If not found: write `STATUS: ERROR` to its `-report.md` with file listing
    - Orchestrator halts and reports to user
 
 9. **Write failure protocol:**
-   - If an agent cannot write its output file:
+   - If an agent cannot write its output files:
      1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR}/loop-iterations)
-     2. If still fails: return `STATUS: ERROR` with error details
-     3. NEVER return DONE/PASS if file was not written
+     2. If still fails: write `STATUS: ERROR` to its `-report.md` with error details
+     3. NEVER write DONE/PASS to `-report.md` if full report was not written
    - Orchestrator halts and reports to user with recovery steps
 
 10. **Task isolation:**
