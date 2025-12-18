@@ -75,7 +75,11 @@ This workflow does NOT handle:
 
 - Re-invoke `devops-specialist` with explicit review instructions:
     - Review the changes made in Step 3 for quality and security issues
-    - Apply its loaded skill (`devops-infrastructure-security`) for best practices checklists
+    - Check against DevOps best practices checklists:
+        - Docker: base image pinning, non-root user, no secrets in layers, health checks
+        - CI/CD: pinned action versions, minimal permissions, proper secret handling
+        - Kubernetes: resource limits, security context, probes configured
+        - Terraform: no hardcoded secrets, proper state handling, consistent naming
     - Identify any issues or improvements needed
 - The review must return a verdict: **PASS / PARTIAL / FAIL**
     - PASS: Changes meet quality and security standards

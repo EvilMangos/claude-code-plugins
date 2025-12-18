@@ -166,7 +166,12 @@ prompt: |
   Use the workflow-report-format skill.
 
   ## Task
-  Review the tests for quality. Apply your loaded skills.
+  Review test quality:
+  - Requirements → tests mapping completeness
+  - Correctness of assertions
+  - Assertion strength (would fail for realistic bugs?)
+  - Determinism & flake risk
+
   Return verdict: PASS / PARTIAL / FAIL
 
   ## Input
@@ -280,11 +285,9 @@ Wait with `TaskOutput(block: true)`.
 
 ### Step 7: Performance Check Loop (performance-specialist ↔ backend-developer)
 
-Initialize loop state: `iteration = 1`
-
 **Loop Start:**
 
-**If iteration == 1:** Launch initial review:
+Launch in background:
 ```
 subagent_type: performance-specialist
 run_in_background: true
@@ -292,89 +295,38 @@ prompt: |
   Use the workflow-report-format skill.
 
   ## Task
-  Analyze the implementation for performance issues.
-  Apply your loaded skills (`backend-performance`, `algorithm-efficiency`).
+  Analyze for performance issues:
+  - Algorithmic complexity
+  - Database query efficiency (N+1, indexes)
+  - Memory allocation patterns
+  - I/O bottlenecks
+  - Caching opportunities
+
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
-
-  ## Iteration
-  This is review iteration 1 (initial review).
 
   ## Input
   Read: .workflow/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/07-performance.md
-  2. Return brief status only
-```
-
-**If iteration > 1:** Launch re-review:
-```
-subagent_type: performance-specialist
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Re-review performance after fixes were applied.
-  Check if BLOCKING issues from previous review are resolved.
-
-  ## Iteration
-  This is review iteration {iteration}.
-
-  ## Input
-  Read:
-  - .workflow/07-performance.md (original findings)
-  - .workflow/loop-iterations/07-performance-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md (current implementation)
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/07-performance-review-{iteration}.md
+  1. Write FULL report to: .workflow/07-performance.md (or loop-iterations/07-performance-{N}.md)
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
+**If BLOCKING issues:**
+1. Launch backend-developer with .workflow/07-performance.md
+2. Developer fixes issues, runs /run-tests
+3. **Go back to Loop Start** - re-run performance-specialist
 
-Launch fixer:
-```
-subagent_type: backend-developer
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Fix the BLOCKING performance issues identified in the review.
-  Run /run-tests after each fix to ensure behavior is preserved.
-
-  ## Iteration
-  This is fix iteration {iteration}.
-
-  ## Input
-  Read: {latest review file - either .workflow/07-performance.md or .workflow/loop-iterations/07-performance-review-{iteration}.md}
-
-  ## Focus On
-  Address ONLY the BLOCKING issues. NON-BLOCKING issues are deferred.
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/07-performance-fix-{iteration}.md
-  2. Return brief status only
-```
-
-Wait with `TaskOutput(block: true)`.
-Increment `iteration`.
-**Go back to Loop Start.**
-
-**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max)
+**Loop Exit:** STATUS is PASS or only NON-BLOCKING remain
 
 ### Step 8: Security Check Loop (application-security-specialist ↔ backend-developer)
 
-Initialize loop state: `iteration = 1`
-
 **Loop Start:**
 
-**If iteration == 1:** Launch initial review:
+Launch in background:
 ```
 subagent_type: application-security-specialist
 run_in_background: true
@@ -382,81 +334,32 @@ prompt: |
   Use the workflow-report-format skill.
 
   ## Task
-  Analyze the implementation for security vulnerabilities.
-  Apply your loaded skill (`web-api-security`).
+  Analyze for security vulnerabilities:
+  - Input validation
+  - Authentication/authorization
+  - Injection vulnerabilities
+  - Sensitive data handling
+  - OWASP Top 10
+
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
-
-  ## Iteration
-  This is review iteration 1 (initial review).
 
   ## Input
   Read: .workflow/04-implementation.md
 
   ## Output
-  1. Write FULL report to: .workflow/08-security.md
-  2. Return brief status only
-```
-
-**If iteration > 1:** Launch re-review:
-```
-subagent_type: application-security-specialist
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Re-review security after fixes were applied.
-  Check if BLOCKING vulnerabilities from previous review are resolved.
-
-  ## Iteration
-  This is review iteration {iteration}.
-
-  ## Input
-  Read:
-  - .workflow/08-security.md (original findings)
-  - .workflow/loop-iterations/08-security-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md (current implementation)
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/08-security-review-{iteration}.md
+  1. Write FULL report to: .workflow/08-security.md (or loop-iterations/08-security-{N}.md)
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
+**If BLOCKING issues:**
+1. Launch backend-developer with .workflow/08-security.md
+2. Developer fixes vulnerabilities, runs /run-tests
+3. **Go back to Loop Start** - re-run security-specialist
 
-Launch fixer:
-```
-subagent_type: backend-developer
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Fix the BLOCKING security vulnerabilities identified in the review.
-  Run /run-tests after each fix to ensure behavior is preserved.
-
-  ## Iteration
-  This is fix iteration {iteration}.
-
-  ## Input
-  Read: {latest review file - either .workflow/08-security.md or .workflow/loop-iterations/08-security-review-{iteration}.md}
-
-  ## Focus On
-  Address ONLY the BLOCKING vulnerabilities. NON-BLOCKING hardening is deferred.
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/08-security-fix-{iteration}.md
-  2. Return brief status only
-```
-
-Wait with `TaskOutput(block: true)`.
-Increment `iteration`.
-**Go back to Loop Start.**
-
-**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max)
+**Loop Exit:** STATUS is PASS or only NON-BLOCKING remain
 
 ### Step 9: Refactoring (refactorer)
 
@@ -468,9 +371,11 @@ prompt: |
   Use the workflow-report-format skill.
 
   ## Task
-  Perform behavior-preserving cleanup.
-  Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
-  Run /run-tests after each refactor step.
+  Behavior-preserving cleanup:
+  - Improve structure, naming, separation of concerns
+  - Remove duplication
+  - Run /run-tests after each refactor step
+
   Record larger refactors as follow-up tasks, don't do them now.
 
   ## Input
@@ -485,11 +390,9 @@ Wait with `TaskOutput(block: true)`.
 
 ### Step 10: Code Review Loop (code-reviewer)
 
-Initialize loop state: `iteration = 1`
-
 **Loop Start:**
 
-**If iteration == 1:** Launch initial review:
+Launch in background:
 ```
 subagent_type: code-reviewer
 run_in_background: true
@@ -497,94 +400,33 @@ prompt: |
   Use the workflow-report-format skill.
 
   ## Task
-  Review the code for quality issues.
-  Apply your loaded skills (`code-review-checklist`, `design-assessment`).
+  Review code quality:
+  - Architecture alignment
+  - Maintainability
+  - Style
+  - Test design quality
+
   Classify findings as BLOCKING or NON-BLOCKING.
-  For each BLOCKING issue, specify route:
-  - "ROUTE: functional" → needs automation-qa (tests) + backend-developer (fix)
-  - "ROUTE: structural" → needs refactorer
+  For BLOCKING, specify route: automation-qa+backend-developer OR refactorer
 
   Return verdict: PASS / PARTIAL / FAIL
-
-  ## Iteration
-  This is review iteration 1 (initial review).
 
   ## Input
   Read: .workflow/04-implementation.md, .workflow/09-refactoring.md
 
   ## Output
-  1. Write FULL report to: .workflow/10-code-review.md
-  2. Return brief status only
-```
-
-**If iteration > 1:** Launch re-review:
-```
-subagent_type: code-reviewer
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Re-review code quality after fixes were applied.
-  Check if BLOCKING issues from previous review are resolved.
-
-  ## Iteration
-  This is review iteration {iteration}.
-
-  ## Input
-  Read:
-  - .workflow/10-code-review.md (original findings)
-  - .workflow/loop-iterations/10-code-review-fix-{iteration-1}.md (latest fix)
-  - .workflow/04-implementation.md, .workflow/09-refactoring.md (current state)
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/10-code-review-review-{iteration}.md
+  1. Write FULL report to: .workflow/10-code-review.md (or loop-iterations/10-code-review-{N}.md)
   2. Return brief status only
 ```
 
 Wait with `TaskOutput(block: true)`.
 
-**If STATUS is FAIL or PARTIAL with BLOCKING issues:**
+**If BLOCKING issues:**
+- Functional issues → automation-qa (tests, RED) + backend-developer (fix, GREEN)
+- Structural issues → refactorer (small refactor, run tests)
+- **Go back to Loop Start** - re-run code-reviewer
 
-Parse BLOCKING issues by route from review file:
-- Functional issues (ROUTE: functional) → TDD loop
-- Structural issues (ROUTE: structural) → refactorer
-
-**For functional issues:**
-1. Launch automation-qa to add/update tests (RED)
-2. Launch backend-developer to fix (GREEN)
-3. Write combined fix report to `.workflow/loop-iterations/10-code-review-fix-{iteration}.md`
-
-**For structural issues:**
-```
-subagent_type: refactorer
-run_in_background: true
-prompt: |
-  Use the workflow-report-format skill.
-
-  ## Task
-  Fix the BLOCKING structural/design issues identified in code review.
-  Run /run-tests after each refactor step.
-
-  ## Iteration
-  This is fix iteration {iteration}.
-
-  ## Input
-  Read: {latest review file}
-
-  ## Focus On
-  Address ONLY the BLOCKING structural issues marked "ROUTE: structural".
-
-  ## Output
-  1. Write FULL report to: .workflow/loop-iterations/10-code-review-fix-{iteration}.md
-  2. Return brief status only
-```
-
-Wait with `TaskOutput(block: true)`.
-Increment `iteration`.
-**Go back to Loop Start.**
-
-**Loop Exit:** STATUS is PASS, or only NON-BLOCKING remain, or iteration > 5 (max), or user accepts trade-offs
+**Loop Exit:** STATUS is PASS or only NON-BLOCKING remain (or user accepts trade-offs)
 
 ### Step 11: Documentation (documentation-updater)
 
@@ -649,28 +491,3 @@ The workflow-completion hook will generate the final summary by reading `.workfl
 
 5. **Skill usage:**
    - Every agent prompt MUST mention `workflow-report-format` skill
-
-6. **Verify output files:**
-   - After each `TaskOutput`, verify the reported FILE exists
-   - If file missing: HALT and report error to user
-
-7. **Handle STATUS: ERROR:**
-   - If any agent returns `STATUS: ERROR`, HALT the workflow immediately
-   - Do NOT proceed to the next step
-   - Do NOT retry the failed agent
-   - Report to user with details from the error response
-
-8. **Missing input file protocol:**
-   - If an agent cannot find a required input file:
-     1. Agent lists `.workflow/` directory contents
-     2. Agent attempts to identify alternative file (name variations)
-     3. If found: use it and log warning in Handoff Notes
-     4. If not found: return `STATUS: ERROR` with file listing
-   - Orchestrator halts and reports to user
-
-9. **Write failure protocol:**
-   - If an agent cannot write its output file:
-     1. Agent attempts recovery (mkdir -p .workflow/loop-iterations)
-     2. If still fails: return `STATUS: ERROR` with error details
-     3. NEVER return DONE/PASS if file was not written
-   - Orchestrator halts and reports to user with recovery steps
