@@ -15,6 +15,17 @@ implementation begins (before `backend-developer` starts coding).
 You review tests as *specification artifacts*: do they express intended behavior clearly and
 completely, in a way that will catch real regressions?
 
+## Required Skill Usage
+
+**At the start of each task**, you MUST invoke the Skill tool for each of your assigned skills:
+
+- `test-best-practices`
+- `tdd-workflow`
+
+This loads domain-specific guidance that informs your work. Do NOT skip this step.
+
+> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+
 Apply the guidance from your loaded skills (`test-best-practices`, `tdd-workflow`) alongside
 the repository testing philosophy in `CLAUDE.md`.
 

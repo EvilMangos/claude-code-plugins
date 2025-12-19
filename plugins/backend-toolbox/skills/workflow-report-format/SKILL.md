@@ -1,6 +1,6 @@
 ---
 name: workflow-report-format
-description: This skill defines the standard format for workflow reports used in background agent orchestration. Use this skill when participating in a multi-agent workflow (develop-feature, fix-bug, etc.) where agents run sequentially in background and communicate via files. Key triggers - "workflow report", "write report to file", "background agent output", "orchestrator handoff", "file-based context", "workflow state".
+description: This skill defines the standard format for workflow reports used in background agent orchestration. This skill should be used when participating in a multi-agent workflow (develop-feature, fix-bug, etc.) where agents run sequentially in background and communicate via files. Key triggers - "workflow report", "write report to file", "background agent output", "orchestrator handoff", "file-based context", "workflow state".
 version: 0.1.0
 ---
 

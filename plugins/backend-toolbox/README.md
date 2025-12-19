@@ -47,7 +47,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 ## Commands (8)
 
-- `/code-review` - Comprehensive code review (tests, quality, security, performance)
+- `/complete-review` - Comprehensive code review (tests, quality, security, performance)
 - `/develop-feature` - Full TDD workflow (planning, tests, implementation, review, docs)
 - `/devops-change` - DevOps workflow for CI/CD, Docker, K8s, Terraform changes
 - `/fix-bug` - Structured bug-fixing workflow (reproduction, root cause, TDD, review)
