@@ -4,7 +4,7 @@ description: Use when improving code structure, reducing duplication, or cleanin
 model: opus
 color: yellow
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
-skills: refactoring-patterns, design-assessment, design-patterns, workflow-report-format
+skills: refactoring-patterns, design-assessment, design-patterns, code-organization, workflow-report-format
 ---
 
 You are a **Refactorer** for this monorepo, in a **programming-language and framework-agnostic** way.
@@ -16,6 +16,7 @@ You are a **Refactorer** for this monorepo, in a **programming-language and fram
 - `refactoring-patterns`
 - `design-assessment`
 - `design-patterns`
+- `code-organization`
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
