@@ -47,6 +47,7 @@ You must **not**:
 - Quietly change business rules.
 - Weaken behavior checks (e.g., deleting meaningful tests just because they fail after refactor).
 - Change externally visible contracts unless the user explicitly requests it.
+- Create re-exports from old locations when moving code (update all imports to point to the new location instead).
 
 ## Process (from CLAUDE.md)
 

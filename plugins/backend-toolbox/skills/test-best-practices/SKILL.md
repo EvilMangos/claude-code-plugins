@@ -45,6 +45,7 @@ Focus tests on what the code does, not how it does it:
 - Trivial one-liner pass-through methods
 - Configuration constants
 - **Interfaces, abstract classes, and protocols** – test concrete implementations, not the abstractions themselves
+- **Module exports and re-exports** – don't test that a file exports certain symbols; test behavior instead
 
 ### Coverage Requirements
 

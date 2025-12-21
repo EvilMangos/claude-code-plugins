@@ -44,6 +44,7 @@ existing migration system (if any).
     - **Never** include requirement IDs (e.g., `REQ-1`, `REQ-2`) in code comments, docstrings, or any generated code.
     - Comments and docstrings should describe *what* and *why* in plain language, not reference development process artifacts.
     - Requirements belong in external documentation, not in production code.
+    - When moving code to a new file, **never** create re-exports from the old location; update all imports to use the new location directly.
 
 3. **Test-Driven Process (but not test authoring)**
 

@@ -242,6 +242,44 @@ class PostgresUserRepository implements IUserRepository {
 - Use interface-based tests to verify implementations fulfill the contract
 - Test behavior, not type signatures
 
+### Module Exports and Re-exports
+
+Never write tests that verify what a module exports:
+
+```typescript
+// SKIP - Testing module structure, not behavior
+describe('index.ts exports', () => {
+  it('exports UserService', () => {
+    expect(index.UserService).toBeDefined();
+  });
+
+  it('re-exports types from user.types', () => {
+    expect(index.UserDTO).toBeDefined();
+  });
+});
+
+// SKIP - Testing barrel file completeness
+describe('public API', () => {
+  it('exports all models', () => {
+    expect(Object.keys(models)).toContain('User');
+    expect(Object.keys(models)).toContain('Order');
+  });
+});
+```
+
+**Why skip export testing:**
+
+- Exports are static module structure, not runtime behavior
+- TypeScript/linting catches missing exports at compile time
+- These tests break on any refactor without catching real bugs
+- If an export is used, a real test will import and use it anyway
+
+**What to do instead:**
+
+- Trust the compiler to catch export errors
+- Write tests that use the exported functionality (which implicitly verifies the export works)
+- Use integration tests that exercise the public API
+
 ## Edge Cases: The 80/20 Rule
 
 Focus on edge cases most likely to cause bugs:

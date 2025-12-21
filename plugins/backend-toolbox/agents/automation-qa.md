@@ -61,9 +61,10 @@ If a requested change would require implementation updates:
         - Error/exception paths
         - Edge cases and boundaries
 
-3. **Never Test Abstractions**
+3. **Never Test Abstractions or Module Structure**
 
     - **Do not** write tests for interfaces, abstract classes, protocols, or pure contracts.
+    - **Do not** write tests that verify exports (e.g., "module exports X", "file re-exports Y").
     - Tests must target **concrete implementations** that implement those abstractions.
     - Interfaces define contracts; tests verify that implementations fulfill contracts.
     - If asked to test an interface, create tests for a concrete implementation instead.

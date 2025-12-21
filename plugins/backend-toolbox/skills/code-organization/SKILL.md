@@ -339,7 +339,39 @@ After:
 | **Circular Dependencies** | A imports B, B imports A | Extract shared to third module |
 | **Deep Nesting** | `src/a/b/c/d/e/f/file.ts` | Flatten, max 3-4 levels |
 | **Flat Structure** | 50 files in one folder | Group by feature/layer |
-| **Re-export Wrappers** | Backwards-compat bloat after moving code | Delete from source; update consumers to import from new location directly. Exception: intentional barrel files (`index.ts`, `__init__.py`) |
+| **Re-export Wrappers** | Backwards-compat bloat after moving code | See "No Re-exports When Moving Code" below |
+
+### No Re-exports When Moving Code
+
+When moving code to a new file, **never** create a re-export from the old location:
+
+```typescript
+// BAD - Creating a re-export wrapper after moving UserService to new location
+// old-file.ts
+export { UserService } from './new-location/user-service';  // DON'T DO THIS
+
+// GOOD - Update all imports to use the new location directly
+// consumer.ts (before)
+import { UserService } from './old-file';
+// consumer.ts (after)
+import { UserService } from './new-location/user-service';
+```
+
+**Why this matters:**
+
+- Re-exports create indirection that makes code harder to navigate
+- IDE "go to definition" leads to the wrapper, not the real code
+- Stale re-exports accumulate as technical debt
+- Import graphs become unnecessarily complex
+
+**The correct approach when moving code:**
+
+1. Move the code to its new location
+2. Use IDE refactoring or search-and-replace to update ALL imports
+3. Delete the old file entirely (or remove the moved exports from it)
+4. Never leave a re-export "for backwards compatibility"
+
+**Exception:** Intentional barrel files (`index.ts`, `__init__.py`) that serve as public API entry points are acceptable - these are designed as aggregation points, not backwards-compatibility shims.
 
 ## Quick Reference Card
 
