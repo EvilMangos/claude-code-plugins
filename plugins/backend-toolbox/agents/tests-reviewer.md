@@ -46,6 +46,7 @@ the repository testing philosophy in `CLAUDE.md`.
 5. **Maintainability** – Naming, structure, fixture quality
 6. **TDD sanity** – Do tests fail for the right reason (proper RED)?
 7. **CLAUDE.md compliance** – Flag trivial/noise tests (KEEP/REWRITE/REMOVE)
+8. **No abstraction testing** – Verify no tests target interfaces, abstract classes, or pure contracts; tests must target concrete implementations
 
 ## What I Do NOT Own
 

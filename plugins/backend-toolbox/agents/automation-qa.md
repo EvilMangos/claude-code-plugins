@@ -61,14 +61,21 @@ If a requested change would require implementation updates:
         - Error/exception paths
         - Edge cases and boundaries
 
-3. **Test Quality**
+3. **Never Test Abstractions**
+
+    - **Do not** write tests for interfaces, abstract classes, protocols, or pure contracts.
+    - Tests must target **concrete implementations** that implement those abstractions.
+    - Interfaces define contracts; tests verify that implementations fulfill contracts.
+    - If asked to test an interface, create tests for a concrete implementation instead.
+
+4. **Test Quality**
 
     - Make tests readable, deterministic, and cheap to run.
     - Prefer shared fixtures/helpers over copy-paste.
     - Isolate external dependencies via mocks/fakes/test doubles (examples: DB, queues, caches, HTTP services,
       third-party APIs, LLM providers) unless the test is explicitly an integration/E2E test.
 
-4. **TDD When Adding Features**
+5. **TDD When Adding Features**
     - If feature work is requested:
         - Add or update tests **before** implementation (or as much as possible).
         - Ensure tests clearly fail with current code, then inform the feature developer what needs to change.

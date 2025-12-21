@@ -44,6 +44,7 @@ Focus tests on what the code does, not how it does it:
 - Third-party library internals
 - Trivial one-liner pass-through methods
 - Configuration constants
+- **Interfaces, abstract classes, and protocols** – test concrete implementations, not the abstractions themselves
 
 ### Coverage Requirements
 

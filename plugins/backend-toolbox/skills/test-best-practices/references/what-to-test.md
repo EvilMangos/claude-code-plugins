@@ -202,6 +202,46 @@ const fullName = (user: User) => `${user.firstName} ${user.lastName}`;
 // - Used in tested code (covered indirectly)
 ```
 
+### Interfaces and Abstractions
+
+Never write tests for interfaces, abstract classes, protocols, or pure contracts:
+
+```typescript
+// SKIP - This is an interface, not testable behavior
+interface IUserRepository {
+  findById(id: string): Promise<User | null>;
+  save(user: User): Promise<void>;
+}
+
+// SKIP - Abstract class defines contract, not behavior
+abstract class BaseValidator {
+  abstract validate(input: unknown): ValidationResult;
+}
+
+// DO TEST - Concrete implementations that fulfill the contract
+class PostgresUserRepository implements IUserRepository {
+  async findById(id: string): Promise<User | null> {
+    // Real implementation with real behavior to test
+  }
+  async save(user: User): Promise<void> {
+    // Real implementation with real behavior to test
+  }
+}
+```
+
+**Why skip abstraction testing:**
+
+- Interfaces have no behavior to verify – they define contracts, not implementations
+- Abstract classes without concrete methods have nothing to execute
+- Tests verify that *implementations* fulfill contracts correctly
+- Testing abstractions leads to empty tests that provide false confidence
+
+**What to do instead:**
+
+- Write tests for each concrete implementation
+- Use interface-based tests to verify implementations fulfill the contract
+- Test behavior, not type signatures
+
 ## Edge Cases: The 80/20 Rule
 
 Focus on edge cases most likely to cause bugs:

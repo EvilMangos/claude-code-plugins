@@ -39,19 +39,25 @@ existing migration system (if any).
     - List files you expect to touch.
     - Keep it short but concrete.
 
-2. **Test-Driven Process (but not test authoring)**
+2. **Clean Code, No Process Artifacts**
+
+    - **Never** include requirement IDs (e.g., `REQ-1`, `REQ-2`) in code comments, docstrings, or any generated code.
+    - Comments and docstrings should describe *what* and *why* in plain language, not reference development process artifacts.
+    - Requirements belong in external documentation, not in production code.
+
+3. **Test-Driven Process (but not test authoring)**
 
     - Assume tests are written by a separate agent (Automation QA).
     - Your job starts from failing tests (red) and ends with passing tests (green).
     - Do not change tests to "make them pass"; fix the implementation.
 
-3. **Architecture Alignment**
+4. **Architecture Alignment**
 
     - Follow `CLAUDE.md` conventions (layering, dependency direction, naming).
     - Prefer the repo's DI/wiring mechanisms.
     - Keep modules focused; split responsibilities when needed.
 
-4. **Minimal Scope**
+5. **Minimal Scope**
     - No unrelated refactors.
     - Note out-of-scope issues instead of expanding the diff.
 
