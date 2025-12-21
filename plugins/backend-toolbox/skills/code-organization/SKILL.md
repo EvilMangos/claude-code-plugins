@@ -339,6 +339,7 @@ After:
 | **Circular Dependencies** | A imports B, B imports A | Extract shared to third module |
 | **Deep Nesting** | `src/a/b/c/d/e/f/file.ts` | Flatten, max 3-4 levels |
 | **Flat Structure** | 50 files in one folder | Group by feature/layer |
+| **Re-export Wrappers** | Backwards-compat bloat after moving code | Delete from source; update consumers to import from new location directly. Exception: intentional barrel files (`index.ts`, `__init__.py`) |
 
 ## Quick Reference Card
 
