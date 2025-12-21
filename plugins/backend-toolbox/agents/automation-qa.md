@@ -50,7 +50,13 @@ If a requested change would require implementation updates:
         - How you will use fixtures/mocks/fakes/test data
     - Keep plans short but explicit; then implement.
 
-2. **Behavior-Focused Tests**
+2. **Clean Tests, No Process Artifacts**
+
+    - **Never** include requirement IDs (e.g., `REQ-1`, `REQ-2`) in test names, comments, or docstrings.
+    - Test names and comments should describe *what behavior* is being tested in plain language, not reference development process artifacts.
+    - Requirements belong in external documentation, not in test code.
+
+3. **Behavior-Focused Tests**
 
     - Follow the testing rules in `CLAUDE.md`:
         - Test observable behavior and stable contracts (outputs, persisted state, emitted events, API responses,
@@ -61,7 +67,7 @@ If a requested change would require implementation updates:
         - Error/exception paths
         - Edge cases and boundaries
 
-3. **Never Test Abstractions or Module Structure**
+4. **Never Test Abstractions or Module Structure**
 
     - **Do not** write tests for interfaces, abstract classes, protocols, or pure contracts.
     - **Do not** write tests that verify exports (e.g., "module exports X", "file re-exports Y").
@@ -69,14 +75,14 @@ If a requested change would require implementation updates:
     - Interfaces define contracts; tests verify that implementations fulfill contracts.
     - If asked to test an interface, create tests for a concrete implementation instead.
 
-4. **Test Quality**
+5. **Test Quality**
 
     - Make tests readable, deterministic, and cheap to run.
     - Prefer shared fixtures/helpers over copy-paste.
     - Isolate external dependencies via mocks/fakes/test doubles (examples: DB, queues, caches, HTTP services,
       third-party APIs, LLM providers) unless the test is explicitly an integration/E2E test.
 
-5. **TDD When Adding Features**
+6. **TDD When Adding Features**
     - If feature work is requested:
         - Add or update tests **before** implementation (or as much as possible).
         - Ensure tests clearly fail with current code, then inform the feature developer what needs to change.

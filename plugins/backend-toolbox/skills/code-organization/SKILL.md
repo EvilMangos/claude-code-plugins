@@ -1,6 +1,6 @@
 ---
 name: code-organization
-description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", or needs guidance on file size limits, when to split vs merge code, and folder/package organization patterns.
+description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", "import at top", "imports inside function", "import placement", "import organization", or needs guidance on file size limits, when to split vs merge code, folder/package organization patterns, and import placement rules.
 version: 0.1.0
 ---
 
@@ -340,6 +340,7 @@ After:
 | **Deep Nesting** | `src/a/b/c/d/e/f/file.ts` | Flatten, max 3-4 levels |
 | **Flat Structure** | 50 files in one folder | Group by feature/layer |
 | **Re-export Wrappers** | Backwards-compat bloat after moving code | See "No Re-exports When Moving Code" below |
+| **Scattered Imports** | Imports inside functions or mid-file | See "Imports at Top of File" below |
 
 ### No Re-exports When Moving Code
 
@@ -373,6 +374,60 @@ import { UserService } from './new-location/user-service';
 
 **Exception:** Intentional barrel files (`index.ts`, `__init__.py`) that serve as public API entry points are acceptable - these are designed as aggregation points, not backwards-compatibility shims.
 
+### Imports at Top of File
+
+**All imports must be placed at the top of the file.** Never place imports inside functions, methods, or in the middle of code.
+
+```typescript
+// BAD - Import inside function
+function processOrder(orderId: string) {
+  const { validateOrder } = require('./validator');  // DON'T DO THIS
+  import('./async-module').then(m => m.process());   // DON'T DO THIS
+  // ...
+}
+
+// BAD - Import in middle of file
+const config = loadConfig();
+
+import { Logger } from './logger';  // DON'T DO THIS - import after code
+
+export function doSomething() { /* ... */ }
+
+// GOOD - All imports at top
+import { validateOrder } from './validator';
+import { Logger } from './logger';
+
+const config = loadConfig();
+
+export function processOrder(orderId: string) {
+  validateOrder(orderId);
+  // ...
+}
+```
+
+**Why this matters:**
+
+- **Predictability** - Developers expect to find all dependencies at the top of the file
+- **Performance** - Module resolution happens at load time, not runtime; scattered imports can cause unexpected delays
+- **Circular dependency detection** - Easier to spot and resolve when all imports are visible at the top
+- **Static analysis** - Linters, bundlers, and IDE tools work better with top-level imports
+- **Code review** - Reviewers can quickly assess a file's dependencies
+
+**The only acceptable exception:**
+
+Dynamic imports for code splitting in specific performance-critical scenarios where lazy loading is intentional and documented:
+
+```typescript
+// Acceptable - Intentional code splitting with clear comment
+async function loadHeavyFeature() {
+  // Lazy load to reduce initial bundle size
+  const { HeavyModule } = await import('./heavy-module');
+  return new HeavyModule();
+}
+```
+
+Even in this case, prefer extracting lazy-loaded imports to dedicated loader functions rather than scattering them throughout the code.
+
 ## Quick Reference Card
 
 ### File Size Limits
@@ -401,6 +456,13 @@ import { UserService } from './new-location/user-service';
 - Max 3-4 levels deep
 - Feature > Layer for most apps
 - Colocate related code
+
+### Import Rules
+
+- All imports at top of file
+- Never import inside functions
+- Never import in middle of code
+- Dynamic imports only for intentional code splitting
 
 ## Additional Resources
 
