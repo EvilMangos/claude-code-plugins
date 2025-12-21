@@ -19,10 +19,9 @@ This workflow uses background agents to minimize context window usage:
 1. **Each agent runs in background** (`run_in_background: true`)
 2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{name}.md`)
 3. **Each agent writes short status to signal file** (`{WORKFLOW_DIR}/{name}-report.md`)
-4. **Each agent writes execution logs to file** (`{WORKFLOW_DIR}/{name}-logs.md`)
-5. **Orchestrator polls for signal file** - no TaskOutput needed
-6. **Orchestrator reads only the short report** - full context stays in files
-7. **Next agent reads previous full reports** - gets context from disk
+4. **Orchestrator polls for signal file** - no TaskOutput needed
+5. **Orchestrator reads only the short report** - full context stays in files
+6. **Next agent reads previous full reports** - gets context from disk
 
 **Critical: Always include these instructions in every agent prompt:**
 ```
@@ -41,14 +40,6 @@ WORKFLOW_DIR: {WORKFLOW_DIR}
    NEXT_INPUT: {comma-separated file list for next agent}
    ---
    {2-5 bullet key points}
-3. Write EXECUTION LOGS using the log script:
-   ```bash
-   ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/{name}-logs.md {ACTION_TYPE} "message"
-   ```
-   Action types: STARTED, READ_FILE, TOOL_CALL, DECISION, WRITE_FILE, COMPLETED, ERROR
-
-   Log at minimum: STARTED (at beginning), COMPLETED or ERROR (at end)
-   Log as you work: READ_FILE, TOOL_CALL, DECISION for key actions
 ```
 
 ## Waiting for Agent Completion
@@ -152,11 +143,6 @@ Task tool:
        NEXT_INPUT: {comma-separated file list for next agent}
        ---
        {2-5 bullet key points}
-    3. Write EXECUTION LOGS using:
-       ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/{name}-logs.md {ACTION} "message"
-       - Start with: STARTED
-       - Log key actions: READ_FILE, TOOL_CALL, DECISION, WRITE_FILE
-       - End with: COMPLETED (or ERROR)
 ```
 
 **Step 3: Wait for completion:**
@@ -214,8 +200,6 @@ prompt: |
      - Clarifications (Q&A pairs if any)
      - Behavioral Requirements (REQ-1, REQ-2, etc.)
   2. Write SHORT status to: {WORKFLOW_DIR}/requirements-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/requirements-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE (for each file), DECISION (questions asked), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/requirements-report.md`
@@ -244,8 +228,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/plan.md
   2. Write SHORT status to: {WORKFLOW_DIR}/plan-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/plan-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (planning decisions), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/plan-report.md`
@@ -285,8 +267,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/tests-design.md
   2. Write SHORT status to: {WORKFLOW_DIR}/tests-design-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/tests-design-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, WRITE_FILE (each test), TOOL_CALL (test runs), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-design-report.md`
@@ -316,8 +296,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/tests-review.md
   2. Write SHORT status to: {WORKFLOW_DIR}/tests-review-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/tests-review-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (each test verdict), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-review-report.md`
@@ -377,8 +355,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/implementation.md
   2. Write SHORT status to: {WORKFLOW_DIR}/implementation-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/implementation-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, WRITE_FILE (code changes), TOOL_CALL (test runs), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/implementation-report.md`
@@ -412,8 +388,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/stabilization.md
   2. Write SHORT status to: {WORKFLOW_DIR}/stabilization-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/stabilization-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, TOOL_CALL (test runs), DECISION (issues/verdict), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/stabilization-report.md`
@@ -468,8 +442,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/acceptance.md
   2. Write SHORT status to: {WORKFLOW_DIR}/acceptance-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/acceptance-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (each REQ check + verdict), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/acceptance-report.md`
@@ -525,8 +497,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/performance.md
   2. Write SHORT status to: {WORKFLOW_DIR}/performance-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/performance-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (each issue + classification), COMPLETED
 ```
 
 **Second Task call (application-security-specialist) - SAME MESSAGE:**
@@ -551,8 +521,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/security.md
   2. Write SHORT status to: {WORKFLOW_DIR}/security-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/security-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (each vulnerability + classification), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
@@ -607,8 +575,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/refactoring.md
   2. Write SHORT status to: {WORKFLOW_DIR}/refactoring-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/refactoring-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, WRITE_FILE (refactors), TOOL_CALL (test runs), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/refactoring-report.md`
@@ -644,8 +610,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/code-review.md
   2. Write SHORT status to: {WORKFLOW_DIR}/code-review-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/code-review-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, DECISION (each issue + classification + route), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/code-review-report.md`
@@ -706,8 +670,6 @@ prompt: |
   ## Output
   1. Write FULL report to: {WORKFLOW_DIR}/documentation.md
   2. Write SHORT status to: {WORKFLOW_DIR}/documentation-report.md
-  3. Write EXECUTION LOGS using: ${CLAUDE_PLUGIN_ROOT}/scripts/log-entry.sh {WORKFLOW_DIR}/documentation-logs.md {ACTION} "message"
-     Log: STARTED, READ_FILE, WRITE_FILE (each doc updated), COMPLETED
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/documentation-report.md`
@@ -747,13 +709,11 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
    - The wait script polls until the report file appears
    - Then read the signal file to get STATUS
 
-3. **Triple-file output:**
+3. **Dual-file output:**
    - Agents write FULL report to `{WORKFLOW_DIR}/{name}.md`
    - Agents write SHORT status to `{WORKFLOW_DIR}/{name}-report.md`
-   - Agents write EXECUTION LOGS to `{WORKFLOW_DIR}/{name}-logs.md`
    - Orchestrator only reads the short `-report.md` files
    - Next agent reads previous agent's full `.md` reports
-   - Logs provide debugging visibility into agent execution
 
 4. **No scope creep:**
    - Do not introduce features beyond $ARGUMENTS
