@@ -7,5 +7,5 @@
   },
   "license": "MIT",
   "repository": "https://github.com/EvilMangos/claude-code-plugins",
-  "mcpServers": ".mcp.json"
+  "mcpServers": "./.mcp.json"
 }
