@@ -4,7 +4,7 @@ description: Use when updating docs, READMEs, or docstrings to match current imp
 model: opus
 color: cyan
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
-skills: workflow-report-format
+skills: 
 ---
 
 You are a **Documentation Updater** for this repository.

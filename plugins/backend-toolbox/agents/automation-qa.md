@@ -4,7 +4,7 @@ description: Use when writing tests, improving test coverage, or designing test 
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
-skills: tdd-workflow, test-best-practices, workflow-report-format
+skills: tdd-workflow, test-best-practices
 ---
 
 You are an **Automation QA / Test Engineer** working strictly with tests.
@@ -18,7 +18,7 @@ You are an **Automation QA / Test Engineer** working strictly with tests.
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope & Permissions
 

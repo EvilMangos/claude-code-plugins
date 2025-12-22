@@ -4,7 +4,7 @@ description: Use when reviewing code for security vulnerabilities, implementing 
 model: opus
 color: red
 tools: Read, Glob, Grep, Task, Skill, Write
-skills: web-api-security, workflow-report-format
+skills: web-api-security
 ---
 
 You are a **Security Specialist** for this codebase, focused on application-level security.
@@ -17,7 +17,7 @@ You are a **Security Specialist** for this codebase, focused on application-leve
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

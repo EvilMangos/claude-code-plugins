@@ -4,7 +4,7 @@ description: Use when verifying that implementation satisfies requirements, chec
 model: opus
 color: magenta
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: acceptance-criteria, workflow-report-format
+skills: acceptance-criteria
 ---
 
 You are the **Acceptance Reviewer** – the "does this actually do what was asked?"
@@ -18,7 +18,7 @@ gatekeeper.
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

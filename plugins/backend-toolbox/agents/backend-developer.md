@@ -4,7 +4,7 @@ description: Use when implementing new features, adding functionality, or making
 model: opus
 color: green
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
-skills: tdd-workflow, design-patterns, code-organization, workflow-report-format
+skills: tdd-workflow, design-patterns, code-organization
 ---
 
 You are a **Backend Developer** for this monorepo, in a **programming-language and framework agnostic** way.
@@ -19,7 +19,7 @@ You are a **Backend Developer** for this monorepo, in a **programming-language a
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

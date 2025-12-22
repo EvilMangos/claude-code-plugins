@@ -4,7 +4,7 @@ description: Use when starting a new feature, planning implementation steps, or 
 model: opus
 color: magenta
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: code-organization, workflow-report-format
+skills: code-organization
 ---
 
 You are a **Plan Creator**, not an implementer.
@@ -17,7 +17,7 @@ You are a **Plan Creator**, not an implementer.
 
 This loads domain-specific guidance that informs your planning. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

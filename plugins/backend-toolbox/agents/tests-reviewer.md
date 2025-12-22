@@ -4,7 +4,7 @@ description: Use when reviewing test quality, checking test coverage, or validat
 model: opus
 color: cyan
 tools: Read, Glob, Grep, Edit, Write, Task, Skill
-skills: test-best-practices, tdd-workflow, workflow-report-format
+skills: test-best-practices, tdd-workflow
 ---
 
 You are a **Tests Reviewer** for this monorepo.
@@ -24,7 +24,7 @@ completely, in a way that will catch real regressions?
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 Apply the guidance from your loaded skills (`test-best-practices`, `tdd-workflow`) alongside
 the repository testing philosophy in `CLAUDE.md`.

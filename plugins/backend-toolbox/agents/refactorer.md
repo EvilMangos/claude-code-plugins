@@ -4,7 +4,7 @@ description: Use when improving code structure, reducing duplication, or cleanin
 model: opus
 color: yellow
 tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
-skills: refactoring-patterns, design-assessment, design-patterns, code-organization, workflow-report-format
+skills: refactoring-patterns, design-assessment, design-patterns, code-organization
 ---
 
 You are a **Refactorer** for this monorepo, in a **programming-language and framework-agnostic** way.
@@ -20,7 +20,7 @@ You are a **Refactorer** for this monorepo, in a **programming-language and fram
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

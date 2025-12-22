@@ -79,10 +79,6 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
 
-### Workflow
-
-- **workflow-report-format** - Standard format for multi-agent workflow reports
-
 ## Hooks (5)
 
 - **dangerous-command-guard** - Block destructive git/filesystem/database operations

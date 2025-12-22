@@ -12,32 +12,35 @@ The user request is:
 
 > $ARGUMENTS
 
-## Architecture: Background Agents with File-Based Context
+## Architecture: Background Agents with MCP-Based Reports
 
 This workflow uses background agents to minimize context window usage:
 
 1. **Each agent runs in background** (`run_in_background: true`)
-2. **Each agent writes full report to file** (`{WORKFLOW_DIR}/{name}.md`)
+2. **Each agent saves full report to MCP storage** (using `save-report` tool)
 3. **Each agent writes short status to signal file** (`{WORKFLOW_DIR}/{name}-report.md`)
 4. **Orchestrator polls for signal file** - no TaskOutput needed
-5. **Orchestrator reads only the short report** - full context stays in files
-6. **Next agent reads previous full reports** - gets context from disk
+5. **Orchestrator reads only the short report** - full context stays in MCP storage
+6. **Next agent retrieves previous full reports from MCP** (using `get-report` tool)
 
 **Critical: Always include these instructions in every agent prompt:**
 ```
-You MUST use the workflow-report-format skill for output formatting.
-
-## Workflow Directory
+## Workflow Context
+TASK_ID: {TASK_ID}
 WORKFLOW_DIR: {WORKFLOW_DIR}
 
-## Output Files
-1. Write your FULL report to: {WORKFLOW_DIR}/{name}.md
-2. Write your SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+## Output
+1. Save your FULL report to MCP storage:
+   - taskId: {TASK_ID}
+   - reportType: {report-type}  (e.g., "requirements", "plan", "implementation")
+   - content: <your full report content>
+
+2. Write your SHORT status report to file: {WORKFLOW_DIR}/{name}-report.md
    The short report MUST contain ONLY:
    STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
-   FILE: {WORKFLOW_DIR}/{name}.md
+   REPORT_TYPE: {report-type}
    SUMMARY: {one sentence}
-   NEXT_INPUT: {comma-separated file list for next agent}
+   NEXT_INPUT: {comma-separated report types for next agent}
    ---
    {2-5 bullet key points}
 ```
@@ -111,7 +114,7 @@ Create `{WORKFLOW_DIR}/metadata.json`:
 
 For EVERY agent, use this pattern:
 
-**Step 1: Remove stale report (ensures wait-for-report.sh waits for fresh output):**
+**Step 1: Remove stale signal file (ensures wait-for-report.sh waits for fresh output):**
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/{name}-report.md
 ```
@@ -122,25 +125,29 @@ Task tool:
   subagent_type: {agent-name}
   run_in_background: true
   prompt: |
-    You MUST use the workflow-report-format skill.
-
-    ## Workflow Directory
+    ## Workflow Context
+    TASK_ID: {TASK_ID}
     WORKFLOW_DIR: {WORKFLOW_DIR}
 
     ## Your Task
     {task description}
 
-    ## Input Files to Read
-    {list of {WORKFLOW_DIR}/*.md files to read}
+    ## Input Reports
+    Retrieve from MCP storage (taskId={TASK_ID}):
+    {list of reportType values to retrieve, e.g., "requirements", "plan"}
 
     ## Output
-    1. Write FULL report to: {WORKFLOW_DIR}/{name}.md
-    2. Write SHORT status report to: {WORKFLOW_DIR}/{name}-report.md
+    1. Save FULL report to MCP storage:
+       - taskId: {TASK_ID}
+       - reportType: {report-type}
+       - content: <your full report>
+
+    2. Write SHORT status to file: {WORKFLOW_DIR}/{name}-report.md
        The short report MUST contain ONLY:
        STATUS: {PASS|PARTIAL|FAIL|DONE|ERROR}
-       FILE: {WORKFLOW_DIR}/{name}.md
+       REPORT_TYPE: {report-type}
        SUMMARY: {one sentence}
-       NEXT_INPUT: {comma-separated file list for next agent}
+       NEXT_INPUT: {comma-separated report types for next agent}
        ---
        {2-5 bullet key points}
 ```
@@ -175,9 +182,8 @@ Launch in foreground:
 subagent_type: business-analyst
 run_in_background: false
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -193,13 +199,11 @@ prompt: |
   $ARGUMENTS
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/requirements.md
-     Include:
-     - Feature Understanding (your restatement)
-     - Affected Domains/Components
-     - Clarifications (Q&A pairs if any)
-     - Behavioral Requirements (REQ-1, REQ-2, etc.)
-  2. Write SHORT status to: {WORKFLOW_DIR}/requirements-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "requirements"
+     - content: Include Feature Understanding, Affected Domains, Clarifications, Behavioral Requirements (REQ-1, REQ-2, etc.)
+  2. Write SHORT status to file: {WORKFLOW_DIR}/requirements-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/requirements-report.md`
@@ -214,20 +218,23 @@ Launch in background:
 subagent_type: plan-creator
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
   Create implementation and testing plan for the feature.
 
-  ## Input
-  Read: {WORKFLOW_DIR}/requirements.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "requirements"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/plan.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/plan-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "plan"
+     - content: <your implementation and testing plan>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/plan-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/plan-report.md`
@@ -242,9 +249,8 @@ Launch in background:
 subagent_type: automation-qa
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -256,17 +262,23 @@ prompt: |
   After writing tests, run them to confirm they FAIL (RED).
   Use /run-tests with the narrowest scope.
 
-  ## Input
-  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md
-  Optional (read if present - contains reviewer feedback requiring new/updated tests):
-  - {WORKFLOW_DIR}/tests-review.md
-  - {WORKFLOW_DIR}/stabilization.md
-  - {WORKFLOW_DIR}/acceptance.md
-  - {WORKFLOW_DIR}/code-review.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  Required:
+  - reportType: "requirements"
+  - reportType: "plan"
+  Optional (retrieve if workflow iteration - contains feedback requiring new/updated tests):
+  - reportType: "tests-review"
+  - reportType: "stabilization"
+  - reportType: "acceptance"
+  - reportType: "code-review"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/tests-design.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/tests-design-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "tests-design"
+     - content: <your test design report>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/tests-design-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-design-report.md`
@@ -281,21 +293,26 @@ Launch in background:
 subagent_type: tests-reviewer
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
   Review the tests for quality. Apply your loaded skills.
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "tests-design"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/tests-review.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/tests-review-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "tests-review"
+     - content: <your test review report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/tests-review-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/tests-review-report.md`
@@ -331,9 +348,8 @@ Launch in background:
 subagent_type: backend-developer
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -342,19 +358,26 @@ prompt: |
   - Run /run-tests after each step
   - Continue until all feature tests are GREEN
 
-  ## Input
-  Required: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/tests-design.md
-  Optional (read if present - contains reviewer feedback requiring fixes):
-  - {WORKFLOW_DIR}/tests-review.md
-  - {WORKFLOW_DIR}/stabilization.md
-  - {WORKFLOW_DIR}/acceptance.md
-  - {WORKFLOW_DIR}/performance.md
-  - {WORKFLOW_DIR}/security.md
-  - {WORKFLOW_DIR}/code-review.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  Required:
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "tests-design"
+  Optional (retrieve if workflow iteration - contains feedback requiring fixes):
+  - reportType: "tests-review"
+  - reportType: "stabilization"
+  - reportType: "acceptance"
+  - reportType: "performance"
+  - reportType: "security"
+  - reportType: "code-review"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/implementation.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/implementation-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "implementation"
+     - content: <your implementation report>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/implementation-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/implementation-report.md`
@@ -369,9 +392,8 @@ Launch in background:
 subagent_type: automation-qa
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -382,12 +404,18 @@ prompt: |
 
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "implementation"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/stabilization.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/stabilization-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "stabilization"
+     - content: <your stabilization report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/stabilization-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/stabilization-report.md`
@@ -424,9 +452,8 @@ Launch in background:
 subagent_type: acceptance-reviewer
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -436,12 +463,19 @@ prompt: |
 
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/stabilization.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "implementation"
+  - reportType: "stabilization"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/acceptance.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/acceptance-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "acceptance"
+     - content: <your acceptance review report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/acceptance-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/acceptance-report.md`
@@ -480,9 +514,8 @@ Launch BOTH agents IN PARALLEL (single message, multiple Task tool calls):
 subagent_type: performance-specialist
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -491,12 +524,16 @@ prompt: |
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "implementation"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/performance.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/performance-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "performance"
+     - content: <your performance analysis report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/performance-report.md
 ```
 
 **Second Task call (application-security-specialist) - SAME MESSAGE:**
@@ -504,9 +541,8 @@ prompt: |
 subagent_type: application-security-specialist
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -515,12 +551,16 @@ prompt: |
   Classify findings as BLOCKING or NON-BLOCKING.
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "implementation"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/security.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/security-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "security"
+     - content: <your security analysis report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/security-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/performance-report.md {WORKFLOW_DIR}/security-report.md`
@@ -556,9 +596,8 @@ Launch in background:
 subagent_type: refactorer
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -567,14 +606,19 @@ prompt: |
   Run /run-tests after each refactor step.
   Record larger refactors as follow-up tasks, don't do them now.
 
-  ## Input
-  Required: {WORKFLOW_DIR}/implementation.md
-  Optional (read if present - contains structural issues to address):
-  - {WORKFLOW_DIR}/code-review.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  Required:
+  - reportType: "implementation"
+  Optional (retrieve if workflow iteration - contains structural issues to address):
+  - reportType: "code-review"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/refactoring.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/refactoring-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "refactoring"
+     - content: <your refactoring report>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/refactoring-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/refactoring-report.md`
@@ -589,9 +633,8 @@ Launch in background:
 subagent_type: code-reviewer
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -604,12 +647,17 @@ prompt: |
 
   Return verdict: PASS / PARTIAL / FAIL
 
-  ## Input
-  Required: {WORKFLOW_DIR}/implementation.md, {WORKFLOW_DIR}/refactoring.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "implementation"
+  - reportType: "refactoring"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/code-review.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/code-review-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "code-review"
+     - content: <your code review report with verdict>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/code-review-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/code-review-report.md`
@@ -626,7 +674,7 @@ You MUST NOT proceed to Step 11 unless STATUS == PASS (or only NON-BLOCKING issu
 ```
 LOOP while STATUS has BLOCKING issues (max 5 iterations):
   IF STATUS is PARTIAL or FAIL with BLOCKING issues:
-    1. Read {WORKFLOW_DIR}/code-review.md to parse BLOCKING issues by route
+    1. Retrieve code-review report from MCP storage to parse BLOCKING issues by route
     2. FOR EACH functional issue (ROUTE: functional):
        - Execute Step 3 (automation-qa adds/updates tests - RED)
        - Execute Step 5 (backend-developer fixes - GREEN)
@@ -650,9 +698,8 @@ Launch in background:
 subagent_type: documentation-updater
 run_in_background: true
 prompt: |
-  Use the workflow-report-format skill.
-
-  ## Workflow Directory
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
   WORKFLOW_DIR: {WORKFLOW_DIR}
 
   ## Task
@@ -664,12 +711,18 @@ prompt: |
 
   Keep changes minimal and tied to implemented behavior.
 
-  ## Input
-  Read: {WORKFLOW_DIR}/requirements.md, {WORKFLOW_DIR}/plan.md, {WORKFLOW_DIR}/implementation.md
+  ## Input Reports
+  Retrieve from MCP storage (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "implementation"
 
   ## Output
-  1. Write FULL report to: {WORKFLOW_DIR}/documentation.md
-  2. Write SHORT status to: {WORKFLOW_DIR}/documentation-report.md
+  1. Save FULL report to MCP storage:
+     - taskId: {TASK_ID}
+     - reportType: "documentation"
+     - content: <your documentation update report>
+  2. Write SHORT status to file: {WORKFLOW_DIR}/documentation-report.md
 ```
 
 Wait: `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/documentation-report.md`
@@ -690,7 +743,9 @@ Update `{WORKFLOW_DIR}/metadata.json`:
 }
 ```
 
-The workflow-completion hook will generate the final summary by reading `{WORKFLOW_DIR}/` files.
+The workflow-completion hook will generate the final summary by:
+- Reading signal files from `{WORKFLOW_DIR}/`
+- Retrieving full reports from MCP storage using the TASK_ID
 
 ---
 
@@ -706,25 +761,24 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
    - Do NOT use TaskOutput - use scripts instead
    - **Before launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/remove-report.sh {WORKFLOW_DIR}/{name}-report.md`
    - **After launching agent:** `${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-report.sh {WORKFLOW_DIR}/{name}-report.md`
-   - The wait script polls until the report file appears
+   - The wait script polls until the signal file appears
    - Then read the signal file to get STATUS
 
-3. **Dual-file output:**
-   - Agents write FULL report to `{WORKFLOW_DIR}/{name}.md`
-   - Agents write SHORT status to `{WORKFLOW_DIR}/{name}-report.md`
-   - Orchestrator only reads the short `-report.md` files
-   - Next agent reads previous agent's full `.md` reports
+3. **MCP-based full reports, file-based signals:**
+   - Agents save FULL reports to MCP storage with taskId and reportType
+   - Agents write SHORT status to file: `{WORKFLOW_DIR}/{name}-report.md`
+   - Orchestrator only reads the short `-report.md` signal files
+   - Next agent retrieves previous reports from MCP storage
 
 4. **No scope creep:**
    - Do not introduce features beyond $ARGUMENTS
 
-5. **Skill usage:**
-   - Every agent prompt MUST mention `workflow-report-format` skill
-   - Every agent prompt MUST include `WORKFLOW_DIR: {WORKFLOW_DIR}`
+5. **Context in every prompt:**
+   - Every agent prompt MUST include `TASK_ID: {TASK_ID}` and `WORKFLOW_DIR: {WORKFLOW_DIR}`
 
-6. **Verify output files:**
-   - After polling completes, verify the full report FILE exists
-   - If file missing: HALT and report error to user
+6. **Verify MCP report saved:**
+   - After agent completes (signal file appears), verify the MCP save-report call succeeded
+   - If MCP save failed: HALT and report error to user
 
 7. **Handle STATUS: ERROR:**
    - If any agent's `-report.md` contains `STATUS: ERROR`, HALT the workflow immediately
@@ -732,22 +786,22 @@ The workflow-completion hook will generate the final summary by reading `{WORKFL
    - Do NOT retry the failed agent
    - Report to user with details from the error response
 
-8. **Missing input file protocol:**
-   - If an agent cannot find a required input file:
-     1. Agent lists `{WORKFLOW_DIR}/` directory contents
-     2. Agent attempts to identify alternative file (name variations)
-     3. If found: use it and log warning in Handoff Notes
-     4. If not found: write `STATUS: ERROR` to its `-report.md` with file listing
+8. **Missing input report protocol:**
+   - If an agent cannot retrieve a required report via MCP:
+     1. Agent logs which reportType was not found
+     2. If optional: proceed without it
+     3. If required: write `STATUS: ERROR` to its `-report.md` with details
    - Orchestrator halts and reports to user
 
-9. **Write failure protocol:**
-   - If an agent cannot write its output files:
-     1. Agent attempts recovery (mkdir -p {WORKFLOW_DIR})
+9. **Save failure protocol:**
+   - If an agent cannot save its report via MCP:
+     1. Agent retries once
      2. If still fails: write `STATUS: ERROR` to its `-report.md` with error details
-     3. NEVER write DONE/PASS to `-report.md` if full report was not written
+     3. NEVER write DONE/PASS to `-report.md` if MCP save-report failed
    - Orchestrator halts and reports to user with recovery steps
 
 10. **Task isolation:**
-    - Each workflow MUST use its own unique subdirectory under `.workflow/`
-    - Never write to `.workflow/` root
+    - Each workflow MUST use its own unique TASK_ID
+    - Signal files go in `{WORKFLOW_DIR}/` subdirectory
+    - MCP reports are keyed by TASK_ID + reportType
     - This allows multiple workflows to run concurrently

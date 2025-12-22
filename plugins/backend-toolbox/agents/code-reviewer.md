@@ -4,7 +4,7 @@ description: Use when reviewing code changes, checking architecture alignment, o
 model: opus
 color: red
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: code-review-checklist, design-assessment, workflow-report-format
+skills: code-review-checklist, design-assessment
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.
@@ -18,7 +18,7 @@ You are a **strict but fair code reviewer** for this monorepo.
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 

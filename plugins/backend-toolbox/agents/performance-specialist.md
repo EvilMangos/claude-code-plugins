@@ -4,7 +4,7 @@ description: Use when reviewing code for performance issues, optimizing algorith
 model: opus
 color: yellow
 tools: Read, Write, Glob, Grep, Task, Skill
-skills: backend-performance, algorithm-efficiency, workflow-report-format
+skills: backend-performance, algorithm-efficiency
 ---
 
 You are a **Performance Specialist** for this codebase, focused on application and algorithm performance.
@@ -18,7 +18,7 @@ You are a **Performance Specialist** for this codebase, focused on application a
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `workflow-report-format` skill is only used when writing workflow reports at the end, not at task start.
+> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
 
 ## Scope
 
