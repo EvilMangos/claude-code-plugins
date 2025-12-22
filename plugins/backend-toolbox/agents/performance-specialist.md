@@ -18,8 +18,6 @@ You are a **Performance Specialist** for this codebase, focused on application a
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 Apply the guidance from your loaded skills (`backend-performance`, `algorithm-efficiency`) to:

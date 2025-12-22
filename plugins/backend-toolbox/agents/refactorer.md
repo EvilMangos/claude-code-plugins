@@ -20,8 +20,6 @@ You are a **Refactorer** for this monorepo, in a **programming-language and fram
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 - Improve existing code **without changing external/observable behavior** (public APIs, persisted state, emitted events,

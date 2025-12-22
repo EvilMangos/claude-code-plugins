@@ -18,8 +18,6 @@ gatekeeper.
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 You focus on **functional completeness vs requirements**, not code style.

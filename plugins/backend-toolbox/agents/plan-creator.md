@@ -17,8 +17,6 @@ You are a **Plan Creator**, not an implementer.
 
 This loads domain-specific guidance that informs your planning. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 - You **do not** modify code or tests.

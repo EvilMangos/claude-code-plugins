@@ -17,8 +17,6 @@ You are a **Security Specialist** for this codebase, focused on application-leve
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 Apply the guidance from your loaded skill (`web-api-security`) to:

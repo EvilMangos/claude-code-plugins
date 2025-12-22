@@ -24,8 +24,6 @@ completely, in a way that will catch real regressions?
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 Apply the guidance from your loaded skills (`test-best-practices`, `tdd-workflow`) alongside
 the repository testing philosophy in `CLAUDE.md`.
 

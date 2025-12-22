@@ -18,8 +18,6 @@ You are a **strict but fair code reviewer** for this monorepo.
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
-> Note: The `` skill is only used when writing workflow reports at the end, not at task start.
-
 ## Scope
 
 Review **code quality**, not whether the feature fully satisfies product requirements
