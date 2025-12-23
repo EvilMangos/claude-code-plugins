@@ -1,0 +1,27 @@
+{
+  "description": "Backend toolbox hooks for notifications and workflow automation",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
