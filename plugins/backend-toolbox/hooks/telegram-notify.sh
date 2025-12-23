@@ -5,7 +5,11 @@
 #   export TELEGRAM_BOT_TOKEN="your_bot_token"
 #   export TELEGRAM_CHAT_ID="your_chat_id"
 
+# Debug logging
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] telegram-notify.sh invoked" >> /tmp/claude-hooks.log
+
 if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID, skipping" >> /tmp/claude-hooks.log
   exit 0
 fi
 
