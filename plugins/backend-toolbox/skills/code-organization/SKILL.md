@@ -103,6 +103,24 @@ Each file should have a **single, clear purpose**:
 - `index.ts` with actual logic (not just re-exports)
 - Names with "and" or multiple concepts
 
+### Ports & Adapters Naming Convention
+
+When using hexagonal/ports & adapters architecture, follow these naming patterns:
+
+| Category             | Pattern                 | Examples                                     |
+|----------------------|-------------------------|----------------------------------------------|
+| Ports (abstractions) | Role nouns              | `EmailSender`, `UserRepository`, `Clock`     |
+| Services             | `*Service` / `*UseCase` | `SignupService`, `CreateOrderService`        |
+| Adapters             | Technology prefix       | `SesEmailSender`, `PostgresUserRepository`   |
+| Data shapes          | Descriptive suffixes    | `SignupInput`, `UserDTO`, `CreateUserParams` |
+
+**Key rules:**
+- No `I` prefix for interfaces (`UserRepository`, not `IUserRepository`)
+- No `T` prefix for types (`User`, not `TUser`)
+- Ports named by role, adapters named by technology
+
+See `references/naming-conventions.md` for full details.
+
 ### Cohesion Check
 
 Ask these questions:
@@ -228,7 +246,7 @@ contracts/
 │   ├── order-repository.ts    # Interface OrderRepository
 │   └── user-repository.ts
 ├── services/
-│   └── email-service.ts       # Interface EmailService
+│   └── email-sender.ts        # Interface EmailSender
 └── index.ts                   # Re-exports all contracts
 ```
 
@@ -468,6 +486,7 @@ Even in this case, prefer extracting lazy-loaded imports to dedicated loader fun
 
 For detailed guidance on specific aspects:
 
+- **`references/naming-conventions.md`** - Ports & Adapters naming patterns for interfaces, classes, and data shapes
 - **`references/granularity-decisions.md`** - Extended decision trees and examples
 - **`references/folder-patterns.md`** - Detailed folder structure patterns by project type
 

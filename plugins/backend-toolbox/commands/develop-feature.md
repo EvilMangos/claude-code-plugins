@@ -12,17 +12,17 @@ The user request is:
 
 > $ARGUMENTS
 
-## Architecture: MCP-Driven Workflow
+## Architecture: Workflow
 
-This workflow uses MCP to drive all decisions:
+This workflow drives all decisions:
 
-1. **Orchestrator initializes task in MCP** with metadata
-2. **MCP determines the next step** based on current state
-3. **Orchestrator executes the step** returned by MCP
-4. **Agent saves report and signal to MCP**
-5. **Orchestrator queries MCP for next step** - repeat until complete
+1. **Orchestrator initializes task** with metadata
+2. **The workflow determines the next step** based on current state
+3. **Orchestrator executes the step** returned by the workflow
+4. **Agent saves report and signal**
+5. **Orchestrator queries for next step** - repeat until complete
 
-**The orchestrator NEVER decides which step to run next. MCP makes all routing decisions.**
+**The orchestrator NEVER decides which step to run next. The workflow makes all routing decisions.**
 
 ## Task ID Generation
 
@@ -46,7 +46,7 @@ After initialization, the orchestrator runs this loop:
 
 ```
 LOOP:
-  1. Query MCP for next step using get-next-step tool:
+  1. Query for next step:
      - taskId: {TASK_ID}
      - Returns: { success, taskId, stepNumber, totalSteps, step?, complete? }
      - step can be a string ("plan") or array for parallel (["performance", "security"])
@@ -69,14 +69,14 @@ END LOOP
 
 **Critical Rules:**
 
-1. **The orchestrator does NOT interpret signal status to decide next step. It always queries MCP.**
+1. **The orchestrator does NOT interpret signal status to decide next step. It always queries the workflow.**
 
-2. **Always execute the step MCP returns, even if that step was already executed before.**
-   - MCP may return the same step multiple times (e.g., `tests-design` after a failed `tests-review`)
-   - This is intentional: MCP handles retry logic and gate failures internally
+2. **Always execute the step returned, even if that step was already executed before.**
+   - The workflow may return the same step multiple times (e.g., `tests-design` after a failed `tests-review`)
+   - This is intentional: the workflow handles retry logic and gate failures internally
    - Do NOT skip a step because "it was already done"
-   - Do NOT question why MCP is requesting a repeated step
-   - Simply execute whatever step MCP returns, every time
+   - Do NOT question why a repeated step is being requested
+   - Simply execute whatever step is returned, every time
 
 ## Agent Output Instructions
 
@@ -86,12 +86,12 @@ END LOOP
 TASK_ID: {TASK_ID}
 
 ## Output
-1. Save your FULL report to MCP storage:
+1. Save your FULL report:
    - taskId: {TASK_ID}
    - reportType: {report-type}  (e.g., "requirements", "plan", "implementation")
    - content: <your full report content>
 
-2. Save your signal to MCP storage:
+2. Save your signal:
    - taskId: {TASK_ID}
    - signalType: {report-type}  (same as reportType)
    - content:
@@ -108,11 +108,11 @@ TASK_ID: {TASK_ID}
 
 ## Step Definitions
 
-The following steps can be returned by MCP. Execute the corresponding agent when MCP returns that step.
+The following steps can be returned. Execute the corresponding agent when the step is returned.
 
 ### initialize
 
-Create task metadata in MCP storage:
+Create task metadata:
 - taskId: {TASK_ID}
 - execution steps derive from Steps below
 
@@ -138,11 +138,11 @@ prompt: |
   $ARGUMENTS
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "requirements"
      - content: Include Feature Understanding, Affected Domains, Clarifications, Behavioral Requirements (REQ-1, REQ-2, etc.)
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "requirements"
      - content: { status: "passed", summary: "Requirements analysis complete with N requirements" }
@@ -161,15 +161,15 @@ prompt: |
   Create implementation and testing plan for the feature.
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "plan"
      - content: <your implementation and testing plan>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "plan"
      - content: { status: "passed", summary: "Implementation plan created" }
@@ -194,7 +194,7 @@ prompt: |
   Use /run-tests with the narrowest scope.
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   Required:
   - reportType: "requirements"
   - reportType: "plan"
@@ -205,11 +205,11 @@ prompt: |
   - reportType: "code-review"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "tests-design"
      - content: <your test design report>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "tests-design"
      - content: { status: "passed", summary: "N tests written, all failing as expected (RED)" }
@@ -231,17 +231,17 @@ prompt: |
   - status: "failed" = tests need improvement (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
   - reportType: "plan"
   - reportType: "tests-design"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "tests-review"
      - content: <your test review report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "tests-review"
      - content: { status: "passed" or "failed", summary: "..." }
@@ -263,7 +263,7 @@ prompt: |
   - Continue until all feature tests are GREEN
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   Required:
   - reportType: "requirements"
   - reportType: "plan"
@@ -277,11 +277,11 @@ prompt: |
   - reportType: "code-review"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "implementation"
      - content: <your implementation report>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "implementation"
      - content: { status: "passed", summary: "Implementation complete, all tests passing" }
@@ -307,17 +307,17 @@ prompt: |
   - status: "failed" = issues found (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
   - reportType: "plan"
   - reportType: "implementation"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "stabilization"
      - content: <your stabilization report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "stabilization"
      - content: { status: "passed" or "failed", summary: "..." }
@@ -342,18 +342,18 @@ prompt: |
   - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
   - reportType: "plan"
   - reportType: "implementation"
   - reportType: "stabilization"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "acceptance"
      - content: <your acceptance review report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "acceptance"
      - content: { status: "passed" or "failed", summary: "..." }
@@ -381,15 +381,15 @@ prompt: |
   - status: "failed" = blocking issues found (include "BLOCKING: ..." in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "implementation"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "performance"
      - content: <your performance analysis report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "performance"
      - content: { status: "passed" or "failed", summary: "..." }
@@ -413,21 +413,21 @@ prompt: |
   - status: "failed" = blocking issues found (include "BLOCKING: ..." in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "implementation"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "security"
      - content: <your security analysis report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "security"
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-Wait for BOTH signals before querying MCP for next step.
+Wait for BOTH signals before querying for next step.
 
 ### Step 9: refactoring (refactorer)
 
@@ -445,18 +445,18 @@ prompt: |
   Record larger refactors as follow-up tasks, don't do them now.
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   Required:
   - reportType: "implementation"
   Optional (retrieve if available - contains structural issues to address):
   - reportType: "code-review"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "refactoring"
      - content: <your refactoring report>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "refactoring"
      - content: { status: "passed", summary: "Refactoring complete, tests still passing" }
@@ -484,16 +484,16 @@ prompt: |
   - status: "failed" = blocking issues found (include "BLOCKING: N functional, M structural" in summary)
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "implementation"
   - reportType: "refactoring"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "code-review"
      - content: <your code review report with verdict>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "code-review"
      - content: { status: "passed" or "failed", summary: "..." }
@@ -518,17 +518,17 @@ prompt: |
   Keep changes minimal and tied to implemented behavior.
 
   ## Input Reports
-  Retrieve from MCP storage (taskId={TASK_ID}):
+  Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
   - reportType: "plan"
   - reportType: "implementation"
 
   ## Output
-  1. Save FULL report to MCP storage:
+  1. Save FULL report:
      - taskId: {TASK_ID}
      - reportType: "documentation"
      - content: <your documentation update report>
-  2. Save signal to MCP storage:
+  2. Save signal:
      - taskId: {TASK_ID}
      - signalType: "documentation"
      - content: { status: "passed", summary: "Documentation updated" }
@@ -537,37 +537,8 @@ prompt: |
 ### finalize
 
 The workflow is complete. Generate a final summary by:
-- Retrieving full reports from MCP storage using the TASK_ID
+- Retrieving full reports using the TASK_ID
 - Update task metadata status to "completed"
 
 ---
 
-## Non-Negotiable Constraints
-
-1. **MCP drives all routing:**
-   - Orchestrator NEVER decides which step to run next
-   - Always query MCP for next step after each agent completes
-   - MCP handles all gate logic, loops, and retries internally
-
-2. **TDD is mandatory:**
-   - Tests before implementation
-   - /run-tests after every implementation or refactor step
-
-3. **Background agents with MCP-based signaling:**
-   - All agents (except requirements) MUST run with `run_in_background: true`
-   - Agents save signals to MCP storage
-   - Orchestrator waits for signals via MCP
-
-4. **No scope creep:**
-   - Do not introduce features beyond $ARGUMENTS
-
-5. **Context in every prompt:**
-   - Every agent prompt MUST include `TASK_ID: {TASK_ID}`
-
-6. **Handle ERROR signals:**
-   - If any signal summary contains "ERROR:", HALT the workflow immediately
-   - Report to user with details from the error summary
-
-7. **Task isolation:**
-   - Each workflow MUST use its own unique TASK_ID
-   - MCP reports and signals are keyed by TASK_ID + type

@@ -2,6 +2,10 @@
 
 This reference covers dependency injection concepts, injection patterns, container usage, and testing implications.
 
+For naming conventions (ports, adapters, services, data shapes), see `code-organization/references/naming-conventions.md`.
+
+---
+
 ## What is Dependency Injection?
 
 Dependency Injection (DI) is a technique where objects receive their dependencies from external sources rather than
@@ -11,8 +15,8 @@ creating them internally. It's the practical application of the Dependency Inver
 
 ```typescript
 class OrderService {
-  private repository = new MySQLOrderRepository(); // Hard-coded dependency
-  private emailer = new SendGridEmailService(); // Hard-coded dependency
+  private repository = new PostgresOrderRepository(); // Hard-coded dependency
+  private emailSender = new SendGridEmailSender();    // Hard-coded dependency
 }
 ```
 
@@ -21,8 +25,8 @@ class OrderService {
 ```typescript
 class OrderService {
   constructor(
-    private repository: OrderRepository, // Injected abstraction
-    private emailer: EmailService // Injected abstraction
+    private repository: OrderRepository,  // Injected port
+    private emailSender: EmailSender      // Injected port
   ) {}
 }
 ```
@@ -38,13 +42,13 @@ class OrderService {
 describe("OrderService", () => {
   it("should save order and send email", async () => {
     const mockRepo = { save: jest.fn() };
-    const mockEmailer = { send: jest.fn() };
+    const mockEmailSender = { send: jest.fn() };
 
-    const service = new OrderService(mockRepo, mockEmailer);
+    const service = new OrderService(mockRepo, mockEmailSender);
     await service.createOrder(testOrder);
 
     expect(mockRepo.save).toHaveBeenCalledWith(testOrder);
-    expect(mockEmailer.send).toHaveBeenCalled();
+    expect(mockEmailSender.send).toHaveBeenCalled();
   });
 });
 ```
@@ -56,9 +60,9 @@ describe("OrderService", () => {
 const repository =
   process.env.NODE_ENV === "test"
     ? new InMemoryOrderRepository()
-    : new MySQLOrderRepository();
+    : new PostgresOrderRepository();
 
-const service = new OrderService(repository, emailer);
+const service = new OrderService(repository, emailSender);
 ```
 
 ### 3. Decoupling
@@ -71,7 +75,7 @@ const service = new OrderService(repository, emailer);
 class OrderService {
   constructor(
     private repository: OrderRepository,
-    private emailer: EmailService,
+    private emailSender: EmailSender,
     private logger: Logger
   ) {}
 }
@@ -90,18 +94,18 @@ Dependencies are created and configured elsewhere, so classes focus on their cor
 Dependencies are provided through the constructor.
 
 ```typescript
-class UserService {
+class CreateUserService {
   constructor(
     private userRepository: UserRepository,
     private passwordHasher: PasswordHasher,
-    private emailService: EmailService
+    private emailSender: EmailSender
   ) {}
 
-  async createUser(data: CreateUserDto): Promise<User> {
-    const hashedPassword = await this.passwordHasher.hash(data.password);
-    const user = new User(data.name, data.email, hashedPassword);
+  async execute(input: CreateUserInput): Promise<User> {
+    const hashedPassword = await this.passwordHasher.hash(input.password);
+    const user = new User(input.name, input.email, hashedPassword);
     await this.userRepository.save(user);
-    await this.emailService.sendWelcome(user);
+    await this.emailSender.send(user.email, "Welcome!", "Thanks for signing up");
     return user;
   }
 }
@@ -138,7 +142,7 @@ class ReportGenerator {
 
 // Usage
 const generator = new ReportGenerator();
-generator.setFormatter(new PdfFormatter());
+generator.setFormatter(new PdfReportFormatter());
 generator.generate(data);
 ```
 
@@ -171,8 +175,8 @@ class DataProcessor {
 
 // Usage
 const processor = new DataProcessor();
-processor.process(data, new StrictValidator());
-processor.process(data, new LenientValidator());
+processor.process(data, new StrictDataValidator());
+processor.process(data, new LenientDataValidator());
 ```
 
 **Advantages:**
@@ -244,10 +248,10 @@ class Container {
 
 // Usage
 const container = new Container();
-container.register("config", new Configuration());
-container.registerFactory("logger", () => new ConsoleLogger());
+container.register("config", new AppConfig());
+container.registerFactory("logger", () => new PinoLogger());
 
-const config = container.resolve<Configuration>("config");
+const config = container.resolve<AppConfig>("config");
 const logger = container.resolve<Logger>("logger");
 ```
 
@@ -278,7 +282,7 @@ function Inject(token: string): ParameterDecorator {
 }
 
 @Injectable()
-class UserService {
+class CreateUserService {
   constructor(
     @Inject("UserRepository") private repo: UserRepository,
     @Inject("Logger") private logger: Logger
@@ -356,7 +360,7 @@ app.use((req, res, next) => {
 });
 
 // Within request handler
-const userService = req.scope.resolve(UserService);
+const userService = req.scope.resolve(CreateUserService);
 // Same instance for this request, different for other requests
 ```
 
@@ -370,93 +374,93 @@ const userService = req.scope.resolve(UserService);
 
 ## Best Practices
 
-### 1. Depend on Abstractions
+### 1. Depend on Abstractions (Ports)
 
 ```typescript
-// GOOD: Depend on interface
+// GOOD: Depend on port (interface)
 class OrderService {
   constructor(private repository: OrderRepository) {}
 }
 
-// BAD: Depend on concrete implementation
+// BAD: Depend on concrete adapter
 class OrderService {
-  constructor(private repository: MySQLOrderRepository) {}
+  constructor(private repository: PostgresOrderRepository) {}
 }
 ```
 
-### 2. Locate Interfaces in a Contracts Layer
+### 2. Locate Ports in a Dedicated Layer
 
-**Critical**: Interfaces must NOT live in the consumer's module or the provider's module. They belong in a separate contracts layer.
+**Critical**: Ports must NOT live in the consumer's module or the adapter's module. They belong in a separate layer.
 
 **Why this matters:**
 
-- Interface with consumer → provider gains unwanted dependency on consumer
-- Interface with provider → consumer depends on provider's module (defeats DIP)
-- Interface in contracts layer → true decoupling achieved
+- Port with consumer → adapter gains unwanted dependency on consumer
+- Port with adapter → consumer depends on adapter's module (defeats DIP)
+- Port in dedicated layer → true decoupling achieved
 
 **Single Package/Module Pattern:**
 
 ```
 src/
-├── contracts/              # Contracts layer - interfaces only
+├── ports/                  # Ports layer - interfaces only
 │   ├── order-repository.ts # interface OrderRepository
 │   ├── payment-gateway.ts  # interface PaymentGateway
-│   └── email-service.ts    # interface EmailService
+│   └── email-sender.ts     # interface EmailSender
 ├── domain/                 # High-level business logic
-│   └── order-service.ts    # depends on contracts/*, NOT on infrastructure/*
-└── infrastructure/         # Low-level implementations
-    ├── mysql-order-repository.ts  # implements OrderRepository
-    ├── stripe-payment-gateway.ts  # implements PaymentGateway
-    └── sendgrid-email-service.ts  # implements EmailService
+│   └── order-service.ts    # depends on ports/*, NOT on adapters/*
+└── adapters/               # Implementations
+    ├── postgres-order-repository.ts  # implements OrderRepository
+    ├── stripe-payment-gateway.ts     # implements PaymentGateway
+    └── sendgrid-email-sender.ts      # implements EmailSender
 ```
 
 ```typescript
-// contracts/order-repository.ts
+// ports/order-repository.ts
 export interface OrderRepository {
   save(order: Order): Promise<void>;
   findById(id: string): Promise<Order | null>;
 }
 
-// domain/order-service.ts - depends ONLY on contracts
-import { OrderRepository } from '../contracts/order-repository';
-import { PaymentGateway } from '../contracts/payment-gateway';
+// domain/order-service.ts - depends ONLY on ports
+import { OrderRepository } from '../ports/order-repository';
+import { PaymentGateway } from '../ports/payment-gateway';
 
 class OrderService {
   constructor(
-    private repository: OrderRepository,  // Interface from contracts
-    private payment: PaymentGateway        // Interface from contracts
+    private repository: OrderRepository,   // Port
+    private payment: PaymentGateway        // Port
   ) {}
 }
 
-// infrastructure/mysql-order-repository.ts - implements contract
-import { OrderRepository } from '../contracts/order-repository';
+// adapters/postgres-order-repository.ts - implements port
+import { OrderRepository } from '../ports/order-repository';
 
-class MySQLOrderRepository implements OrderRepository {
+class PostgresOrderRepository implements OrderRepository {
   // Implementation details...
 }
 ```
 
 **Monorepo Pattern:**
 
-When dependencies cross package/repository boundaries, create a dedicated contracts package:
+When dependencies cross package/repository boundaries, create a dedicated ports package:
 
 ```
 monorepo/
 ├── packages/
-│   ├── contracts/           # Shared contracts package
-│   │   ├── package.json     # @myorg/contracts
+│   ├── ports/               # Shared ports package
+│   │   ├── package.json     # @myorg/ports
 │   │   └── src/
 │   │       ├── order-repository.ts
 │   │       ├── payment-gateway.ts
 │   │       └── index.ts
 │   ├── order-service/       # Consumer package
-│   │   ├── package.json     # depends on @myorg/contracts
+│   │   ├── package.json     # depends on @myorg/ports
 │   │   └── src/
 │   │       └── order-service.ts
-│   └── mysql-adapter/       # Provider package
-│       ├── package.json     # depends on @myorg/contracts
+│   └── postgres-adapter/    # Adapter package
+│       ├── package.json     # depends on @myorg/ports
 │       └── src/
-│           └── mysql-order-repository.ts
+│           └── postgres-order-repository.ts
 ```
 
 ```json
@@ -464,22 +468,22 @@ monorepo/
 {
   "name": "@myorg/order-service",
   "dependencies": {
-    "@myorg/contracts": "workspace:*"  // Only depends on contracts
+    "@myorg/ports": "workspace:*"  // Only depends on ports
   }
 }
 
-// packages/mysql-adapter/package.json
+// packages/postgres-adapter/package.json
 {
-  "name": "@myorg/mysql-adapter",
+  "name": "@myorg/postgres-adapter",
   "dependencies": {
-    "@myorg/contracts": "workspace:*"  // Implements contracts
+    "@myorg/ports": "workspace:*"  // Implements ports
   }
 }
 ```
 
-**Exception - Hexagonal Architecture:**
+**Hexagonal Architecture:**
 
-In hexagonal (ports and adapters) architecture, the rule is different:
+In hexagonal (ports and adapters) architecture:
 
 - **Ports** (interfaces) live in the **domain/core** layer
 - **Adapters** depend on the domain and implement its ports
@@ -490,17 +494,17 @@ src/
 ├── domain/                 # Core domain - owns the ports
 │   ├── model/
 │   │   └── order.ts
-│   └── ports/              # Ports ARE in domain (hexagonal exception)
-│       ├── order-repository.port.ts
-│       └── payment-gateway.port.ts
-├── application/            # Use cases
-│   └── create-order.usecase.ts
+│   └── ports/              # Ports ARE in domain (hexagonal pattern)
+│       ├── order-repository.ts
+│       └── payment-gateway.ts
+├── application/            # Use cases / services
+│   └── create-order-service.ts
 └── adapters/               # Adapters implement domain ports
     ├── driven/             # Secondary/driven adapters
-    │   ├── mysql-order-repository.adapter.ts
-    │   └── stripe-payment.adapter.ts
+    │   ├── postgres-order-repository.ts
+    │   └── stripe-payment-gateway.ts
     └── driving/            # Primary/driving adapters
-        └── rest-api.adapter.ts
+        └── rest-api-adapter.ts
 ```
 
 In hexagonal architecture, the domain is the center and everything points inward. Adapters depend on the domain, not the other way around.
@@ -512,14 +516,14 @@ In hexagonal architecture, the domain is the center and everything points inward
 class OrderService {
   createOrder(order: Order): void {
     const repo = ServiceLocator.get("OrderRepository");
-    const emailer = ServiceLocator.get("EmailService");
+    const emailSender = ServiceLocator.get("EmailSender");
     // Dependencies not visible from constructor
   }
 }
 
 // GOOD: Constructor injection - explicit dependencies
 class OrderService {
-  constructor(private repo: OrderRepository, private emailer: EmailService) {}
+  constructor(private repo: OrderRepository, private emailSender: EmailSender) {}
 }
 ```
 
@@ -527,7 +531,7 @@ class OrderService {
 
 ```typescript
 // BAD: Logic in constructor
-class UserService {
+class CreateUserService {
   constructor(private repo: UserRepository) {
     this.warmUpCache(); // Side effect
     this.validateConnection(); // Can throw
@@ -535,7 +539,7 @@ class UserService {
 }
 
 // GOOD: Simple assignment only
-class UserService {
+class CreateUserService {
   constructor(private repo: UserRepository) {}
 
   async initialize(): Promise<void> {
@@ -557,20 +561,20 @@ class ServiceB {
   constructor(private serviceA: ServiceA) {} // Circular!
 }
 
-// GOOD: Break cycle with interface or events
-interface ServiceAInterface {
-  methodNeededByB(): void;
+// GOOD: Break cycle with port or events
+interface NotificationSender {
+  notify(message: string): void;
 }
 
-class ServiceA implements ServiceAInterface {
+class ServiceA implements NotificationSender {
   constructor(private serviceB: ServiceB) {}
-  methodNeededByB(): void {
+  notify(message: string): void {
     /* ... */
   }
 }
 
 class ServiceB {
-  constructor(private serviceA: ServiceAInterface) {}
+  constructor(private notifier: NotificationSender) {}
 }
 ```
 
@@ -594,21 +598,21 @@ class OrderService {
 }
 ```
 
-### 7. Use Factory Functions for Complex Creation
+### 7. Use Factory for Complex Creation
 
 ```typescript
 // When creation logic is complex
 interface UserServiceFactory {
-  create(tenantId: string): UserService;
+  create(tenantId: string): CreateUserService;
 }
 
 class TenantAwareUserServiceFactory implements UserServiceFactory {
-  constructor(private connectionPool: ConnectionPool, private config: Config) {}
+  constructor(private connectionPool: ConnectionPool, private config: AppConfig) {}
 
-  create(tenantId: string): UserService {
+  create(tenantId: string): CreateUserService {
     const connection = this.connectionPool.getForTenant(tenantId);
-    const repo = new UserRepository(connection);
-    return new UserService(repo, this.config);
+    const repo = new PostgresUserRepository(connection);
+    return new CreateUserService(repo, this.config);
   }
 }
 
@@ -633,18 +637,18 @@ class TenantController {
 describe("OrderService", () => {
   let service: OrderService;
   let mockRepo: jest.Mocked<OrderRepository>;
-  let mockEmailer: jest.Mocked<EmailService>;
+  let mockEmailSender: jest.Mocked<EmailSender>;
 
   beforeEach(() => {
     mockRepo = {
       save: jest.fn(),
       findById: jest.fn(),
     };
-    mockEmailer = {
+    mockEmailSender = {
       send: jest.fn(),
     };
 
-    service = new OrderService(mockRepo, mockEmailer);
+    service = new OrderService(mockRepo, mockEmailSender);
   });
 
   it("should save order and send confirmation", async () => {
@@ -653,7 +657,7 @@ describe("OrderService", () => {
     await service.createOrder(order);
 
     expect(mockRepo.save).toHaveBeenCalledWith(order);
-    expect(mockEmailer.send).toHaveBeenCalledWith(
+    expect(mockEmailSender.send).toHaveBeenCalledWith(
       expect.objectContaining({ orderId: "123" })
     );
   });
@@ -665,7 +669,7 @@ describe("OrderService", () => {
       "DB error"
     );
 
-    expect(mockEmailer.send).not.toHaveBeenCalled();
+    expect(mockEmailSender.send).not.toHaveBeenCalled();
   });
 });
 ```
@@ -676,13 +680,13 @@ describe("OrderService", () => {
 describe("OrderService Integration", () => {
   let service: OrderService;
   let testRepo: InMemoryOrderRepository;
-  let testEmailer: SpyEmailService;
+  let testEmailSender: SpyEmailSender;
 
   beforeEach(() => {
     testRepo = new InMemoryOrderRepository();
-    testEmailer = new SpyEmailService();
+    testEmailSender = new SpyEmailSender();
 
-    service = new OrderService(testRepo, testEmailer);
+    service = new OrderService(testRepo, testEmailSender);
   });
 
   it("should persist order", async () => {
@@ -692,7 +696,7 @@ describe("OrderService Integration", () => {
 
     const saved = await testRepo.findById("123");
     expect(saved).toEqual(order);
-    expect(testEmailer.sentEmails).toHaveLength(1);
+    expect(testEmailSender.sentEmails).toHaveLength(1);
   });
 });
 ```
@@ -712,7 +716,7 @@ class GodService {
     private service1: Service1,
     private service2: Service2,
     private logger: Logger,
-    private config: Config,
+    private config: AppConfig,
     private cache: Cache,
     private validator: Validator
   ) // ... more
@@ -728,7 +732,7 @@ class OrderCreator {
 }
 
 class OrderNotifier {
-  constructor(private emailer: EmailService, private smsService: SmsService) {}
+  constructor(private emailSender: EmailSender, private smsSender: SmsSender) {}
 }
 ```
 
@@ -736,23 +740,23 @@ class OrderNotifier {
 
 ```typescript
 // BAD: Primitive parameters mixed with services
-class EmailService {
+class SendGridEmailSender {
   constructor(
     private smtpHost: string, // Primitive
     private smtpPort: number, // Primitive
-    private logger: Logger // Service
+    private logger: Logger    // Service
   ) {}
 }
 
 // GOOD: Group primitives into config object
-interface EmailConfig {
+interface EmailSenderConfig {
   smtpHost: string;
   smtpPort: number;
   fromAddress: string;
 }
 
-class EmailService {
-  constructor(private config: EmailConfig, private logger: Logger) {}
+class SendGridEmailSender {
+  constructor(private config: EmailSenderConfig, private logger: Logger) {}
 }
 ```
 
@@ -760,8 +764,8 @@ class EmailService {
 
 ```typescript
 // BAD: Must call init() before use
-class Service {
-  constructor(private repo: Repository) {}
+class SomeService {
+  constructor(private repo: SomeRepository) {}
 
   init(): void {
     this.connection = this.repo.connect();  // Required before use
@@ -773,7 +777,7 @@ class Service {
 }
 
 // GOOD: Fully initialized after construction
-class Service {
+class SomeService {
   constructor(private connection: DatabaseConnection) {}
 
   doWork(): void {

@@ -441,7 +441,7 @@ interface PaymentGateway {
   charge(amount: number): void;
 }
 
-interface EmailService {
+interface EmailSender {
   send(to: string, message: string): void;
 }
 
@@ -449,7 +449,7 @@ class OrderService {
   constructor(
     private repository: OrderRepository,
     private payment: PaymentGateway,
-    private emailer: EmailService
+    private emailer: EmailSender
   ) {}
 
   createOrder(order: Order): void {

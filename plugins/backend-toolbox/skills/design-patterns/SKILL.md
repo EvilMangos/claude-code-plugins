@@ -230,7 +230,7 @@ class MySQLOrderRepository implements OrderRepository { /* ... */ }
 class OrderService {
   constructor(
     private repository: OrderRepository,
-    private emailer: EmailService
+    private emailer: EmailSender
   ) {}
 }
 
