@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/tests-script-verify.sh",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/telegram-notify.sh",
             "timeout": 10
           }
         ]
