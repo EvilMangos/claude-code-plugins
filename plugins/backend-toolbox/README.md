@@ -11,7 +11,6 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 ## Prerequisites
 
-- `/run-tests` command in target project's `.claude/commands/run-tests.md`
 - CLAUDE.md for project-specific rules (for steward/curator agents)
 
 ## Agents (14)
@@ -79,12 +78,11 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
 
-## Hooks (5)
+## Hooks (4)
 
 - **dangerous-command-guard** - Block destructive git/filesystem/database operations
 - **test-reminder** - Remind to run tests after code modifications
 - **validate-test-files** - Prevent inappropriate test file modifications
-- **session-start** - Verify prerequisites at session start
 - **workflow-completion** - Generate structured summary when workflows complete
 
 ## Typical Workflow
@@ -97,8 +95,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 ## Setup
 
 1. Install the plugin
-2. Create `/run-tests` command in your project that wraps your test runner
-3. Optionally create CLAUDE.md for project-specific rules
+2. Optionally create CLAUDE.md for project-specific rules
 
 ## Installation
 

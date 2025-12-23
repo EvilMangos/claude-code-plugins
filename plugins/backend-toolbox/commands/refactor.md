@@ -39,8 +39,7 @@ Required subagents:
     - Prefer small, reversible steps.
 
 3) **Tests after each step**
-    - After **every refactor step** (each plan item that changes code), run the smallest relevant `/run-tests`
-      invocation.
+    - After **every refactor step** (each plan item that changes code), run tests with the smallest relevant scope.
 
 ## Preflight (main agent)
 
@@ -53,9 +52,8 @@ Required subagents:
     - If it does not exist, STOP and report the path is invalid.
 
 3) Establish baseline:
-    - Run a narrow `/run-tests` invocation relevant to the scope (or the smallest reasonable default if broad scope).
+    - Run tests with a narrow scope relevant to the refactor (or the smallest reasonable default if broad scope).
     - If baseline is failing, STOP and report that refactor is blocked until tests are green.
-    - The SessionStart hook verifies `/run-tests` exists.
 
 ## Workflow
 
@@ -78,7 +76,7 @@ Invoke `plan-creator` to:
 - For each step, include:
     - files to change (must exclude test files)
     - expected outcome
-    - the smallest relevant `/run-tests` invocation to use after that step
+    - the smallest relevant test scope to use after that step
 - Include a “test-file safety” note: how the plan avoids touching tests.
 - If scope is the entire codebase:
     - Prioritize the top 3–10 highest-value refactors; do not attempt a sweeping rewrite.
@@ -97,9 +95,9 @@ For each plan step:
 
 1) Make the minimal behavior-preserving changes.
 2) State what changed (files/functions) and why.
-3) Provide the exact `/run-tests` invocation to run now (smallest scope).
+3) Specify the smallest test scope to run now.
 4) BEFORE moving to the next step, you MUST:
-    - Run `/run-tests ...`
+    - Run tests with the specified scope
     - Check changed files with `git diff --name-only`
     - If any touched file matches “test files/dirs” rules:
         - Revert those changes immediately (via git) and STOP with a report
@@ -107,7 +105,7 @@ For each plan step:
 
 If tests fail:
 
-- Fix the refactor (or revert) with minimal changes, then re-run the same `/run-tests`.
+- Fix the refactor (or revert) with minimal changes, then re-run tests.
 - Do not proceed until green.
 
 ### 4) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
@@ -130,7 +128,7 @@ You MUST NOT proceed to Step 5 unless no BLOCKING issues remain.
 LOOP while BLOCKING issues remain (max 5 iterations):
   IF code-reviewer reports BLOCKING issues:
     1. Invoke plan-creator to update the plan to address issues
-    2. Invoke refactorer to apply fixes step-by-step with /run-tests after each step
+    2. Invoke refactorer to apply fixes step-by-step with tests after each step
     3. Re-invoke code-reviewer
     4. Check for remaining BLOCKING issues
   END IF
@@ -177,6 +175,6 @@ Invoke `documentation-updater` to update documentation impacted by the refactor,
 - keep doc changes minimal and accurate
 - update only what is now misleading (paths, module names, usage examples, architecture notes, etc.)
 
-If doc updates include code changes, re-run an appropriate `/run-tests` once afterward.
+If doc updates include code changes, re-run tests once afterward.
 
 The workflow-completion hook will generate the final summary when the workflow completes.

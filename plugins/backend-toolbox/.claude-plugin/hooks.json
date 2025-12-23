@@ -1,17 +1,6 @@
 {
   "description": "Backend toolbox hooks for notifications and workflow automation",
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/tests-script-verify.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [

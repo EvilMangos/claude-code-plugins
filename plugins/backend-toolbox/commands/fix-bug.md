@@ -23,10 +23,6 @@ Required subagents:
 - refactorer
 - code-reviewer
 
-## Testing
-
-Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
-
 ## Workflow
 
 ### 1) Clarify & High-level understanding (main agent)
@@ -40,7 +36,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
 ### 2) Verify bug / Attempt to reproduce (main agent)
 
 - Attempt to reproduce the bug:
-    - If there are existing tests that should catch this bug, run them with `/run-tests`.
+    - If there are existing tests that should catch this bug, run them.
     - If no tests exist, try to trigger the bug manually (check logs, trace code paths).
 - Document reproduction steps and evidence.
 - If the bug cannot be reproduced:
@@ -80,7 +76,7 @@ Use `/run-tests <path-or-pattern>` to run tests throughout this workflow.
     - If no test is warranted (trivial fix, no behavioral change worth testing): document why and proceed without a test.
 - If a test was created:
     - The test should **fail** with the current buggy code (RED).
-    - Run `/run-tests` to confirm the test **fails** (RED).
+    - Run tests to confirm the test **fails** (RED).
     - If the test passes unexpectedly:
         - The bug may not be where you think. Re-analyze root cause.
         - Or strengthen the test to properly catch the bug.
@@ -121,11 +117,11 @@ END LOOP
 - Pass to `backend-developer`:
     - The fix plan from `plan-creator`.
     - The root cause analysis.
-    - The failing test (if created) and its `/run-tests` invocation.
+    - The failing test (if created).
 - The `backend-developer` must:
     - Implement the fix in small, incremental steps.
-    - After each step, specify the smallest relevant `/run-tests` invocation.
-- You MUST run `/run-tests` after each step.
+    - After each step, run tests with the smallest relevant scope.
+- You MUST run tests after each step.
 - If the bug-catching test was created, it should now **pass** (GREEN).
 - If tests fail unexpectedly:
     - Analyze and fix, or loop with `automation-qa` if tests need adjustment.
@@ -134,9 +130,9 @@ END LOOP
 
 - Re-invoke `automation-qa` to:
     - Determine if additional regression tests are needed.
-    - Provide a broader `/run-tests` invocation (package-level or module-level).
+    - Specify a broader test scope (package-level or module-level).
     - Return a stabilization verdict: **PASS / PARTIAL / FAIL**
-- You MUST run the broader `/run-tests` invocation.
+- You MUST run tests with the broader scope.
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
@@ -151,7 +147,7 @@ LOOP while verdict != PASS (max 5 iterations):
   IF verdict is PARTIAL or FAIL:
     1. Invoke automation-qa to create/update tests for issues (RED)
     2. Invoke backend-developer to fix (GREEN)
-    3. Re-run broader /run-tests
+    3. Re-run broader tests
     4. Re-invoke automation-qa for stabilization verdict
     5. Check verdict again
   END IF
@@ -220,7 +216,7 @@ LOOP while BLOCKING issues remain (max 5 iterations):
        - Invoke backend-developer to fix (GREEN)
     2. FOR EACH structural/style BLOCKING issue:
        - Invoke refactorer for cleanup
-       - Run /run-tests
+       - Run tests
     3. Re-invoke code-reviewer
     4. Check for remaining BLOCKING issues
   END IF
@@ -237,7 +233,7 @@ END LOOP
     - Improve structure, naming, clarity.
     - Keep external behavior identical.
 - After each refactor step:
-    - Run `/run-tests`.
+    - Run tests.
     - If tests fail, fix or revert.
 - Do not expand scope beyond what's needed for the bug fix.
 
@@ -245,6 +241,6 @@ END LOOP
 
 - Reproduce or verify the bug before attempting to fix it.
 - Always invoke `automation-qa` to evaluate whether a regression test is needed (let the agent decide based on its `test-best-practices` skill).
-- After every implementation or refactor step, run the smallest relevant `/run-tests`.
+- After every implementation or refactor step, run tests with the smallest relevant scope.
 - Do not introduce changes beyond what's needed to fix the reported bug.
-- Prefer narrow `/run-tests` invocations unless broader runs are required by the workflow.
+- Prefer narrow test scopes unless broader runs are required by the workflow.

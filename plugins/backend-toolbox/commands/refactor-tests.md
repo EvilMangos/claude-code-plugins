@@ -40,7 +40,7 @@ Required subagents:
     - Refactor for readability, determinism, structure, and robustness.
 
 3) **Tests after each step**
-    - After **every refactor step** that changes files, run the smallest relevant `/run-tests` invocation.
+    - After **every refactor step** that changes files, run tests with the smallest relevant scope.
 
 ### Test File Patterns
 
@@ -56,8 +56,6 @@ If a required improvement would need production code changes, STOP and tell the 
 
 ## Preflight (main agent)
 
-The SessionStart hook verifies `/run-tests` exists.
-
 1) Determine scope:
 
 - If `$ARGUMENTS` is empty: scope = "entire test suite".
@@ -72,9 +70,9 @@ The SessionStart hook verifies `/run-tests` exists.
 
 3) Establish baseline:
 
-- Run the smallest reasonable `/run-tests` for the scope:
-    - If a path was provided: `/run-tests $ARGUMENTS`
-    - Else: `/run-tests` (or the smallest default suite your repo uses)
+- Run tests with the smallest reasonable scope:
+    - If a path was provided: run tests for that path
+    - Else: run the smallest default test suite your repo uses
 - If baseline fails, STOP: refactoring is blocked until tests are green.
 
 ## Workflow
@@ -102,7 +100,7 @@ Invoke `plan-creator` to:
 - For each step include:
     - files to change (must be tests/support/docs only)
     - expected outcome
-    - exact smallest `/run-tests` invocation to run after the step
+    - smallest test scope to run after the step
 - If scope is the entire test suite:
     - prioritize top 3–10 highest-value refactors; no sweeping rewrite
 - Add a “file-safety” section explaining how the plan avoids production code edits.
@@ -121,11 +119,11 @@ For each plan step, `automation-qa` must:
 
 1) Apply minimal behavior-preserving edits (tests/support/docs only).
 2) Describe what changed (files + why).
-3) Provide the exact `/run-tests` invocation to run now (smallest scope).
+3) Specify the smallest test scope to run now.
 
 You MUST, after each step:
 
-- Run `/run-tests ...`
+- Run tests with the specified scope
 - Check changed files with `git diff --name-only`
 
 If any changed file is NOT:
@@ -140,7 +138,7 @@ If any changed file is NOT:
 If tests fail:
 
 - `automation-qa` must fix the refactor (or revert) with minimal changes
-- re-run the same `/run-tests` command
+- re-run tests
 - do not proceed until green
 
 ### 4) Test quality review gate (delegate to `tests-reviewer`; if not ok, loop to Planning)
@@ -149,7 +147,7 @@ Invoke `tests-reviewer` with:
 
 - the plan
 - summary of changes
-- the `/run-tests` commands run
+- the test commands run
 
 `tests-reviewer` must return: **PASS / PARTIAL / FAIL**.
 
@@ -165,7 +163,7 @@ You MUST NOT proceed to Step 5 unless verdict == PASS.
 LOOP while verdict != PASS (max 5 iterations):
   IF verdict is PARTIAL or FAIL:
     1. Invoke plan-creator to update the plan to address feedback
-    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    2. Invoke automation-qa to apply fixes step-by-step with tests after each step
     3. Re-invoke tests-reviewer
     4. Check verdict again
   END IF
@@ -192,7 +190,7 @@ You MUST NOT proceed to Step 6 unless no BLOCKING issues remain.
 LOOP while BLOCKING issues remain (max 5 iterations):
   IF code-reviewer reports BLOCKING issues:
     1. Invoke plan-creator to update the plan to address issues
-    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    2. Invoke automation-qa to apply fixes step-by-step with tests after each step
     3. Re-invoke code-reviewer
     4. Check for remaining BLOCKING issues
   END IF
@@ -205,7 +203,7 @@ END LOOP
 
 Acceptance criteria for this command:
 
-- Tests remain green (evidence via `/run-tests`)
+- Tests remain green (evidence via test runs)
 - No production code changed (evidence via diff checks)
 - Refactor scope stayed within the requested test scope
 - Test code quality improved (structure/readability/determinism)
@@ -222,7 +220,7 @@ You MUST NOT proceed to Step 7 unless verdict == PASS.
 LOOP while acceptance verdict != PASS (max 5 iterations):
   IF verdict is PARTIAL or FAIL:
     1. Invoke plan-creator to propose corrective steps
-    2. Invoke automation-qa to apply fixes step-by-step with /run-tests after each step
+    2. Invoke automation-qa to apply fixes step-by-step with tests after each step
     3. Re-invoke acceptance-reviewer
     4. Check verdict again
   END IF
@@ -239,6 +237,6 @@ The documentation-updater must not change production code.
 
 After doc changes:
 
-- Run an appropriate `/run-tests` once.
+- Run tests once.
 
 The workflow-completion hook will generate the final summary when the workflow completes.

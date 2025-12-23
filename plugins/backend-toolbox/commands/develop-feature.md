@@ -191,7 +191,7 @@ prompt: |
   - Error conditions
 
   After writing tests, run them to confirm they FAIL (RED).
-  Use /run-tests with the narrowest scope.
+  Use the narrowest test scope.
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
@@ -259,7 +259,7 @@ prompt: |
   ## Task
   Implement the feature to make tests pass (GREEN stage).
   - Work in small incremental steps
-  - Run /run-tests after each step
+  - Run tests after each step
   - Continue until all feature tests are GREEN
 
   ## Input Reports
@@ -299,7 +299,7 @@ prompt: |
   ## Task
   Run broader test scope and assess stability:
   - Identify regression risks
-  - Run package-level or broader /run-tests
+  - Run package-level or broader tests
   - Report if additional tests are needed
 
   Return verdict in signal:
@@ -441,7 +441,7 @@ prompt: |
   ## Task
   Perform behavior-preserving cleanup.
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
-  Run /run-tests after each refactor step.
+  Run tests after each refactor step.
   Record larger refactors as follow-up tasks, don't do them now.
 
   ## Input Reports
