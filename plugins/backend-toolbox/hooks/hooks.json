@@ -1,12 +1,24 @@
 {
+  "description": "Backend toolbox hooks for notifications and workflow automation",
   "hooks": {
-    "PreToolUse": [
+    "Stop": [
       {
-        "matcher": "Bash",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/bash_command_validator_example.py"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh"
           }
         ]
       }
