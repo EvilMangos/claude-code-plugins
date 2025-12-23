@@ -6,8 +6,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/telegram-notify.sh",
-            "timeout": 10
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/telegram-notify.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/telegram-notify.sh"
           }
         ]
       }
