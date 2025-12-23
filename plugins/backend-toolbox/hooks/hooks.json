@@ -1,5 +1,4 @@
 {
-  "description": "Backend toolbox hooks for notifications and workflow automation",
   "hooks": {
     "Stop": [
       {
