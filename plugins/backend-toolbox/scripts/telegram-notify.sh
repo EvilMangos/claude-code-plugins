@@ -5,9 +5,6 @@
 #   export TELEGRAM_BOT_TOKEN="your_bot_token"
 #   export TELEGRAM_CHAT_ID="your_chat_id"
 
-# Debug logging
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] telegram-notify.sh invoked" >> /tmp/claude-hooks.log
-
 if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID, skipping" >> /tmp/claude-hooks.log
   exit 0
@@ -18,8 +15,9 @@ input=$(cat)
 session_id=$(echo "$input" | jq -r '.session_id // "unknown"' | cut -c1-8)
 cwd=$(echo "$input" | jq -r '.cwd // ""')
 project=$(basename "$cwd")
+hook_type=$(echo "$input" | jq -r '.hook_type // "unknown"')
 
-message="Claude Code task completed
+message="Claude Code: $hook_type
 Project: $project
 Session: $session_id"
 
