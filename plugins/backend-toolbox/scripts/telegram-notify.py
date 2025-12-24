@@ -171,6 +171,7 @@ def main() -> None:
     cwd = input_data.get("cwd", "")
     project = Path(cwd).name if cwd else "unknown"
     transcript_path = input_data.get("transcript_path", "")
+    session_id = input_data.get("session_id", "unknown")
 
     if transcript_path and Path(transcript_path).is_file():
         last_prompt = extract_last_user_prompt(transcript_path)
@@ -179,7 +180,7 @@ def main() -> None:
 
     # Escape user-supplied text because Telegram parse_mode=HTML
     header = f"<b>Claude Code:</b> {escape(message_type)}\n<b>Project:</b> {escape(project)}"
-    full_text = f"{header}\n<b>Prompt:</b> {escape(last_prompt)}"
+    full_text = f"{header}\n<b>Prompt:</b> {escape(last_prompt)}\n<b>Session:</b> {escape(session_id)}"
 
     send_chunked_message(token, chat_id, full_text)
 
