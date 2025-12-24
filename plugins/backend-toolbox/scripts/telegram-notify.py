@@ -9,6 +9,7 @@ Set environment variables:
 
 import json
 import os
+import re
 import sys
 from datetime import datetime
 from html import escape
@@ -19,6 +20,7 @@ from urllib.request import Request, urlopen
 
 LOG_FILE = "/tmp/claude-hooks.log"
 MAX_MESSAGE_LENGTH = 3500
+MAX_PROMPT_DISPLAY_LENGTH = 200
 
 
 def log(message: str) -> None:
@@ -94,6 +96,49 @@ def _extract_human_text(content: Any) -> Optional[str]:
         return combined or None
 
     return None
+
+
+def _sanitize_prompt_for_display(prompt: str) -> str:
+    """
+    Sanitize a prompt for display in notifications.
+
+    Handles:
+    - Skill expansions (extracts the command name instead of full prompt)
+    - Long prompts (truncates with ellipsis)
+    - System prompts that shouldn't be shown in full
+    """
+    if not prompt or prompt == "unknown":
+        return prompt
+
+    # Check for skill/command expansion - extract command name
+    # Pattern: <command-name>/skill-name</command-name>
+    command_match = re.search(r"<command-name>([^<]+)</command-name>", prompt)
+    if command_match:
+        return command_match.group(1).strip()
+
+    # Detect expanded skill prompts by common patterns
+    skill_indicators = [
+        "You are running a **",
+        "## Hard constraints",
+        "## Execution workflow",
+        "### 1)",
+        "<command-message>",
+    ]
+    if any(indicator in prompt for indicator in skill_indicators):
+        # Try to extract a meaningful summary from the first line
+        first_line = prompt.split("\n")[0].strip()
+        if first_line.startswith("You are running"):
+            # Extract workflow name: "You are running a **X** workflow"
+            workflow_match = re.search(r"\*\*([^*]+)\*\*", first_line)
+            if workflow_match:
+                return f"/{workflow_match.group(1).replace(' ', '-').lower()}"
+        return "[skill expansion]"
+
+    # Truncate long prompts
+    if len(prompt) > MAX_PROMPT_DISPLAY_LENGTH:
+        return prompt[:MAX_PROMPT_DISPLAY_LENGTH].rstrip() + "..."
+
+    return prompt
 
 
 def extract_last_user_prompt(transcript_path: str) -> str:
@@ -175,6 +220,7 @@ def main() -> None:
 
     if transcript_path and Path(transcript_path).is_file():
         last_prompt = extract_last_user_prompt(transcript_path)
+        last_prompt = _sanitize_prompt_for_display(last_prompt)
     else:
         last_prompt = "unknown"
 

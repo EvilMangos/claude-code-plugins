@@ -13,7 +13,7 @@
     ],
     "Notification": [
       {
-        "matcher": "*",
+        "matcher": "permission_prompt|idle_prompt",
         "hooks": [
           {
             "type": "command",
