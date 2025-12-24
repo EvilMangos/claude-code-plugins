@@ -10,14 +10,16 @@ if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
   exit 0
 fi
 
+# Get message type from argument (default: "Update")
+message_type="${1:-Update}"
+
 input=$(cat)
 
 session_id=$(echo "$input" | jq -r '.session_id // "unknown"' | cut -c1-8)
 cwd=$(echo "$input" | jq -r '.cwd // ""')
 project=$(basename "$cwd")
-hook_type=$(echo "$input" | jq -r '.hook_type // "unknown"')
 
-message="Claude Code: $hook_type
+message="Claude Code: $message_type
 Project: $project
 Session: $session_id"
 
