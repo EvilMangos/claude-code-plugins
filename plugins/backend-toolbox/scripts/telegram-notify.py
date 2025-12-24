@@ -104,6 +104,7 @@ def _sanitize_prompt_for_display(prompt: str) -> str:
 
     Handles:
     - Skill expansions (extracts the command name instead of full prompt)
+    - System XML tags (removes them)
     - Long prompts (truncates with ellipsis)
     - System prompts that shouldn't be shown in full
     """
@@ -115,6 +116,18 @@ def _sanitize_prompt_for_display(prompt: str) -> str:
     command_match = re.search(r"<command-name>([^<]+)</command-name>", prompt)
     if command_match:
         return command_match.group(1).strip()
+
+    # Remove system XML tags that shouldn't be shown
+    # Handles: <local-command-stdout>...</local-command-stdout>, <command-args>, etc.
+    cleaned = re.sub(r"<[a-z-]+>[^<]*</[a-z-]+>", "", prompt)
+    cleaned = re.sub(r"<[a-z-]+/>", "", cleaned)  # Self-closing tags
+    cleaned = cleaned.strip()
+
+    # If nothing left after cleaning, return a placeholder
+    if not cleaned:
+        return "[command output]"
+
+    prompt = cleaned
 
     # Detect expanded skill prompts by common patterns
     skill_indicators = [
@@ -224,10 +237,20 @@ def main() -> None:
     else:
         last_prompt = "unknown"
 
-    # Escape user-supplied text because Telegram parse_mode=HTML
-    header = f"<b>Claude Code:</b> {escape(message_type)}\n<b>Project:</b> {escape(project)}"
-    full_text = f"{header}\n<b>Prompt:</b> {escape(last_prompt)}\n<b>Session:</b> {escape(session_id)}"
+    # Use short session ID (first 8 chars)
+    short_session = session_id[:8] if session_id and session_id != "unknown" else "unknown"
 
+    # Compact format with emoji indicators
+    lines = [
+        f"🤖 <b>{escape(message_type)}</b>",
+        f"📁 {escape(project)} · {escape(short_session)}",
+    ]
+
+    # Only show prompt if it's meaningful
+    if last_prompt and last_prompt not in ("unknown", "[command output]"):
+        lines.append(f"💬 {escape(last_prompt)}")
+
+    full_text = "\n".join(lines)
     send_chunked_message(token, chat_id, full_text)
 
 
