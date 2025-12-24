@@ -67,6 +67,7 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **refactoring-patterns** - Safe refactoring process, common patterns
 - **design-patterns** - SOLID, DDD, dependency injection, design patterns
 - **design-assessment** - Coupling/cohesion analysis, code smells
+- **code-organization** - File structure, module boundaries, when to split code
 - **code-review-checklist** - Systematic review workflow, quality checklist
 - **quick-code-review** - Lightweight review for smaller changes
 - **acceptance-criteria** - Requirement verification, completeness checking
@@ -78,19 +79,16 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
 
-## Hooks (4)
+## Hooks (2)
 
-- **dangerous-command-guard** - Block destructive git/filesystem/database operations
-- **test-reminder** - Remind to run tests after code modifications
-- **validate-test-files** - Prevent inappropriate test file modifications
-- **workflow-completion** - Generate structured summary when workflows complete
+- **telegram-notify (Stop)** - Send Telegram notification when Claude finishes a task
+- **telegram-notify (Notification)** - Send Telegram notification when user action is required
 
 ## Typical Workflow
 
 1. Run `/develop-feature [description]` or `/fix-bug [description]`
 2. Plugin orchestrates: plan-creator -> automation-qa (RED) -> tests-reviewer -> backend-developer (GREEN) ->
    acceptance-reviewer -> refactorer -> code-reviewer -> documentation-updater
-3. workflow-completion hook generates final summary
 
 ## Setup
 
@@ -109,11 +107,11 @@ This plugin includes optional safety/quality-of-life hooks under `hooks/`.
 - If you do **not** want hooks, exclude the `hooks/` directory when installing, or disable hooks via your Claude
   Code/plugin configuration (depending on how you load plugins).
 
-## Safety model
+## Telegram Notifications
 
-- **Dangerous commands**: `dangerous-command-guard` will warn/block high-risk shell commands and require explicit
-  confirmation before proceeding.
-- **Confirmation format**: when prompted, reply with `CONFIRM: <exact command>` to proceed.
+If configured with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables, the plugin can send notifications:
+- When Claude finishes a task (Stop event)
+- When user action is required (Notification event)
 
 ## Compatibility
 

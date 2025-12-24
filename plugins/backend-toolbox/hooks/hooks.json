@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh Finished"
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.py Finished"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.sh 'Action Required'"
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/telegram-notify.py 'Action Required'"
           }
         ]
       }
