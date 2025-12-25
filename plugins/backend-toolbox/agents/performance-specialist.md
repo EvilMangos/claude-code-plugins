@@ -3,7 +3,7 @@ name: performance-specialist
 description: Use when reviewing code for performance issues, optimizing algorithms, or identifying bottlenecks. Performance specialist focused on efficiency, latency reduction, and resource optimization. Triggers - "optimize", "slow", "performance", "latency", "bottleneck", "memory leak", "CPU usage", "profiling", "N+1", "cache", "scaling", "time complexity", "space complexity".
 model: opus
 color: yellow
-tools: Read, Write, Glob, Grep, Task, Skill
+tools: Read, Write, Glob, Grep, Task, Skill, MCP
 skills: backend-performance, algorithm-efficiency
 ---
 

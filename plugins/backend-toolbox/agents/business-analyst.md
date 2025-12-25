@@ -3,7 +3,7 @@ name: business-analyst
 description: Use when the user describes a new feature request that needs clarification before implementation. Clarifies ambiguous points and creates specific requirements. Triggers - "analyze requirements", "clarify feature", "what are the requirements", "specify feature", or when a feature description is vague.
 model: opus
 color: cyan
-tools: Read, Write, Glob, Grep, AskUserQuestion, Skill
+tools: Read, Write, Glob, Grep, AskUserQuestion, Skill, MCP
 skills: 
 ---
 

@@ -3,7 +3,7 @@ name: refactorer
 description: Use when improving code structure, reducing duplication, or cleaning up design without changing behavior. Refactoring specialist focused on improving design, structure, and readability while preserving behavior. Triggers - "refactor", "clean up", "restructure", "reduce duplication", "improve design".
 model: opus
 color: yellow
-tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill
+tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill, MCP
 skills: refactoring-patterns, design-assessment, design-patterns, code-organization
 ---
 

@@ -1,7 +1,7 @@
 ---
 description: Develops a backend feature end-to-end using strict TDD with planning, test design, test review gate, implementation, QA, acceptance review, performance check, security check, refactoring, code review, and documentation updates.
 argument-hint: [ feature-description ]
-allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand, Bash, AskUserQuestion
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand, Bash, AskUserQuestion, Skill, MCP
 ---
 
 # Feature Development Workflow (Background Agent Orchestration)

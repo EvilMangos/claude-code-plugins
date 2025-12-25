@@ -3,7 +3,7 @@ name: automation-qa
 description: Use when writing tests, improving test coverage, or designing test scenarios. Automation QA / Test Engineer responsible for designing, writing, and refactoring automated tests (unit, integration, E2E). Triggers - "write tests", "add tests", "test coverage", "TDD", "RED stage".
 model: opus
 color: blue
-tools: Read, Glob, Grep, Edit, Write, Task, Skill
+tools: Read, Glob, Grep, Edit, Write, Task, Skill, MCP
 skills: tdd-workflow, test-best-practices
 ---
 

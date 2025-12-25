@@ -1,7 +1,7 @@
 ---
 description: Review code for quality, security, and performance issues. If no path is provided, reviews staged/unstaged git changes.
 argument-hint: [ path ]
-allowed-tools: Read, Glob, Grep, Bash(git:*), Task
+allowed-tools: Read, Glob, Grep, Bash(git:*), Task, Skill
 ---
 
 You are orchestrating a **code review** workflow for this repository.
