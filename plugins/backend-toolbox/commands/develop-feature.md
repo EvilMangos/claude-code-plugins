@@ -63,7 +63,14 @@ LOOP:
      - Launch the single agent for the returned step
      - Wait for signal using wait-signal
 
-  5. GOTO 1
+  5. Handle wait-signal result:
+     - IF signal received (success=true): proceed to step 1
+     - IF timeout (success=false):
+       - Log brief message: "Step {step} timed out after {X}ms"
+       - DO NOT use TaskOutput to retrieve agent output
+       - Proceed to step 1 (query for next step - workflow handles retry logic)
+
+  6. GOTO 1
 END LOOP
 ```
 
@@ -77,6 +84,14 @@ END LOOP
    - Do NOT skip a step because "it was already done"
    - Do NOT question why a repeated step is being requested
    - Simply execute whatever step is returned, every time
+
+3. **NEVER use TaskOutput to retrieve background agent results.**
+   - Background agents communicate ONLY via MCP signals and reports
+   - Using TaskOutput pulls verbose agent output (tool calls, file reads, etc.) into the main context
+   - This wastes context window and defeats the purpose of background execution
+   - If wait-signal times out: treat it as a failed step and query for next step
+   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
+   - The signal summary provides enough info for the orchestrator to proceed
 
 ## Agent Output Instructions
 
