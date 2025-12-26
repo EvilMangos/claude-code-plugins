@@ -163,7 +163,46 @@ prompt: |
      - content: { status: "passed", summary: "Requirements analysis complete with N requirements" }
 ```
 
-### Step 2: plan (plan-creator)
+### Step 2: codebase-analysis (codebase-analyzer)
+
+```
+subagent_type: codebase-analyzer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Analyze the codebase to identify existing practices, patterns, and conventions.
+  This analysis will guide implementation to ensure consistency with the codebase.
+
+  Focus on:
+  - Files/directory structure
+  - DI/IoC container patterns
+  - Error handling conventions
+  - Logging patterns
+  - Testing structure and patterns
+  - API/endpoint conventions
+  - Database access patterns
+  - Configuration management
+  - Common utilities and helpers
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements" (to understand what areas are relevant)
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "codebase-analysis"
+     - content: <your codebase analysis report>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "codebase-analysis"
+     - content: { status: "passed", summary: "Codebase analysis complete" }
+```
+
+### Step 3: plan (plan-creator)
 
 ```
 subagent_type: plan-creator
@@ -174,10 +213,12 @@ prompt: |
 
   ## Task
   Create implementation and testing plan for the feature.
+  Use the codebase analysis to ensure the plan follows existing patterns.
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
   - reportType: "requirements"
+  - reportType: "codebase-analysis"
 
   ## Output
   1. Save FULL report:
@@ -190,7 +231,7 @@ prompt: |
      - content: { status: "passed", summary: "Implementation plan created" }
 ```
 
-### Step 3: tests-design (automation-qa)
+### Step 4: tests-design (automation-qa)
 
 ```
 subagent_type: automation-qa
@@ -230,7 +271,7 @@ prompt: |
      - content: { status: "passed", summary: "N tests written, all failing as expected (RED)" }
 ```
 
-### Step 4: tests-review (tests-reviewer)
+### Step 5: tests-review (tests-reviewer)
 
 ```
 subagent_type: tests-reviewer
@@ -262,7 +303,7 @@ prompt: |
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-### Step 5: implementation (backend-developer)
+### Step 6: implementation (backend-developer)
 
 ```
 subagent_type: backend-developer
@@ -276,11 +317,13 @@ prompt: |
   - Work in small incremental steps
   - Run tests after each step
   - Continue until all feature tests are GREEN
+  - Follow patterns identified in codebase-analysis
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
   Required:
   - reportType: "requirements"
+  - reportType: "codebase-analysis"
   - reportType: "plan"
   - reportType: "tests-design"
   Optional (retrieve if available - contains feedback requiring fixes):
@@ -302,7 +345,7 @@ prompt: |
      - content: { status: "passed", summary: "Implementation complete, all tests passing" }
 ```
 
-### Step 6: stabilization (automation-qa)
+### Step 7: stabilization (automation-qa)
 
 ```
 subagent_type: automation-qa
@@ -338,7 +381,7 @@ prompt: |
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-### Step 7: acceptance (acceptance-reviewer)
+### Step 8: acceptance (acceptance-reviewer)
 
 ```
 subagent_type: acceptance-reviewer
@@ -374,7 +417,7 @@ prompt: |
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-### Step 8: performance + security
+### Step 9: performance + security
 
 Launch BOTH agents in parallel (single message, multiple Task tool calls):
 
@@ -389,6 +432,7 @@ prompt: |
   ## Task
   Analyze the implementation for performance issues.
   Apply your loaded skills (`backend-performance`, `algorithm-efficiency`).
+  Consider codebase patterns (caching, connection pooling, etc.) when analyzing.
   Classify findings as BLOCKING or NON-BLOCKING.
 
   Return verdict in signal:
@@ -397,6 +441,7 @@ prompt: |
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
   - reportType: "implementation"
 
   ## Output
@@ -421,6 +466,7 @@ prompt: |
   ## Task
   Analyze the implementation for security vulnerabilities.
   Apply your loaded skill (`web-api-security`).
+  Consider codebase security patterns (auth, validation, error handling) when analyzing.
   Classify findings as BLOCKING or NON-BLOCKING.
 
   Return verdict in signal:
@@ -429,6 +475,7 @@ prompt: |
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
   - reportType: "implementation"
 
   ## Output
@@ -444,7 +491,7 @@ prompt: |
 
 Wait for BOTH signals before querying for next step.
 
-### Step 9: refactoring (refactorer)
+### Step 10: refactoring (refactorer)
 
 ```
 subagent_type: refactorer
@@ -458,10 +505,12 @@ prompt: |
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
   Run tests after each refactor step.
   Record larger refactors as follow-up tasks, don't do them now.
+  Ensure refactored code follows patterns from codebase-analysis.
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
   Required:
+  - reportType: "codebase-analysis"
   - reportType: "implementation"
   Optional (retrieve if available - contains structural issues to address):
   - reportType: "code-review"
@@ -477,7 +526,7 @@ prompt: |
      - content: { status: "passed", summary: "Refactoring complete, tests still passing" }
 ```
 
-### Step 10: code-review (code-reviewer)
+### Step 11: code-review (code-reviewer)
 
 ```
 subagent_type: code-reviewer
@@ -490,6 +539,7 @@ prompt: |
   Review the code for quality issues.
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
   Classify findings as BLOCKING or NON-BLOCKING.
+  Check that implementation follows patterns from codebase-analysis.
   For each BLOCKING issue, specify route:
   - "ROUTE: functional" → needs tests + implementation fix
   - "ROUTE: structural" → needs refactoring
@@ -500,6 +550,7 @@ prompt: |
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
   - reportType: "implementation"
   - reportType: "refactoring"
 
@@ -514,7 +565,7 @@ prompt: |
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-### Step 11: documentation (documentation-updater)
+### Step 12: documentation (documentation-updater)
 
 ```
 subagent_type: documentation-updater

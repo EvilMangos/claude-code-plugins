@@ -17,6 +17,7 @@ Do not do a subagent's work in the main agent.
 
 Required subagents:
 
+- codebase-analyzer
 - tests-reviewer
 - code-reviewer
 - application-security-specialist
@@ -40,7 +41,27 @@ Required subagents:
 
 ## Workflow
 
-### 1) Test Review (delegate to `tests-reviewer`)
+### 1) Codebase Analysis (delegate to `codebase-analyzer`)
+
+Invoke `codebase-analyzer` with:
+
+- The scope (path or list of changed files)
+- Request analysis of the codebase to discover:
+    - Existing patterns and conventions
+    - Project-specific abstractions and utilities
+    - Code organization and architecture style
+    - Testing patterns and frameworks
+
+This step provides context for all subsequent reviews. The analysis report will help reviewers:
+
+- Identify violations of established conventions
+- Check if new code follows existing patterns
+- Verify proper use of project utilities
+- Ensure consistency with codebase style
+
+Collect the codebase analysis report for reference by other reviewers.
+
+### 2) Test Review (delegate to `tests-reviewer`)
 
 Invoke `tests-reviewer` with:
 
@@ -59,7 +80,7 @@ Collect test review findings including:
 - Test quality issues
 - Recommendations for improvement
 
-### 2) Code Quality Review (delegate to `code-reviewer`)
+### 3) Code Quality Review (delegate to `code-reviewer`)
 
 Invoke `code-reviewer` with:
 
@@ -77,7 +98,7 @@ Collect the review output including:
 - Blocking issues
 - Non-blocking suggestions
 
-### 3) Security Review (delegate to `application-security-specialist`)
+### 4) Security Review (delegate to `application-security-specialist`)
 
 Invoke `application-security-specialist` with:
 
@@ -91,7 +112,7 @@ Invoke `application-security-specialist` with:
 
 Collect security findings categorized by severity.
 
-### 4) Performance Review (delegate to `performance-specialist`)
+### 5) Performance Review (delegate to `performance-specialist`)
 
 Invoke `performance-specialist` with:
 
@@ -105,7 +126,7 @@ Invoke `performance-specialist` with:
 
 Collect performance findings and recommendations.
 
-### 5) Synthesize Final Report (main agent)
+### 6) Synthesize Final Report (main agent)
 
 Combine all subagent findings into a unified report:
 

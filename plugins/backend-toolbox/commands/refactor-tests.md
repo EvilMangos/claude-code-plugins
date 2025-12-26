@@ -18,6 +18,7 @@ Do not do a subagent's work in the main agent.
 
 Required subagents:
 
+- codebase-analyzer
 - plan-creator
 - automation-qa
 - tests-reviewer
@@ -91,7 +92,21 @@ If a required improvement would need production code changes, STOP and tell the 
     - improve fixtures/helpers organization
     - speed up tests (avoid expensive setup where possible)
 
-### 2) Planning (delegate to `plan-creator`)
+### 2) Codebase analysis (delegate to `codebase-analyzer`)
+
+Before planning, analyze the codebase to understand existing testing patterns and conventions.
+
+- Invoke `codebase-analyzer` with:
+    - The test scope (path or entire test suite).
+    - Request focus on:
+        - Test organization and structure.
+        - Mocking and stubbing patterns.
+        - Fixture and factory patterns.
+        - Setup/teardown conventions.
+        - Naming conventions for tests.
+- The analysis ensures refactoring follows established testing patterns.
+
+### 3) Planning (delegate to `plan-creator`)
 
 Invoke `plan-creator` to:
 
@@ -111,7 +126,7 @@ Adopt or lightly refine the plan to ensure:
 - each step includes a test command
 - file list stays within allowed areas
 
-### 3) Refactor tests (delegate to `automation-qa`, tests after each step)
+### 4) Refactor tests (delegate to `automation-qa`, tests after each step)
 
 Delegate the plan to `automation-qa` and require it to execute steps one-by-one.
 
@@ -141,7 +156,7 @@ If tests fail:
 - re-run tests
 - do not proceed until green
 
-### 4) Test quality review gate (delegate to `tests-reviewer`; if not ok, loop to Planning)
+### 5) Test quality review gate (delegate to `tests-reviewer`; if not ok, loop to Planning)
 
 Invoke `tests-reviewer` with:
 
@@ -153,7 +168,7 @@ Invoke `tests-reviewer` with:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 5 unless verdict == PASS.
+You MUST NOT proceed to Step 6 unless verdict == PASS.
 
 - Do NOT rationalize skipping this gate ("tests are adequate", "will fix later", etc.)
 - Do NOT use your own judgment to override this gate
@@ -170,9 +185,9 @@ LOOP while verdict != PASS (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 5 after verdict == PASS.**
+**HARD STOP: Only proceed to Step 6 after verdict == PASS.**
 
-### 5) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
+### 6) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
 
 Invoke `code-reviewer` with:
 
@@ -180,7 +195,7 @@ Invoke `code-reviewer` with:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 6 unless no BLOCKING issues remain.
+You MUST NOT proceed to Step 7 unless no BLOCKING issues remain.
 
 - Do NOT rationalize skipping this gate ("issues are minor", "code is acceptable", etc.)
 - Do NOT use your own judgment to override this gate
@@ -197,9 +212,9 @@ LOOP while BLOCKING issues remain (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 6 after no BLOCKING issues remain.**
+**HARD STOP: Only proceed to Step 7 after no BLOCKING issues remain.**
 
-### 6) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
+### 7) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
 
 Acceptance criteria for this command:
 
@@ -210,7 +225,7 @@ Acceptance criteria for this command:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 7 unless verdict == PASS.
+You MUST NOT proceed to Step 8 unless verdict == PASS.
 
 - Do NOT rationalize skipping this gate ("mostly acceptable", "minor gaps", etc.)
 - Do NOT use your own judgment to override this gate
@@ -227,9 +242,9 @@ LOOP while acceptance verdict != PASS (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
+**HARD STOP: Only proceed to Step 8 after verdict == PASS.**
 
-### 7) Update Documentation (delegate to `documentation-updater`)
+### 8) Update Documentation (delegate to `documentation-updater`)
 
 Invoke `documentation-updater` to update only docs impacted by the refactor (test conventions, how to run tests, fixture
 locations, etc.).

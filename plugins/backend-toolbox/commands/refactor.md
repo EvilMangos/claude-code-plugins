@@ -18,6 +18,7 @@ Do not do a subagent's work in the main agent.
 
 Required subagents:
 
+- codebase-analyzer
 - plan-creator
 - refactorer
 - code-reviewer
@@ -67,7 +68,20 @@ Required subagents:
     - readability, structure, coupling, naming, duplication, error-handling hygiene, performance footguns
 - List explicit assumptions (only if needed). Do not guess repo rules if CLAUDE.md defines them.
 
-### 2) Planning (delegate to `plan-creator`)
+### 2) Codebase analysis (delegate to `codebase-analyzer`)
+
+Before planning, analyze the codebase to understand existing patterns and conventions.
+
+- Invoke `codebase-analyzer` with:
+    - The scope (path or entire codebase).
+    - Request focus on:
+        - Code organization and module boundaries.
+        - Design patterns used in the affected areas.
+        - Naming conventions and style patterns.
+        - Existing abstractions and utilities.
+- The analysis ensures refactoring follows established patterns.
+
+### 3) Planning (delegate to `plan-creator`)
 
 Invoke `plan-creator` to:
 
@@ -87,7 +101,7 @@ Adopt or lightly refine the plan to ensure:
 - each step has a test command
 - no step edits test files
 
-### 3) Refactor (delegate to `refactorer`, tests after each step)
+### 4) Refactor (delegate to `refactorer`, tests after each step)
 
 Pass the plan to `refactorer` and require:
 
@@ -108,7 +122,7 @@ If tests fail:
 - Fix the refactor (or revert) with minimal changes, then re-run tests.
 - Do not proceed until green.
 
-### 4) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
+### 5) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
 
 Invoke `code-reviewer` with:
 
@@ -118,7 +132,7 @@ Invoke `code-reviewer` with:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 5 unless no BLOCKING issues remain.
+You MUST NOT proceed to Step 6 unless no BLOCKING issues remain.
 
 - Do NOT rationalize skipping this gate ("issues are minor", "refactor is good", etc.)
 - Do NOT use your own judgment to override this gate
@@ -135,9 +149,9 @@ LOOP while BLOCKING issues remain (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 5 after no BLOCKING issues remain.**
+**HARD STOP: Only proceed to Step 6 after no BLOCKING issues remain.**
 
-### 5) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
+### 6) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
 
 Acceptance criteria for refactor work:
 
@@ -148,7 +162,7 @@ Acceptance criteria for refactor work:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 6 unless verdict == PASS.
+You MUST NOT proceed to Step 7 unless verdict == PASS.
 
 - Do NOT rationalize skipping this gate ("mostly acceptable", "minor gaps", etc.)
 - Do NOT use your own judgment to override this gate
@@ -165,9 +179,9 @@ LOOP while acceptance verdict != PASS (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 6 after verdict == PASS.**
+**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
 
-### 6) Update Documentation (delegate to `documentation-updater`)
+### 7) Update Documentation (delegate to `documentation-updater`)
 
 Invoke `documentation-updater` to update documentation impacted by the refactor, while respecting:
 

@@ -15,6 +15,7 @@ Do not do a subagent's work in the main agent.
 
 Required subagents:
 
+- codebase-analyzer
 - plan-creator
 - devops-specialist
 - acceptance-reviewer
@@ -43,7 +44,21 @@ This workflow does NOT handle:
 - If anything is ambiguous, list assumptions explicitly.
 - Derive a list of **expected outcomes** (what should change, what should remain stable).
 
-### 2) Planning (delegate to `plan-creator`)
+### 2) Codebase analysis (delegate to `codebase-analyzer`)
+
+Before planning, analyze the codebase to understand existing DevOps patterns and conventions.
+
+- Invoke `codebase-analyzer` with:
+    - The affected infrastructure areas.
+    - Request focus on:
+        - Existing CI/CD pipeline structure.
+        - Containerization patterns (Dockerfile conventions, compose structure).
+        - Infrastructure as Code patterns.
+        - Secret management approaches.
+        - Environment configuration patterns.
+- The analysis ensures changes follow established DevOps conventions.
+
+### 3) Planning (delegate to `plan-creator`)
 
 - Invoke `plan-creator` to:
     - Explore the relevant configuration files and infrastructure code.
@@ -56,7 +71,7 @@ This workflow does NOT handle:
     - **What to add/change/remove** in each file
     - **Verification steps** (how to validate the changes work)
 
-### 3) Apply modifications (delegate to `devops-specialist`)
+### 4) Apply modifications (delegate to `devops-specialist`)
 
 - Pass to `devops-specialist`:
     - The approved plan
@@ -71,10 +86,10 @@ This workflow does NOT handle:
     - Any deviations from the plan and why
     - Suggested verification commands
 
-### 4) Quality & security review (delegate to `devops-specialist`)
+### 5) Quality & security review (delegate to `devops-specialist`)
 
 - Re-invoke `devops-specialist` with explicit review instructions:
-    - Review the changes made in Step 3 for quality and security issues
+    - Review the changes made in Step 4 for quality and security issues
     - Check against DevOps best practices checklists:
         - Docker: base image pinning, non-root user, no secrets in layers, health checks
         - CI/CD: pinned action versions, minimal permissions, proper secret handling
@@ -88,7 +103,7 @@ This workflow does NOT handle:
 
 **⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
 
-You MUST NOT proceed to Step 5 unless verdict == PASS.
+You MUST NOT proceed to Step 6 unless verdict == PASS.
 
 - Do NOT rationalize skipping this gate ("issues are minor", "config is acceptable", etc.)
 - Do NOT use your own judgment to override this gate
@@ -104,9 +119,9 @@ LOOP while verdict != PASS (max 5 iterations):
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 5 after verdict == PASS.**
+**HARD STOP: Only proceed to Step 6 after verdict == PASS.**
 
-### 5) Acceptance review (delegate to `acceptance-reviewer`)
+### 6) Acceptance review (delegate to `acceptance-reviewer`)
 
 - Provide `acceptance-reviewer`:
     - The original request (`$ARGUMENTS` and clarifications)
@@ -130,7 +145,7 @@ You MUST NOT complete the workflow unless verdict == PASS.
 LOOP while verdict != PASS (max 5 iterations):
   IF verdict is PARTIAL or FAIL:
     1. Invoke devops-specialist to address gaps
-    2. IF changes are significant: Re-invoke code-reviewer for quality review (Step 4)
+    2. IF changes are significant: Re-invoke code-reviewer for quality review (Step 5)
     3. Re-invoke acceptance-reviewer
     4. Check verdict again
   END IF
