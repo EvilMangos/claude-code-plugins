@@ -103,7 +103,7 @@ LOOP:
 
   3. Launch the agent for the returned step (run_in_background: true)
 
-  4. Wait for signal using wait-signal
+  4. Wait for signal using `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal`
 
   5. After signal received, proceed to step 1
 
@@ -121,7 +121,7 @@ END LOOP
 
 3. **NEVER use TaskOutput to retrieve background agent results.**
    - Background agents communicate ONLY via MCP signals and reports
-   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
+   - If you need agent results: use `mcp__plugin_backend-toolbox_backend-toolbox-mcp__get-report` tool, NOT TaskOutput
 
 ## Agent Output Instructions
 

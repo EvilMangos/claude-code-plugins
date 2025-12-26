@@ -57,21 +57,21 @@ LOOP:
 
   3. IF step is an array (parallel execution):
      - Launch ALL agents in parallel (single message, multiple Task tool calls)
-     - ALWAYS call wait-signal with array of signalTypes
+     - ALWAYS call `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` with array of signalTypes
 
   4. ELSE (step is a string):
      - Launch the single agent for the returned step
-     - ALWAYS call wait-signal for the signalType
+     - ALWAYS call `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` for the signalType
 
   5. GOTO 1
 END LOOP
 ```
 
-**IMPORTANT: Always call wait-signal after every step**
-- `wait-signal` is what advances the workflow to the next step (increments currentIndex)
-- For background agents: wait-signal polls until the signal appears
-- For foreground agents: the signal is already saved, so wait-signal returns immediately
-- Skipping wait-signal will cause the workflow to get stuck on the same step
+**IMPORTANT: Always call `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` after every step**
+- `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` is what advances the workflow to the next step (increments currentIndex)
+- For background agents: `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` polls until the signal appears
+- For foreground agents: the signal is already saved, so `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` returns immediately
+- Skipping `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` will cause the workflow to get stuck on the same step
 
 **Critical Rules:**
 
@@ -88,7 +88,7 @@ END LOOP
    - Background agents communicate ONLY via MCP signals and reports
    - Using TaskOutput pulls verbose agent output (tool calls, file reads, etc.) into the main context
    - This wastes context window and defeats the purpose of background execution
-   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
+   - If you need agent results: use `mcp__plugin_backend-toolbox_backend-toolbox-mcp__get-report` tool, NOT TaskOutput
    - The signal summary provides enough info for the orchestrator to proceed
 
 ## Agent Output Instructions
