@@ -3,7 +3,7 @@ name: code-reviewer
 description: Use when reviewing code changes, checking architecture alignment, or evaluating code quality. Senior engineer focused on code quality, architecture alignment, performance, and test robustness. Triggers - "review code", "code review", "check quality", "architecture review", "PR review".
 model: opus
 color: red
-tools: Read, Write, Glob, Grep, Task, Skill, MCP
+tools: Read, Glob, Grep, Task, Skill, MCP
 skills: code-review-checklist, design-assessment
 ---
 

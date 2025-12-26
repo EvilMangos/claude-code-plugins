@@ -3,7 +3,7 @@ name: acceptance-reviewer
 description: Use when verifying that implementation satisfies requirements, checking feature completeness, or validating against the original request. Product/acceptance reviewer that checks whether changes satisfy the user's task requirements. Triggers - "does this meet requirements", "acceptance", "validate feature".
 model: opus
 color: magenta
-tools: Read, Write, Glob, Grep, Task, Skill, MCP
+tools: Read, Glob, Grep, Task, Skill, MCP
 skills: acceptance-criteria
 ---
 
