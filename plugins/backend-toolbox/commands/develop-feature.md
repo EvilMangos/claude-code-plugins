@@ -57,17 +57,21 @@ LOOP:
 
   3. IF step is an array (parallel execution):
      - Launch ALL agents in parallel (single message, multiple Task tool calls)
-     - Wait for ALL signals using wait-signal with array of signalTypes
+     - ALWAYS call wait-signal with array of signalTypes
 
   4. ELSE (step is a string):
      - Launch the single agent for the returned step
-     - Wait for signal using wait-signal
+     - ALWAYS call wait-signal for the signalType
 
-  5. After signal received, proceed to step 1
-
-  6. GOTO 1
+  5. GOTO 1
 END LOOP
 ```
+
+**IMPORTANT: Always call wait-signal after every step**
+- `wait-signal` is what advances the workflow to the next step (increments currentIndex)
+- For background agents: wait-signal polls until the signal appears
+- For foreground agents: the signal is already saved, so wait-signal returns immediately
+- Skipping wait-signal will cause the workflow to get stuck on the same step
 
 **Critical Rules:**
 
