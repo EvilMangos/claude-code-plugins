@@ -8,13 +8,16 @@ hooks.
 ```
 plugins/
   backend-toolbox/     # TDD and code quality framework
-  ...
+  telegram-notify/     # Telegram notifications hook
 ```
 
 Each plugin is self-contained with its own:
 
 - `.claude-plugin/plugin.json` - Plugin manifest and configuration
 - `README.md` - Plugin-specific documentation
+
+And optionally:
+
 - `agents/` - Specialized autonomous agents
 - `commands/` - Slash commands for workflows
 - `skills/` - Domain knowledge and best practices
@@ -22,9 +25,10 @@ Each plugin is self-contained with its own:
 
 ## Available Plugins
 
-| Plugin                                      | Description                                         |
-|---------------------------------------------|-----------------------------------------------------|
-| [backend-toolbox](plugins/backend-toolbox/) | TDD workflow, code quality, and backend development |
+| Plugin                                        | Description                                                       |
+|-----------------------------------------------|-------------------------------------------------------------------|
+| [backend-toolbox](plugins/backend-toolbox/)   | TDD workflow, code quality, and backend development               |
+| [telegram-notify](plugins/telegram-notify/)   | Telegram notifications on task finish or user action required     |
 
 ## Installation
 

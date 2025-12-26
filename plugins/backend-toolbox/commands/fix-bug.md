@@ -60,12 +60,7 @@ LOOP:
 
   4. Wait for signal using wait-signal
 
-  5. Handle wait-signal result:
-     - IF signal received (success=true): proceed to step 1
-     - IF timeout (success=false):
-       - Log brief message: "Step {step} timed out after {X}ms"
-       - DO NOT use TaskOutput to retrieve agent output
-       - Proceed to step 1 (query for next step - workflow handles retry logic)
+  5. After signal received, proceed to step 1
 
   6. GOTO 1
 END LOOP
