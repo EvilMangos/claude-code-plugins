@@ -5,7 +5,12 @@
     {
       "name": "backend-toolbox",
       "source": "./plugins/backend-toolbox",
-      "description": "All-in-one workflow commands + subagents + (optional) hooks"
+      "description": "Toolbox that consists of skills, agents and commands for backend development"
+    },
+    {
+      "name": "telegram-notify",
+      "source": "./plugins/telegram-notify",
+      "description": "A hook to send Telegram notifications on task finish or when user action is required"
     }
   ]
 }

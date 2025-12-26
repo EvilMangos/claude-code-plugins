@@ -1,6 +1,6 @@
 # telegram-notify
 
-Telegram notifications for Claude Code session events.
+A hook to send Telegram notifications on task finish or when user action is required
 
 ## Features
 

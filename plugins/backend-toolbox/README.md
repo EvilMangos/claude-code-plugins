@@ -1,6 +1,6 @@
 # Backend Toolbox Plugin
 
-A comprehensive TDD and code quality framework for Claude Code.
+Toolbox that consists of skills, agents and commands for backend development
 
 ## Philosophy
 

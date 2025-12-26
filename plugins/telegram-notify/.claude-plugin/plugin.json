@@ -1,7 +1,7 @@
 {
   "name": "telegram-notify",
   "version": "0.1.0",
-  "description": "Telegram notifications for Claude Code session events",
+  "description": "A hook to send Telegram notifications on task finish or when user action is required",
   "author": {
     "name": "EvilMangos"
   },
