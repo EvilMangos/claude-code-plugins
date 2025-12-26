@@ -79,11 +79,6 @@ A comprehensive TDD and code quality framework for Claude Code.
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
 
-## Hooks (2)
-
-- **telegram-notify (Stop)** - Send Telegram notification when Claude finishes a task
-- **telegram-notify (Notification)** - Send Telegram notification when user action is required
-
 ## Typical Workflow
 
 1. Run `/develop-feature [description]` or `/fix-bug [description]`
@@ -99,19 +94,6 @@ A comprehensive TDD and code quality framework for Claude Code.
 
 Install by copying or symlinking this folder into your Claude Code plugins location, or by referencing it from your
 project's `.claude/plugins.json` (if you use project-scoped plugin config).
-
-## Hooks (optional)
-
-This plugin includes optional safety/quality-of-life hooks under `hooks/`.
-
-- If you do **not** want hooks, exclude the `hooks/` directory when installing, or disable hooks via your Claude
-  Code/plugin configuration (depending on how you load plugins).
-
-## Telegram Notifications
-
-If configured with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables, the plugin can send notifications:
-- When Claude finishes a task (Stop event)
-- When user action is required (Notification event)
 
 ## Compatibility
 

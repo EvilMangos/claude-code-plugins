@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Telegram notification hook for backend-toolbox.
+Telegram notification hook for Claude Code.
 
 Set environment variables:
     export TELEGRAM_BOT_TOKEN="your_bot_token"
