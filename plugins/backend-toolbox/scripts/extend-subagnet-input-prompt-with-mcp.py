@@ -31,6 +31,11 @@ if tool_name != "Task":
     print(json.dumps({}))
     sys.exit(0)
 
+subagent_type = tool_input.get("subagent_type", "")
+if not subagent_type.startswith("backend-toolbox:"):
+    print(json.dumps({}))
+    sys.exit(0)
+
 prompt = tool_input.get("prompt")
 if isinstance(prompt, str) and MCP_BLOCK not in prompt:
     tool_input["prompt"] = f"{MCP_BLOCK}\n\n{prompt}"

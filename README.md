@@ -22,6 +22,7 @@ And optionally:
 - `commands/` - Slash commands for workflows
 - `skills/` - Domain knowledge and best practices
 - `hooks/` - Event-driven automation
+- `scripts/` - Supporting shell scripts
 
 ## Available Plugins
 

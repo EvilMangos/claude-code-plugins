@@ -13,7 +13,7 @@ Toolbox that consists of skills, agents and commands for backend development
 
 - CLAUDE.md for project-specific rules (for steward/curator agents)
 
-## Agents (14)
+## Agents (15)
 
 ### Core Workflow
 
@@ -21,6 +21,7 @@ Toolbox that consists of skills, agents and commands for backend development
 |-----------------------|-----------------------------------|---------|
 | plan-creator          | Step-by-step implementation plans | magenta |
 | business-analyst      | Requirements clarification        | cyan    |
+| codebase-analyzer     | Pattern & convention discovery    | cyan    |
 | automation-qa         | Test design, RED stage            | blue    |
 | tests-reviewer        | Test quality gate                 | cyan    |
 | backend-developer     | Implementation, GREEN stage       | green   |
@@ -79,6 +80,14 @@ Toolbox that consists of skills, agents and commands for backend development
 - **backend-performance** - Database optimization, caching patterns
 - **algorithm-efficiency** - Complexity analysis, data structures
 
+## Hooks (1)
+
+| Hook       | Event      | Matcher | Purpose                                            |
+|------------|------------|---------|---------------------------------------------------|
+| MCP inject | PreToolUse | Task    | Injects MCP I/O contract into backend-toolbox subagent prompts |
+
+The hook ensures all backend-toolbox subagents use MCP tools (`save-report`, `save-signal`, `get-report`) for workflow state persistence instead of local files.
+
 ## Typical Workflow
 
 1. Run `/develop-feature [description]` or `/fix-bug [description]`
@@ -100,6 +109,3 @@ project's `.claude/plugins.json` (if you use project-scoped plugin config).
 This plugin ships a `.claude-plugin/plugin.json` intended for publishing/packaging. If your Claude Code runtime expects
 a different manifest schema, adjust it to match your target environment.
 
-## Releases
-
-See `CHANGELOG.md` for version history.
