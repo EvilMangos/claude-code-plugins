@@ -72,11 +72,11 @@ LOOP:
 
   3. IF step is an array (parallel execution):
      - Launch ALL agents in parallel (single message, multiple Task tool calls)
-     - Wait for ALL signals using `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal` with array of signalTypes
+     - Wait for ALL signals using wait-signal with array of signalTypes
 
   4. ELSE (step is a string):
      - Launch the single agent for the returned step
-     - Wait for signal using `mcp__plugin_backend-toolbox_backend-toolbox-mcp__wait-signal`
+     - Wait for signal using wait-signal
 
   5. After signal received, proceed to step 1
 
@@ -99,7 +99,7 @@ END LOOP
    - Background agents communicate ONLY via MCP signals and reports
    - Using TaskOutput pulls verbose agent output (tool calls, file reads, etc.) into the main context
    - This wastes context window and defeats the purpose of background execution
-   - If you need agent results: use `mcp__plugin_backend-toolbox_backend-toolbox-mcp__get-report` tool, NOT TaskOutput
+   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
    - The signal summary provides enough info for the orchestrator to proceed
 
 ## Agent Output Instructions
