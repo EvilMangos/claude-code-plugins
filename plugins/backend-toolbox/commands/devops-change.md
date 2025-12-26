@@ -1,8 +1,10 @@
 ---
 description: Make DevOps changes (CI/CD, Docker, K8s, Terraform) with planning and review workflow
 argument-hint: [ change-description ]
-allowed-tools: Read, Edit, Write, Grep, Glob, Task
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, Skill, MCP
 ---
+
+# DevOps Change Workflow (Background Agent Orchestration)
 
 You are orchestrating a **DevOps change workflow** for this repository.
 
@@ -10,15 +12,33 @@ The user request is:
 
 > $ARGUMENTS
 
-You MUST follow this workflow strictly and delegate to the named subagents at each step.
-Do not do a subagent's work in the main agent.
+## Architecture: Workflow
 
-Required subagents:
+This workflow drives all decisions:
 
-- codebase-analyzer
-- plan-creator
-- devops-specialist
-- acceptance-reviewer
+1. **Orchestrator initializes task** with metadata
+2. **The workflow determines the next step** based on current state
+3. **Orchestrator executes the step** returned by the workflow
+4. **Agent saves report and signal**
+5. **Orchestrator queries for next step** - repeat until complete
+
+**The orchestrator NEVER decides which step to run next. The workflow makes all routing decisions.**
+
+## Task ID Generation
+
+Before starting, generate a unique task ID for this workflow:
+
+```
+TASK_ID = devops-change-{slug}-{timestamp}
+```
+
+Where:
+- `slug`: URL-safe version of change description (lowercase, hyphens, max 30 chars)
+  - Example: "Add GitHub Actions CI" → `add-github-actions-ci`
+  - Example: "Update Docker build for ARM" → `update-docker-build-for-arm`
+- `timestamp`: Unix timestamp in seconds (e.g., `1702834567`)
+
+Example: `devops-change-add-github-actions-ci-1702834567`
 
 ## Scope
 
@@ -35,124 +55,321 @@ This workflow does NOT handle:
 - Test files (use `/develop-feature`)
 - Database migrations (use `/develop-feature`)
 
-## Workflow
+## Orchestrator Loop
 
-### 1) Clarify & high-level understanding (main agent)
-
-- Restate the change request in your own words.
-- Identify affected configuration files and infrastructure components.
-- If anything is ambiguous, list assumptions explicitly.
-- Derive a list of **expected outcomes** (what should change, what should remain stable).
-
-### 2) Codebase analysis (delegate to `codebase-analyzer`)
-
-Before planning, analyze the codebase to understand existing DevOps patterns and conventions.
-
-- Invoke `codebase-analyzer` with:
-    - The affected infrastructure areas.
-    - Request focus on:
-        - Existing CI/CD pipeline structure.
-        - Containerization patterns (Dockerfile conventions, compose structure).
-        - Infrastructure as Code patterns.
-        - Secret management approaches.
-        - Environment configuration patterns.
-- The analysis ensures changes follow established DevOps conventions.
-
-### 3) Planning (delegate to `plan-creator`)
-
-- Invoke `plan-creator` to:
-    - Explore the relevant configuration files and infrastructure code.
-    - Produce a step-by-step implementation plan.
-    - Map each change to concrete files and locations.
-    - Highlight risks, dependencies, and open questions.
-- Adopt or refine the plan before proceeding.
-- Ensure the plan covers:
-    - **What files to modify** (Dockerfiles, workflows, manifests, etc.)
-    - **What to add/change/remove** in each file
-    - **Verification steps** (how to validate the changes work)
-
-### 4) Apply modifications (delegate to `devops-specialist`)
-
-- Pass to `devops-specialist`:
-    - The approved plan
-    - The expected outcomes list
-    - The affected file paths
-- The `devops-specialist` must:
-    - Implement changes following the plan
-    - Apply DevOps best practices (security, reproducibility, minimal changes)
-    - Provide verification commands to test changes locally
-- After implementation, summarize:
-    - Files changed and what was modified
-    - Any deviations from the plan and why
-    - Suggested verification commands
-
-### 5) Quality & security review (delegate to `devops-specialist`)
-
-- Re-invoke `devops-specialist` with explicit review instructions:
-    - Review the changes made in Step 4 for quality and security issues
-    - Check against DevOps best practices checklists:
-        - Docker: base image pinning, non-root user, no secrets in layers, health checks
-        - CI/CD: pinned action versions, minimal permissions, proper secret handling
-        - Kubernetes: resource limits, security context, probes configured
-        - Terraform: no hardcoded secrets, proper state handling, consistent naming
-    - Identify any issues or improvements needed
-- The review must return a verdict: **PASS / PARTIAL / FAIL**
-    - PASS: Changes meet quality and security standards
-    - PARTIAL: Minor issues that should be addressed
-    - FAIL: Critical issues that must be fixed
-
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
-
-You MUST NOT proceed to Step 6 unless verdict == PASS.
-
-- Do NOT rationalize skipping this gate ("issues are minor", "config is acceptable", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
+After initialization, the orchestrator runs this loop:
 
 ```
-LOOP while verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL:
-    1. Invoke devops-specialist to fix the identified issues
-    2. Re-invoke code-reviewer for quality review
-    3. Check verdict again
-  END IF
+LOOP:
+  1. Query for next step:
+     - taskId: {TASK_ID}
+     - Returns: { success, taskId, stepNumber, totalSteps, step?, complete? }
+     - step can be a string ("plan") or array for parallel (["performance", "security"])
+
+  2. IF complete == true:
+     - Execute finalization
+     - EXIT LOOP
+
+  3. IF step is an array (parallel execution):
+     - Launch ALL agents in parallel (single message, multiple Task tool calls)
+     - Wait for ALL signals using wait-signal with array of signalTypes
+
+  4. ELSE (step is a string):
+     - Launch the single agent for the returned step
+     - Wait for signal using wait-signal
+
+  5. Handle wait-signal result:
+     - IF signal received (success=true): proceed to step 1
+     - IF timeout (success=false):
+       - Log brief message: "Step {step} timed out after {X}ms"
+       - DO NOT use TaskOutput to retrieve agent output
+       - Proceed to step 1 (query for next step - workflow handles retry logic)
+
+  6. GOTO 1
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 6 after verdict == PASS.**
+**Critical Rules:**
 
-### 6) Acceptance review (delegate to `acceptance-reviewer`)
+1. **The orchestrator does NOT interpret signal status to decide next step. It always queries the workflow.**
 
-- Provide `acceptance-reviewer`:
-    - The original request (`$ARGUMENTS` and clarifications)
-    - The plan from `plan-creator`
-    - A summary of changes made by `devops-specialist`
-    - The quality review verdict and any notes
-- Have the subagent:
-    - Check whether all requirements from the original request are met
-    - Verify expected outcomes are achieved
-    - Produce a verdict: **PASS / PARTIAL / FAIL** with a requirements checklist
+2. **Always execute the step returned, even if that step was already executed before.**
+   - The workflow may return the same step multiple times (e.g., `implementation` after a failed `acceptance`)
+   - This is intentional: the workflow handles retry logic and gate failures internally
+   - Do NOT skip a step because "it was already done"
+   - Do NOT question why a repeated step is being requested
+   - Simply execute whatever step is returned, every time
 
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+3. **NEVER use TaskOutput to retrieve background agent results.**
+   - Background agents communicate ONLY via MCP signals and reports
+   - Using TaskOutput pulls verbose agent output (tool calls, file reads, etc.) into the main context
+   - This wastes context window and defeats the purpose of background execution
+   - If wait-signal times out: treat it as a failed step and query for next step
+   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
+   - The signal summary provides enough info for the orchestrator to proceed
 
-You MUST NOT complete the workflow unless verdict == PASS.
+## Agent Output Instructions
 
-- Do NOT rationalize skipping this gate ("mostly meets requirements", "good enough", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
+**Always include these instructions in every agent prompt:**
+```
+## Workflow Context
+TASK_ID: {TASK_ID}
+
+## Output
+1. Save your FULL report:
+   - taskId: {TASK_ID}
+   - reportType: {report-type}  (e.g., "requirements", "plan", "implementation")
+   - content: <your full report content>
+
+2. Save your signal:
+   - taskId: {TASK_ID}
+   - signalType: {report-type}  (same as reportType)
+   - content:
+     - status: "passed" or "failed"
+     - summary: {one sentence describing outcome}
+
+   Status mapping:
+   - "passed" = completed successfully, gate passed, no blocking issues
+   - "failed" = needs iteration, has blocking issues, or error occurred
+     (include details in summary: "PARTIAL: ...", "BLOCKING: ...", "ERROR: ...")
+```
+
+---
+
+## Step Definitions
+
+The following steps can be returned. Execute the corresponding agent when the step is returned.
+
+### initialize
+
+Create task metadata:
+- taskId: {TASK_ID}
+- execution steps derive from Steps below
+
+### Step 1: requirements (business-analyst)
 
 ```
-LOOP while verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL:
-    1. Invoke devops-specialist to address gaps
-    2. IF changes are significant: Re-invoke code-reviewer for quality review (Step 5)
-    3. Re-invoke acceptance-reviewer
-    4. Check verdict again
-  END IF
-END LOOP
+subagent_type: business-analyst
+run_in_background: false
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Analyze the DevOps change request and create specific requirements:
+  - Restate the change in your own words
+  - Identify affected configuration files and infrastructure components
+  - List ALL ambiguous points, unclear terms, or missing details
+  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
+  - Review answers; if unclear or introduce new ambiguities, ask follow-ups
+  - Derive expected outcomes (OUTCOME-1, OUTCOME-2, etc.)
+
+  ## Change Request
+  $ARGUMENTS
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "requirements"
+     - content: Include Change Understanding, Affected Components, Clarifications, Expected Outcomes (OUTCOME-1, OUTCOME-2, etc.)
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "requirements"
+     - content: { status: "passed", summary: "Requirements analysis complete with N outcomes" }
 ```
 
-**HARD STOP: Workflow completes only after verdict == PASS.**
+### Step 2: codebase-analysis (codebase-analyzer)
+
+```
+subagent_type: codebase-analyzer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Analyze the codebase to identify existing DevOps practices, patterns, and conventions.
+  This analysis will guide implementation to ensure consistency.
+
+  Focus on:
+  - Existing CI/CD pipeline structure
+  - Containerization patterns (Dockerfile conventions, compose structure)
+  - Infrastructure as Code patterns
+  - Secret management approaches
+  - Environment configuration patterns
+  - Deployment conventions
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements" (to understand what areas are relevant)
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "codebase-analysis"
+     - content: <your codebase analysis report>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "codebase-analysis"
+     - content: { status: "passed", summary: "Codebase analysis complete" }
+```
+
+### Step 3: plan (plan-creator)
+
+```
+subagent_type: plan-creator
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Create implementation plan for the DevOps change.
+  Use the codebase analysis to ensure the plan follows existing patterns.
+
+  The plan must cover:
+  - What files to modify (Dockerfiles, workflows, manifests, etc.)
+  - What to add/change/remove in each file
+  - Verification steps (how to validate the changes work)
+  - Risk assessment and dependencies
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "plan"
+     - content: <your implementation plan>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "plan"
+     - content: { status: "passed", summary: "Implementation plan created" }
+```
+
+### Step 4: implementation (devops-specialist)
+
+```
+subagent_type: devops-specialist
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Implement the DevOps changes following the plan.
+  - Apply DevOps best practices (security, reproducibility, minimal changes)
+  - Follow patterns identified in codebase-analysis
+  - Provide verification commands to test changes locally
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  Required:
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  Optional (retrieve if available - contains feedback requiring fixes):
+  - reportType: "code-review"
+  - reportType: "acceptance"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "implementation"
+     - content: Include files changed, what was modified, verification commands
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "implementation"
+     - content: { status: "passed", summary: "Implementation complete" }
+```
+
+### Step 5: code-review (devops-specialist as reviewer)
+
+```
+subagent_type: devops-specialist
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Review the DevOps changes for quality and security issues.
+  Check against DevOps best practices checklists:
+  - Docker: base image pinning, non-root user, no secrets in layers, health checks
+  - CI/CD: pinned action versions, minimal permissions, proper secret handling
+  - Kubernetes: resource limits, security context, probes configured
+  - Terraform: no hardcoded secrets, proper state handling, consistent naming
+
+  Apply your loaded skill (`devops-infrastructure-security`).
+  Classify findings as BLOCKING or NON-BLOCKING.
+
+  Return verdict in signal:
+  - status: "passed" = no blocking issues
+  - status: "failed" = blocking issues found (include "BLOCKING: N issues" in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "implementation"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "code-review"
+     - content: <your code review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "code-review"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 6: acceptance (acceptance-reviewer)
+
+```
+subagent_type: acceptance-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Verify all expected outcomes are met:
+  - Check each OUTCOME-N against implementation
+  - Verify the original change request is satisfied
+  - Identify any functional gaps
+
+  Return verdict in signal:
+  - status: "passed" = all outcomes met
+  - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "implementation"
+  - reportType: "code-review"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "acceptance"
+     - content: <your acceptance review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "acceptance"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### finalize
+
+The workflow is complete. Generate a final summary by:
+- Retrieving full reports using the TASK_ID
+- Update task metadata status to "completed"
+
+---
 
 ## Non-negotiable constraints
 
@@ -160,4 +377,3 @@ END LOOP
 - Follow security best practices: no hardcoded secrets, minimal permissions, pinned versions.
 - Prefer minimal changes that achieve the goal without unnecessary refactoring.
 - Provide verification commands for every change so users can test locally.
-- Do not proceed to acceptance review until quality review passes.

@@ -1,8 +1,10 @@
 ---
 description: Fix a bug using a structured workflow with reproduction, root cause analysis, TDD, implementation, and code review.
 argument-hint: <bug-description>
-allowed-tools: Read, Edit, Write, Grep, Glob, Task, SlashCommand
+allowed-tools: Read, Edit, Write, Grep, Glob, Task, Skill, MCP
 ---
+
+# Bug Fix Workflow (Background Agent Orchestration)
 
 You are orchestrating a multistep **bug-fixing** workflow for this repository.
 
@@ -10,237 +12,505 @@ The bug report is:
 
 > $ARGUMENTS
 
-You MUST follow this workflow strictly and delegate to the named subagents at each step.
-Do not do a subagent's work in the main agent.
+## Architecture: Workflow
 
-Required subagents:
+This workflow drives all decisions:
 
-- plan-creator
-- automation-qa
-- tests-reviewer
-- backend-developer
-- acceptance-reviewer
-- refactorer
-- code-reviewer
+1. **Orchestrator initializes task** with metadata
+2. **The workflow determines the next step** based on current state
+3. **Orchestrator executes the step** returned by the workflow
+4. **Agent saves report and signal**
+5. **Orchestrator queries for next step** - repeat until complete
 
-## Workflow
+**The orchestrator NEVER decides which step to run next. The workflow makes all routing decisions.**
 
-### 1) Clarify & High-level understanding (main agent)
+## Task ID Generation
 
-- Restate the bug in your own words.
-- Identify the expected behavior vs actual behavior.
-- Identify affected domains/packages/components.
-- If anything is ambiguous, ask clarifying questions before proceeding.
-- List assumptions explicitly.
-
-### 2) Verify bug / Attempt to reproduce (main agent)
-
-- Attempt to reproduce the bug:
-    - If there are existing tests that should catch this bug, run them.
-    - If no tests exist, try to trigger the bug manually (check logs, trace code paths).
-- Document reproduction steps and evidence.
-- If the bug cannot be reproduced:
-    - Ask the user for more details (environment, exact steps, logs).
-    - Do not proceed until the bug is confirmed or a reasonable hypothesis exists.
-
-### 3) Identify bug / Root cause analysis (main agent)
-
-- Explore the codebase to locate the root cause:
-    - Trace the code path from the symptom to the source.
-    - Check recent changes if relevant (git log, git blame).
-    - Identify the specific file(s), function(s), and line(s) causing the issue.
-- Document:
-    - Root cause explanation.
-    - Why the bug occurs (missing check, wrong logic, race condition, etc.).
-    - Confidence level (certain, likely, hypothesis).
-
-### 4) Fix planning (delegate to `plan-creator`)
-
-- Invoke `plan-creator` with:
-    - The bug description and root cause analysis.
-    - The affected files and functions.
-- The `plan-creator` should produce:
-    - A step-by-step fix plan.
-    - Risk assessment (could this fix break other things?).
-    - Files to modify and how.
-- Adopt or refine the plan before proceeding.
-
-### 5) TDD — Test design & RED stage (delegate to `automation-qa`)
-
-- Before changing any implementation, invoke `automation-qa` with:
-    - The bug description and root cause analysis.
-    - The affected files and functions.
-- The `automation-qa` agent will:
-    - Evaluate whether a regression test is warranted for this bug (using its `test-best-practices` skill).
-    - If a test is warranted: design and write a test that reproduces the bug.
-    - If no test is warranted (trivial fix, no behavioral change worth testing): document why and proceed without a test.
-- If a test was created:
-    - The test should **fail** with the current buggy code (RED).
-    - Run tests to confirm the test **fails** (RED).
-    - If the test passes unexpectedly:
-        - The bug may not be where you think. Re-analyze root cause.
-        - Or strengthen the test to properly catch the bug.
-
-### 6) Test quality review gate (conditional, delegate to `tests-reviewer`)
-
-**SKIP if `automation-qa` determined no test was warranted in Step 5.**
-
-- Invoke `tests-reviewer` to review:
-    - Does the test actually catch the reported bug?
-    - Is the test assertion specific enough?
-    - Will the test remain valuable after the fix (regression prevention)?
-- Verdict: **PASS / PARTIAL / FAIL**
-
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
-
-You MUST NOT proceed to Step 7 unless verdict == PASS.
-
-- Do NOT rationalize skipping this gate ("tests are adequate", "core tests pass", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
+Before starting, generate a unique task ID for this workflow:
 
 ```
-LOOP while verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL:
-    1. Invoke automation-qa to improve the test based on feedback
-    2. Re-run RED verification (confirm test still fails)
-    3. Re-invoke tests-reviewer
-    4. Check verdict again
-  END IF
+TASK_ID = fix-bug-{slug}-{timestamp}
+```
+
+Where:
+- `slug`: URL-safe version of bug description (lowercase, hyphens, max 30 chars)
+  - Example: "Login fails with special chars" → `login-fails-special-chars`
+  - Example: "Memory leak in cache" → `memory-leak-in-cache`
+- `timestamp`: Unix timestamp in seconds (e.g., `1702834567`)
+
+Example: `fix-bug-login-fails-special-chars-1702834567`
+
+## Orchestrator Loop
+
+After initialization, the orchestrator runs this loop:
+
+```
+LOOP:
+  1. Query for next step:
+     - taskId: {TASK_ID}
+     - Returns: { success, taskId, stepNumber, totalSteps, step?, complete? }
+
+  2. IF complete == true:
+     - Execute finalization
+     - EXIT LOOP
+
+  3. Launch the agent for the returned step
+     - For "requirements" step: run_in_background: false (needs user interaction)
+     - For all other steps: run_in_background: true
+
+  4. Wait for signal using wait-signal
+
+  5. Handle wait-signal result:
+     - IF signal received (success=true): proceed to step 1
+     - IF timeout (success=false):
+       - Log brief message: "Step {step} timed out after {X}ms"
+       - DO NOT use TaskOutput to retrieve agent output
+       - Proceed to step 1 (query for next step - workflow handles retry logic)
+
+  6. GOTO 1
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
+**Critical Rules:**
 
-### 7) Apply fix / GREEN stage (delegate to `backend-developer`)
+1. **The orchestrator does NOT interpret signal status to decide next step. It always queries the workflow.**
 
-- Pass to `backend-developer`:
-    - The fix plan from `plan-creator`.
-    - The root cause analysis.
-    - The failing test (if created).
-- The `backend-developer` must:
-    - Implement the fix in small, incremental steps.
-    - After each step, run tests with the smallest relevant scope.
-- You MUST run tests after each step.
-- If the bug-catching test was created, it should now **pass** (GREEN).
-- If tests fail unexpectedly:
-    - Analyze and fix, or loop with `automation-qa` if tests need adjustment.
+2. **Always execute the step returned, even if that step was already executed before.**
+   - The workflow may return the same step multiple times (e.g., `tests-design` after a failed `tests-review`)
+   - This is intentional: the workflow handles retry logic and gate failures internally
+   - Do NOT skip a step because "it was already done"
+   - Simply execute whatever step is returned, every time
 
-### 8) Broader testing & stabilization (delegate to `automation-qa`)
+3. **NEVER use TaskOutput to retrieve background agent results.**
+   - Background agents communicate ONLY via MCP signals and reports
+   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
 
-- Re-invoke `automation-qa` to:
-    - Determine if additional regression tests are needed.
-    - Specify a broader test scope (package-level or module-level).
-    - Return a stabilization verdict: **PASS / PARTIAL / FAIL**
-- You MUST run tests with the broader scope.
+## Agent Output Instructions
 
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
-
-You MUST NOT proceed to Step 9 unless verdict == PASS.
-
-- Do NOT rationalize skipping this gate ("will address later", "minor issues", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
-
+**Always include these instructions in every agent prompt:**
 ```
-LOOP while verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL:
-    1. Invoke automation-qa to create/update tests for issues (RED)
-    2. Invoke backend-developer to fix (GREEN)
-    3. Re-run broader tests
-    4. Re-invoke automation-qa for stabilization verdict
-    5. Check verdict again
-  END IF
-END LOOP
+## Workflow Context
+TASK_ID: {TASK_ID}
+
+## Output
+1. Save your FULL report:
+   - taskId: {TASK_ID}
+   - reportType: {report-type}
+   - content: <your full report content>
+
+2. Save your signal:
+   - taskId: {TASK_ID}
+   - signalType: {report-type}
+   - content:
+     - status: "passed" or "failed"
+     - summary: {one sentence describing outcome}
+
+   Status mapping:
+   - "passed" = completed successfully, gate passed, no blocking issues
+   - "failed" = needs iteration, has blocking issues, or error occurred
+     (include details in summary: "PARTIAL: ...", "BLOCKING: ...", "ERROR: ...")
 ```
 
-**HARD STOP: Only proceed to Step 9 after verdict == PASS.**
+---
 
-### 9) Acceptance test (delegate to `acceptance-reviewer`)
+## Step Definitions
 
-- Provide `acceptance-reviewer`:
-    - Original bug report (`$ARGUMENTS`).
-    - Root cause analysis.
-    - Summary of fix and tests.
-    - Evidence from Step 8 (test results, stabilization verdict).
-- The `acceptance-reviewer` should:
-    - Verify the original bug is fixed.
-    - Check no new issues were introduced.
-    - Produce verdict: **PASS / PARTIAL / FAIL**
+### initialize
 
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+Create task metadata:
+- taskId: {TASK_ID}
+- execution steps derive from Steps below
 
-You MUST NOT proceed to Step 10 unless verdict == PASS.
-
-- Do NOT rationalize skipping this gate ("bug is fixed", "acceptance mostly met", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
+### Step 1: requirements (business-analyst)
 
 ```
-LOOP while verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL (gaps identified):
-    1. Invoke automation-qa to add tests for gaps (RED)
-    2. Invoke backend-developer to fix gaps (GREEN)
-    3. Re-invoke acceptance-reviewer
-    4. Check verdict again
-  END IF
-END LOOP
+subagent_type: business-analyst
+run_in_background: false
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Analyze the bug report and clarify requirements:
+  - Restate the bug in your own words
+  - Identify the expected behavior vs actual behavior
+  - Identify affected domains/packages/components
+  - List ALL ambiguous points or missing details
+  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
+  - Document assumptions explicitly
+
+  ## Bug Report
+  $ARGUMENTS
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "requirements"
+     - content: Include Bug Understanding, Expected vs Actual, Affected Components, Clarifications, Assumptions
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "requirements"
+     - content: { status: "passed", summary: "Bug requirements clarified" }
 ```
 
-**HARD STOP: Only proceed to Step 10 after verdict == PASS.**
-
-### 10) Quick code review (delegate to `code-reviewer`)
-
-- Invoke `code-reviewer` to evaluate:
-    - Fix quality (is this the right solution?).
-    - Adherence to project conventions.
-    - No unnecessary changes beyond the fix.
-    - Test quality (if tests were added).
-- Findings classified as:
-    - **BLOCKING** (must fix)
-    - **NON-BLOCKING** (nice-to-have)
-
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
-
-You MUST NOT proceed to Step 11 unless no BLOCKING issues remain.
-
-- Do NOT rationalize skipping this gate ("issues are minor", "code is acceptable", etc.)
-- Do NOT use your own judgment to override this gate
-- BLOCKING issues mean the loop MUST execute - no exceptions
+### Step 2: codebase-analysis (codebase-analyzer)
 
 ```
-LOOP while BLOCKING issues remain (max 5 iterations):
-  IF BLOCKING issues exist:
-    1. FOR EACH functional BLOCKING issue:
-       - Invoke automation-qa to add/update tests (RED)
-       - Invoke backend-developer to fix (GREEN)
-    2. FOR EACH structural/style BLOCKING issue:
-       - Invoke refactorer for cleanup
-       - Run tests
-    3. Re-invoke code-reviewer
-    4. Check for remaining BLOCKING issues
-  END IF
-END LOOP
+subagent_type: codebase-analyzer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Analyze the codebase to:
+  1. Attempt to reproduce the bug (run existing tests, trace code paths)
+  2. Perform root cause analysis:
+     - Trace the code path from symptom to source
+     - Check recent changes if relevant (git log, git blame)
+     - Identify specific file(s), function(s), and line(s) causing the issue
+
+  Document:
+  - Reproduction steps and evidence
+  - Root cause explanation
+  - Why the bug occurs (missing check, wrong logic, race condition, etc.)
+  - Confidence level (certain, likely, hypothesis)
+
+  If bug cannot be reproduced, signal "failed" with details requesting more info.
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "codebase-analysis"
+     - content: <reproduction steps, root cause analysis, affected files>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "codebase-analysis"
+     - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-**HARD STOP: Only proceed to Step 11 after no BLOCKING issues remain.**
+### Step 3: plan (plan-creator)
 
-### 11) Refactoring (conditional, delegate to `refactorer`)
+```
+subagent_type: plan-creator
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
 
-**ONLY if Step 10 identified structural issues or the fix introduced code smells.**
+  ## Task
+  Create a fix plan based on the root cause analysis:
+  - Step-by-step fix plan
+  - Risk assessment (could this fix break other things?)
+  - Files to modify and how
+  - Test strategy (what tests to add/modify)
 
-- Invoke `refactorer` for behavior-preserving cleanup:
-    - Improve structure, naming, clarity.
-    - Keep external behavior identical.
-- After each refactor step:
-    - Run tests.
-    - If tests fail, fix or revert.
-- Do not expand scope beyond what's needed for the bug fix.
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "plan"
+     - content: <your fix plan>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "plan"
+     - content: { status: "passed", summary: "Fix plan created" }
+```
+
+### Step 4: tests-design (automation-qa)
+
+```
+subagent_type: automation-qa
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Design and write tests for the bug fix (RED stage).
+  - Evaluate whether a regression test is warranted (use test-best-practices skill)
+  - If warranted: write a test that reproduces the bug (should FAIL with current code)
+  - If not warranted: document why and proceed without a test
+
+  If a test was created, run it to confirm it FAILS (RED).
+  If the test passes unexpectedly, signal "failed" - the bug may not be where we think.
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  Required:
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  Optional (contains feedback requiring test updates):
+  - reportType: "tests-review"
+  - reportType: "stabilization"
+  - reportType: "acceptance"
+  - reportType: "code-review"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "tests-design"
+     - content: <test design report, whether test was created, RED verification>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "tests-design"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 5: tests-review (tests-reviewer)
+
+```
+subagent_type: tests-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Review the bug-catching test (if created):
+  - Does the test actually catch the reported bug?
+  - Is the test assertion specific enough?
+  - Will the test remain valuable after the fix (regression prevention)?
+
+  If no test was created (automation-qa determined not warranted), verify the reasoning.
+
+  Return verdict in signal:
+  - status: "passed" = test quality is acceptable (or no-test decision was valid)
+  - status: "failed" = test needs improvement (include "PARTIAL: ..." in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "tests-design"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "tests-review"
+     - content: <your test review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "tests-review"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 6: implementation (backend-developer)
+
+```
+subagent_type: backend-developer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Implement the bug fix (GREEN stage):
+  - Follow the fix plan
+  - Work in small, incremental steps
+  - After each step, run tests with the smallest relevant scope
+  - The bug-catching test (if created) should now PASS (GREEN)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  Required:
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "tests-design"
+  Optional (contains feedback requiring fixes):
+  - reportType: "tests-review"
+  - reportType: "stabilization"
+  - reportType: "acceptance"
+  - reportType: "code-review"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "implementation"
+     - content: <implementation report, what changed, test results>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "implementation"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 7: stabilization (automation-qa)
+
+```
+subagent_type: automation-qa
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Run broader test scope and assess stability:
+  - Determine if additional regression tests are needed
+  - Run package-level or broader tests
+  - Identify any regressions introduced
+
+  Return verdict in signal:
+  - status: "passed" = stable, no regressions
+  - status: "failed" = issues found (include "PARTIAL: ..." in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "implementation"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "stabilization"
+     - content: <stabilization report with broader test results>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "stabilization"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 8: acceptance (acceptance-reviewer)
+
+```
+subagent_type: acceptance-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Verify the bug is fixed:
+  - Check original bug is resolved
+  - Verify no new issues were introduced
+  - Confirm fix matches expected behavior from requirements
+
+  Return verdict in signal:
+  - status: "passed" = bug fixed, acceptance criteria met
+  - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "implementation"
+  - reportType: "stabilization"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "acceptance"
+     - content: <acceptance review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "acceptance"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 9: code-review (code-reviewer)
+
+```
+subagent_type: code-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Review the bug fix for quality:
+  - Fix quality (is this the right solution?)
+  - Adherence to project conventions
+  - No unnecessary changes beyond the fix
+  - Test quality (if tests were added)
+
+  Apply your loaded skills (`code-review-checklist`, `design-assessment`).
+  Classify findings as BLOCKING or NON-BLOCKING.
+  For BLOCKING issues, specify route:
+  - "ROUTE: functional" → needs tests + implementation fix
+  - "ROUTE: structural" → needs refactoring
+
+  Return verdict in signal:
+  - status: "passed" = no blocking issues
+  - status: "failed" = blocking issues found (include "BLOCKING: N functional, M structural" in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "implementation"
+  - reportType: "stabilization"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "code-review"
+     - content: <code review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "code-review"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 10: refactoring (refactorer)
+
+```
+subagent_type: refactorer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Perform behavior-preserving cleanup if code-review identified structural issues.
+  - Improve structure, naming, clarity
+  - Keep external behavior identical
+  - Run tests after each refactor step
+
+  Do not expand scope beyond what's needed for the bug fix.
+
+  Apply your loaded skills (`refactoring-patterns`, `design-assessment`).
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
+  - reportType: "implementation"
+  - reportType: "code-review"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "refactoring"
+     - content: <refactoring report>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "refactoring"
+     - content: { status: "passed", summary: "Refactoring complete, tests passing" }
+```
+
+### finalize
+
+The workflow is complete. Generate a final summary by:
+- Retrieving full reports using the TASK_ID
+- Update task metadata status to "completed"
+
+---
 
 ## Non-negotiable constraints
 
 - Reproduce or verify the bug before attempting to fix it.
-- Always invoke `automation-qa` to evaluate whether a regression test is needed (let the agent decide based on its `test-best-practices` skill).
+- Always invoke automation-qa to evaluate whether a regression test is needed.
 - After every implementation or refactor step, run tests with the smallest relevant scope.
 - Do not introduce changes beyond what's needed to fix the reported bug.
 - Prefer narrow test scopes unless broader runs are required by the workflow.

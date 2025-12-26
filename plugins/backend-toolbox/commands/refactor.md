@@ -1,8 +1,10 @@
 ---
 description: Refactor code in a given path (file or folder) with tests after each step; never modify test files. If no path is provided, scope is the entire codebase.
 argument-hint: [ path ]
-allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), SlashCommand, Task
+allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), Task, Skill, MCP
 ---
+
+# Refactor Workflow (Background Agent Orchestration)
 
 You are orchestrating a **refactor-only** workflow for this repository.
 
@@ -10,185 +12,388 @@ The user request is:
 
 > $ARGUMENTS
 
-The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase
-**.
+The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase**.
 
-You MUST follow the workflow strictly and delegate to the named subagents at each step.
-Do not do a subagent's work in the main agent.
+## Architecture: Workflow
 
-Required subagents:
+This workflow drives all decisions:
 
-- codebase-analyzer
-- plan-creator
-- refactorer
-- code-reviewer
-- acceptance-reviewer
-- documentation-updater
+1. **Orchestrator initializes task** with metadata
+2. **The workflow determines the next step** based on current state
+3. **Orchestrator executes the step** returned by the workflow
+4. **Agent saves report and signal**
+5. **Orchestrator queries for next step** - repeat until complete
+
+**The orchestrator NEVER decides which step to run next. The workflow makes all routing decisions.**
+
+## Task ID Generation
+
+Before starting, generate a unique task ID for this workflow:
+
+```
+TASK_ID = refactor-{slug}-{timestamp}
+```
+
+Where:
+- `slug`: URL-safe version of path or "codebase" (lowercase, hyphens, max 30 chars)
+  - Example: "src/utils/helpers.ts" → `src-utils-helpers`
+  - Example: (no path) → `codebase`
+- `timestamp`: Unix timestamp in seconds (e.g., `1702834567`)
+
+Example: `refactor-src-utils-helpers-1702834567`
 
 ## Hard constraints (non-negotiable)
 
 1) **Do not modify test files** (read-only is fine).
-    - You must NOT edit, create, delete, rename, or move any test file.
-    - If a change would require updating tests, STOP and report that tests must be handled via the separate tests
-      command.
+   - You must NOT edit, create, delete, rename, or move any test file.
+   - If a change would require updating tests, STOP and report that tests must be handled via the separate tests command.
 
    See `skills/test-best-practices/references/test-file-patterns.md` for complete test file identification patterns.
    Default patterns include: `/test/`, `/tests/`, `/__tests__/`, files containing `.spec.` or `.test.`, etc.
 
 2) **Behavior-preserving refactor**
-    - Do not change external behavior intentionally.
-    - Prefer small, reversible steps.
+   - Do not change external behavior intentionally.
+   - Prefer small, reversible steps.
 
 3) **Tests after each step**
-    - After **every refactor step** (each plan item that changes code), run tests with the smallest relevant scope.
+   - After **every refactor step** (each plan item that changes code), run tests with the smallest relevant scope.
 
 ## Preflight (main agent)
 
+Before initializing the workflow, the main agent must:
+
 1) Determine scope:
-    - If `$ARGUMENTS` is empty: set scope to the repo root (`.`).
-    - Else: set scope to `$ARGUMENTS`.
+   - If `$ARGUMENTS` is empty: set scope to the repo root (`.`).
+   - Else: set scope to `$ARGUMENTS`.
 
 2) Verify the scope exists:
-    - Use Glob on the chosen scope.
-    - If it does not exist, STOP and report the path is invalid.
+   - Use Glob on the chosen scope.
+   - If it does not exist, STOP and report the path is invalid.
 
 3) Establish baseline:
-    - Run tests with a narrow scope relevant to the refactor (or the smallest reasonable default if broad scope).
-    - If baseline is failing, STOP and report that refactor is blocked until tests are green.
+   - Run tests with a narrow scope relevant to the refactor (or the smallest reasonable default if broad scope).
+   - If baseline is failing, STOP and report that refactor is blocked until tests are green.
 
-## Workflow
+## Orchestrator Loop
 
-### 1) Clarify & high-level understanding (main agent)
-
-- Restate the scope (path or entire codebase) and what “success” means:
-    - behavior preserved
-    - tests remain green
-    - no test files changed
-- Identify the main refactor goals appropriate to the scope:
-    - readability, structure, coupling, naming, duplication, error-handling hygiene, performance footguns
-- List explicit assumptions (only if needed). Do not guess repo rules if CLAUDE.md defines them.
-
-### 2) Codebase analysis (delegate to `codebase-analyzer`)
-
-Before planning, analyze the codebase to understand existing patterns and conventions.
-
-- Invoke `codebase-analyzer` with:
-    - The scope (path or entire codebase).
-    - Request focus on:
-        - Code organization and module boundaries.
-        - Design patterns used in the affected areas.
-        - Naming conventions and style patterns.
-        - Existing abstractions and utilities.
-- The analysis ensures refactoring follows established patterns.
-
-### 3) Planning (delegate to `plan-creator`)
-
-Invoke `plan-creator` to:
-
-- Inspect the scope and surrounding dependencies.
-- Propose a **small-step refactor plan** (steps should be independently testable).
-- For each step, include:
-    - files to change (must exclude test files)
-    - expected outcome
-    - the smallest relevant test scope to use after that step
-- Include a “test-file safety” note: how the plan avoids touching tests.
-- If scope is the entire codebase:
-    - Prioritize the top 3–10 highest-value refactors; do not attempt a sweeping rewrite.
-
-Adopt or lightly refine the plan to ensure:
-
-- steps are small
-- each step has a test command
-- no step edits test files
-
-### 4) Refactor (delegate to `refactorer`, tests after each step)
-
-Pass the plan to `refactorer` and require:
-
-For each plan step:
-
-1) Make the minimal behavior-preserving changes.
-2) State what changed (files/functions) and why.
-3) Specify the smallest test scope to run now.
-4) BEFORE moving to the next step, you MUST:
-    - Run tests with the specified scope
-    - Check changed files with `git diff --name-only`
-    - If any touched file matches “test files/dirs” rules:
-        - Revert those changes immediately (via git) and STOP with a report
-        - Do not proceed further
-
-If tests fail:
-
-- Fix the refactor (or revert) with minimal changes, then re-run tests.
-- Do not proceed until green.
-
-### 5) Code review (delegate to `code-reviewer`; if not ok, loop to Planning)
-
-Invoke `code-reviewer` with:
-
-- the refactor plan
-- what changed (high-level)
-- the test commands run
-
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
-
-You MUST NOT proceed to Step 6 unless no BLOCKING issues remain.
-
-- Do NOT rationalize skipping this gate ("issues are minor", "refactor is good", etc.)
-- Do NOT use your own judgment to override this gate
-- BLOCKING issues mean the loop MUST execute - no exceptions
+After initialization, the orchestrator runs this loop:
 
 ```
-LOOP while BLOCKING issues remain (max 5 iterations):
-  IF code-reviewer reports BLOCKING issues:
-    1. Invoke plan-creator to update the plan to address issues
-    2. Invoke refactorer to apply fixes step-by-step with tests after each step
-    3. Re-invoke code-reviewer
-    4. Check for remaining BLOCKING issues
-  END IF
+LOOP:
+  1. Query for next step:
+     - taskId: {TASK_ID}
+     - Returns: { success, taskId, stepNumber, totalSteps, step?, complete? }
+
+  2. IF complete == true:
+     - Execute finalization
+     - EXIT LOOP
+
+  3. Launch the agent for the returned step (run_in_background: true)
+
+  4. Wait for signal using wait-signal
+
+  5. Handle wait-signal result:
+     - IF signal received (success=true): proceed to step 1
+     - IF timeout (success=false):
+       - Log brief message: "Step {step} timed out after {X}ms"
+       - DO NOT use TaskOutput to retrieve agent output
+       - Proceed to step 1 (query for next step - workflow handles retry logic)
+
+  6. GOTO 1
 END LOOP
 ```
 
-**HARD STOP: Only proceed to Step 6 after no BLOCKING issues remain.**
+**Critical Rules:**
 
-### 6) Acceptance review (delegate to `acceptance-reviewer`; if not ok, loop to Planning)
+1. **The orchestrator does NOT interpret signal status to decide next step. It always queries the workflow.**
 
-Acceptance criteria for refactor work:
+2. **Always execute the step returned, even if that step was already executed before.**
+   - The workflow may return the same step multiple times (e.g., `refactoring` after a failed `code-review`)
+   - This is intentional: the workflow handles retry logic and gate failures internally
+   - Do NOT skip a step because "it was already done"
+   - Simply execute whatever step is returned, every time
 
-- behavior preserved (as evidenced by tests)
-- no test files changed
-- scope is reasonable for the provided scope (path or entire codebase)
-- code quality improved per stated goals
+3. **NEVER use TaskOutput to retrieve background agent results.**
+   - Background agents communicate ONLY via MCP signals and reports
+   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
 
-**⛔ MANDATORY GATE - NO EXCEPTIONS, NO RATIONALIZATION:**
+## Agent Output Instructions
 
-You MUST NOT proceed to Step 7 unless verdict == PASS.
+**Always include these instructions in every agent prompt:**
+```
+## Workflow Context
+TASK_ID: {TASK_ID}
+SCOPE: {scope path or "entire codebase"}
 
-- Do NOT rationalize skipping this gate ("mostly acceptable", "minor gaps", etc.)
-- Do NOT use your own judgment to override this gate
-- PARTIAL means the loop MUST execute - no exceptions
+## Output
+1. Save your FULL report:
+   - taskId: {TASK_ID}
+   - reportType: {report-type}
+   - content: <your full report content>
+
+2. Save your signal:
+   - taskId: {TASK_ID}
+   - signalType: {report-type}
+   - content:
+     - status: "passed" or "failed"
+     - summary: {one sentence describing outcome}
+
+   Status mapping:
+   - "passed" = completed successfully, gate passed, no blocking issues
+   - "failed" = needs iteration, has blocking issues, or error occurred
+```
+
+---
+
+## Step Definitions
+
+### initialize
+
+Create task metadata:
+- taskId: {TASK_ID}
+- execution steps derive from Steps below
+
+### Step 1: requirements (main agent captures scope)
+
+The main agent (not a subagent) captures:
+- Scope (path or entire codebase)
+- Success criteria: behavior preserved, tests remain green, no test files changed
+- Refactor goals: readability, structure, coupling, naming, duplication, error-handling hygiene
+
+Save report and signal with reportType/signalType: "requirements"
+
+### Step 2: codebase-analysis (codebase-analyzer)
 
 ```
-LOOP while acceptance verdict != PASS (max 5 iterations):
-  IF verdict is PARTIAL or FAIL:
-    1. Invoke plan-creator to propose minimal corrective steps
-    2. Invoke refactorer to apply them with tests after each step
-    3. Re-invoke acceptance-reviewer
-    4. Check verdict again
-  END IF
-END LOOP
+subagent_type: codebase-analyzer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+  SCOPE: {scope}
+
+  ## Task
+  Analyze the codebase to understand existing patterns and conventions.
+  This analysis will guide refactoring to ensure consistency.
+
+  Focus on:
+  - Code organization and module boundaries
+  - Design patterns used in the affected areas
+  - Naming conventions and style patterns
+  - Existing abstractions and utilities
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "codebase-analysis"
+     - content: <your codebase analysis report>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "codebase-analysis"
+     - content: { status: "passed", summary: "Codebase analysis complete" }
 ```
 
-**HARD STOP: Only proceed to Step 7 after verdict == PASS.**
+### Step 3: plan (plan-creator)
 
-### 7) Update Documentation (delegate to `documentation-updater`)
+```
+subagent_type: plan-creator
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+  SCOPE: {scope}
 
-Invoke `documentation-updater` to update documentation impacted by the refactor, while respecting:
+  ## Task
+  Create a small-step refactor plan (steps should be independently testable).
+  For each step, include:
+  - files to change (must exclude test files)
+  - expected outcome
+  - the smallest relevant test scope to use after that step
 
-- do not modify test files
-- keep doc changes minimal and accurate
-- update only what is now misleading (paths, module names, usage examples, architecture notes, etc.)
+  Include a "test-file safety" note: how the plan avoids touching tests.
+  If scope is the entire codebase: prioritize top 3-10 highest-value refactors.
 
-If doc updates include code changes, re-run tests once afterward.
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "codebase-analysis"
 
-The workflow-completion hook will generate the final summary when the workflow completes.
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "plan"
+     - content: <your refactor plan>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "plan"
+     - content: { status: "passed", summary: "Refactor plan created with N steps" }
+```
+
+### Step 4: refactoring (refactorer)
+
+```
+subagent_type: refactorer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+  SCOPE: {scope}
+
+  ## Task
+  Execute the refactor plan step-by-step.
+  For each plan step:
+  1) Make minimal behavior-preserving changes
+  2) State what changed (files/functions) and why
+  3) Run tests with the smallest relevant scope
+  4) Check changed files with `git diff --name-only`
+     - If any touched file matches test file patterns: revert and STOP
+
+  If tests fail: fix the refactor (or revert) with minimal changes, re-run tests.
+
+  Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  Required:
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  Optional (contains feedback requiring additional fixes):
+  - reportType: "code-review"
+  - reportType: "acceptance"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "refactoring"
+     - content: <your refactoring report with steps completed>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "refactoring"
+     - content: { status: "passed" or "failed", summary: "..." }
+       - "passed" = all steps complete, tests green
+       - "failed" = issues encountered (include details)
+```
+
+### Step 5: code-review (code-reviewer)
+
+```
+subagent_type: code-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Review the refactored code for quality issues.
+  Apply your loaded skills (`code-review-checklist`, `design-assessment`).
+
+  Verify:
+  - No test files were modified
+  - Behavior is preserved
+  - Code quality improved per stated goals
+  - Changes follow codebase patterns
+
+  Classify findings as BLOCKING or NON-BLOCKING.
+
+  Return verdict in signal:
+  - status: "passed" = no blocking issues
+  - status: "failed" = blocking issues found (include "BLOCKING: N issues" in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "codebase-analysis"
+  - reportType: "plan"
+  - reportType: "refactoring"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "code-review"
+     - content: <your code review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "code-review"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 6: acceptance (acceptance-reviewer)
+
+```
+subagent_type: acceptance-reviewer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Verify acceptance criteria for refactor work:
+  - Behavior preserved (as evidenced by tests)
+  - No test files changed
+  - Scope is reasonable for the provided scope
+  - Code quality improved per stated goals
+
+  Return verdict in signal:
+  - status: "passed" = all criteria met
+  - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "refactoring"
+  - reportType: "code-review"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "acceptance"
+     - content: <your acceptance review report with verdict>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "acceptance"
+     - content: { status: "passed" or "failed", summary: "..." }
+```
+
+### Step 7: documentation (documentation-updater)
+
+```
+subagent_type: documentation-updater
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Update documentation impacted by the refactor:
+  - Do not modify test files
+  - Keep doc changes minimal and accurate
+  - Update only what is now misleading (paths, module names, usage examples, architecture notes)
+
+  If doc updates include code changes, re-run tests once afterward.
+
+  ## Input Reports
+  Retrieve (taskId={TASK_ID}):
+  - reportType: "requirements"
+  - reportType: "plan"
+  - reportType: "refactoring"
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "documentation"
+     - content: <your documentation update report>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "documentation"
+     - content: { status: "passed", summary: "Documentation updated" }
+```
+
+### finalize
+
+The workflow is complete. Generate a final summary by:
+- Retrieving full reports using the TASK_ID
+- Update task metadata status to "completed"
