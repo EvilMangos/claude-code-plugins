@@ -26,6 +26,22 @@ This workflow drives all decisions:
 
 **The orchestrator NEVER decides which step to run next. The workflow makes all routing decisions.**
 
+## Workflow Scripts
+
+All orchestrator operations use scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/`:
+
+| Operation | Script | Usage |
+|-----------|--------|-------|
+| Create metadata | `create-metadata.sh <taskId> '<stepsJson>'` | Initialize task with execution steps |
+| Get next step | `get-next-step.sh <taskId>` | Returns current step to execute |
+| Wait for signal | `wait-signal.sh <taskId> <signalType(s)> [timeout]` | Waits for signal(s), advances workflow |
+| Get report | `get-report.sh <taskId> <reportType>` | Retrieves full report content |
+
+Notes:
+- `stepsJson` is a JSON array, arrays within represent parallel steps: `'["plan",["perf","security"],"impl"]'`
+- For parallel signals, use comma-separated types: `wait-signal.sh $TASK_ID "performance,security"`
+- Scripts output JSON to stdout; parse with jq
+
 ## Task ID Generation
 
 Before starting, generate a unique task ID for this workflow:
@@ -80,9 +96,7 @@ After initialization, the orchestrator runs this loop:
 
 ```
 LOOP:
-  1. Query for next step:
-     - taskId: {TASK_ID}
-     - Returns: { success, taskId, stepNumber, totalSteps, step?, complete? }
+  1. Get next step (returns: stepNumber, totalSteps, step, complete)
 
   2. IF complete == true:
      - Execute finalization
@@ -90,11 +104,9 @@ LOOP:
 
   3. Launch the agent for the returned step (run_in_background: true)
 
-  4. Wait for signal using wait-signal
+  4. Wait for signal
 
-  5. After signal received, proceed to step 1
-
-  6. GOTO 1
+  5. GOTO 1
 END LOOP
 ```
 
@@ -109,8 +121,8 @@ END LOOP
    - Simply execute whatever step is returned, every time
 
 3. **NEVER use TaskOutput to retrieve background agent results.**
-   - Background agents communicate ONLY via MCP signals and reports
-   - If you need agent results: use `get-report` MCP tool, NOT TaskOutput
+   - Background agents communicate ONLY via signals and reports
+   - If you need agent results: use get-report script, NOT TaskOutput
 
 ## Agent Output Instructions
 

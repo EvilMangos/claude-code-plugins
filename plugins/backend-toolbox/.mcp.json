@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "backend-toolbox-mcp": {
-      "command": "npx",
-      "args": ["@evil-mango/claude-code-plugins-mcp@0.1.6"]
-    }
-  }
-}

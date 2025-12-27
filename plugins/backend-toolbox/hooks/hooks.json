@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"/Users/maksym/code/claude-code-plugins/plugins/backend-toolbox/scripts/extend-subagnet-input-prompt-with-mcp.py\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/extend-subagnet-input-prompt-with-io-tools.py\""
           }
         ]
       }

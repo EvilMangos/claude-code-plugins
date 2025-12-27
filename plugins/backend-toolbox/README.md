@@ -47,14 +47,14 @@ Toolbox that consists of skills, agents and commands for backend development
 
 ## Commands (8)
 
-- `/complete-review` - Comprehensive code review (tests, quality, security, performance)
-- `/develop-feature` - Full TDD workflow (planning, tests, implementation, review, docs)
-- `/devops-change` - DevOps workflow for CI/CD, Docker, K8s, Terraform changes
-- `/fix-bug` - Structured bug-fixing workflow (reproduction, root cause, TDD, review)
-- `/refactor` - Behavior-preserving refactor with tests after each step
-- `/refactor-tests` - Test-only refactoring (no production code changes)
-- `/refresh-documentation` - Sync READMEs with repository reality
-- `/refresh-claude-md` - Audit CLAUDE.md against repo state
+- `/complete-review` - Review code for quality, security, and performance issues (defaults to staged/unstaged git changes)
+- `/develop-feature` - End-to-end TDD workflow (planning, test design, test review, implementation, acceptance, performance, security, refactoring, code review, docs)
+- `/devops-change` - DevOps changes (CI/CD, Docker, K8s, Terraform) with planning and review workflow
+- `/fix-bug` - Structured bug-fixing workflow (reproduction, root cause analysis, TDD, implementation, code review)
+- `/refactor` - Refactor code in a path with tests after each step (never modify test files)
+- `/refactor-tests` - Refactor tests within a path (never modify production code)
+- `/refresh-documentation` - Refresh README documentation under a given path
+- `/refresh-claude-md` - Audit CLAUDE.md against repo reality
 
 ## Skills (13)
 
@@ -82,11 +82,11 @@ Toolbox that consists of skills, agents and commands for backend development
 
 ## Hooks (1)
 
-| Hook       | Event      | Matcher | Purpose                                            |
-|------------|------------|---------|---------------------------------------------------|
-| MCP inject | PreToolUse | Task    | Injects MCP I/O contract into backend-toolbox subagent prompts |
+| Hook             | Event      | Matcher | Purpose                                                     |
+|------------------|------------|---------|-------------------------------------------------------------|
+| I/O tools inject | PreToolUse | Task    | Injects I/O tool instructions into backend-toolbox subagent prompts |
 
-The hook ensures all backend-toolbox subagents use MCP tools (`save-report`, `save-signal`, `get-report`) for workflow state persistence instead of local files.
+The hook ensures all backend-toolbox subagents use workflow I/O tools (`save-report`, `save-signal`, `get-report`, `wait-signal`) for workflow state persistence.
 
 ## Typical Workflow
 

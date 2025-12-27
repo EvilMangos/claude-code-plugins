@@ -3,7 +3,7 @@ name: application-security-specialist
 description: Use when reviewing code for security vulnerabilities, implementing auth/authz, or hardening applications. Security specialist focused on vulnerability assessment, secure coding, and application hardening. Triggers - "security review", "vulnerability", "authentication", "authorization", "OWASP", "XSS", "SQL injection", "CSRF", "secure", "pentest", "security audit".
 model: opus
 color: red
-tools: Read, Glob, Grep, Task, Skill, MCP
+tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
 skills: web-api-security
 ---
 
