@@ -17,7 +17,7 @@ if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPES_INPUT" ]]; then
 fi
 
 # Valid signal types
-VALID_TYPES="requirements codebase-analysis plan tests-design tests-review implementation stabilization acceptance performance security refactoring code-review documentation"
+VALID_TYPES="requirements codebase-analysis plan tests-design tests-review implementation stabilization acceptance performance security refactoring code-review documentation finalize"
 
 # Parse signal types (comma-separated for parallel)
 IFS=',' read -ra SIGNAL_TYPES <<< "$SIGNAL_TYPES_INPUT"

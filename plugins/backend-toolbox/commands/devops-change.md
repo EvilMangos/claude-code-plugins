@@ -81,7 +81,7 @@ LOOP:
      - step can be a string ("plan") or array for parallel (["performance", "security"])
 
   2. IF complete == true:
-     - Execute finalization
+     - Output final signal summary to user
      - EXIT LOOP
 
   3. IF step is an array (parallel execution):
@@ -150,7 +150,7 @@ The following steps can be returned. Execute the corresponding agent when the st
 
 Create task metadata:
 - taskId: {TASK_ID}
-- execution steps derive from Steps below
+- executionSteps: `["requirements", "codebase-analysis", "plan", "implementation", "code-review", "acceptance", "finalize"]`
 
 ### Step 1: requirements (business-analyst)
 
@@ -369,11 +369,39 @@ prompt: |
      - content: { status: "passed" or "failed", summary: "..." }
 ```
 
-### finalize
+### Step 7: finalize (workflow-finalizer)
 
-The workflow is complete. Generate a final summary by:
-- Retrieving full reports using the TASK_ID
-- Update task metadata status to "completed"
+```
+subagent_type: workflow-finalizer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Generate an executive summary of the completed DevOps change workflow.
+
+  Read all available reports for this task and synthesize:
+  - Overall outcome (success/partial/failed)
+  - Key changes made to infrastructure/deployment
+  - Verification commands for testing
+  - Open items/follow-ups (if any)
+  - Files changed
+
+  Keep the summary concise and focused on outcomes.
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "finalize"
+     - content: <your executive summary>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "finalize"
+     - content: { status: "passed", summary: "DevOps change complete: <one-sentence outcome>" }
+```
+
+After the finalize signal is received, the orchestrator outputs the signal summary to the user and exits.
 
 ---
 

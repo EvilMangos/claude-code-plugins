@@ -99,7 +99,7 @@ LOOP:
   1. Get next step (returns: stepNumber, totalSteps, step, complete)
 
   2. IF complete == true:
-     - Execute finalization
+     - Output final signal summary to user
      - EXIT LOOP
 
   3. Launch the agent for the returned step (run_in_background: true)
@@ -158,7 +158,7 @@ SCOPE: {scope path or "entire codebase"}
 
 Create task metadata:
 - taskId: {TASK_ID}
-- execution steps derive from Steps below
+- executionSteps: `["requirements", "codebase-analysis", "plan", "refactoring", "code-review", "acceptance", "documentation", "finalize"]`
 
 ### Step 1: requirements (main agent captures scope)
 
@@ -399,8 +399,35 @@ prompt: |
      - content: { status: "passed", summary: "Documentation updated" }
 ```
 
-### finalize
+### Step 8: finalize (workflow-finalizer)
 
-The workflow is complete. Generate a final summary by:
-- Retrieving full reports using the TASK_ID
-- Update task metadata status to "completed"
+```
+subagent_type: workflow-finalizer
+run_in_background: true
+prompt: |
+  ## Workflow Context
+  TASK_ID: {TASK_ID}
+
+  ## Task
+  Generate an executive summary of the completed refactor workflow.
+
+  Read all available reports for this task and synthesize:
+  - Overall outcome (success/partial/failed)
+  - Key refactoring improvements made
+  - Open items/follow-ups (if any)
+  - Files changed
+
+  Keep the summary concise and focused on outcomes.
+
+  ## Output
+  1. Save FULL report:
+     - taskId: {TASK_ID}
+     - reportType: "finalize"
+     - content: <your executive summary>
+  2. Save signal:
+     - taskId: {TASK_ID}
+     - signalType: "finalize"
+     - content: { status: "passed", summary: "Refactor complete: <one-sentence outcome>" }
+```
+
+After the finalize signal is received, the orchestrator outputs the signal summary to the user and exits.

@@ -17,7 +17,7 @@ if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPE" || -z "$STATUS" ]]; then
 fi
 
 # Valid signal types
-VALID_TYPES="requirements codebase-analysis plan tests-design tests-review implementation stabilization acceptance performance security refactoring code-review documentation"
+VALID_TYPES="requirements codebase-analysis plan tests-design tests-review implementation stabilization acceptance performance security refactoring code-review documentation finalize"
 if [[ ! " $VALID_TYPES " =~ " $SIGNAL_TYPE " ]]; then
     echo "{\"success\":false,\"error\":\"Invalid signalType: $SIGNAL_TYPE\"}" >&2
     exit 1
