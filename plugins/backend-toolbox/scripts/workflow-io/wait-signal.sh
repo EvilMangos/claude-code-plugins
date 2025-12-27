@@ -9,7 +9,7 @@ set -e
 
 TASK_ID="$1"
 SIGNAL_TYPES_INPUT="$2"
-TIMEOUT="${3:-300}"
+TIMEOUT="${3:-1200}"
 
 if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPES_INPUT" ]]; then
     echo '{"success":false,"error":"Missing required parameters: taskId and signalType"}' >&2
