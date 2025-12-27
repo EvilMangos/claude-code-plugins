@@ -2,7 +2,7 @@
   "hooks": {
     "Stop": [
       {
-        "matcher": "*",
+        "matcher": "end_turn",
         "hooks": [
           {
             "type": "command",
