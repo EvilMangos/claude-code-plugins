@@ -1,6 +1,6 @@
 ---
 name: code-organization
-description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", "import at top", "imports inside function", "import placement", "import organization", or needs guidance on file size limits, when to split vs merge code, folder/package organization patterns, and import placement rules.
+description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", "import at top", "imports inside function", "import placement", "import organization", or needs guidance on file size limits, when to split vs merge code, folder/package organization patterns, and import placement rules. For naming conventions and type safety, see the code-style skill.
 version: 0.1.0
 ---
 
@@ -78,48 +78,9 @@ Is file > 300 lines?
 
 ### One Thing Per File
 
-Each file should have a **single, clear purpose**:
+Each file should have a **single, clear purpose**. If you struggle to name a file without using generic terms like "utils", "helpers", or "common", the file likely has multiple responsibilities and should be split.
 
-| Good (Focused) | Bad (Mixed) |
-|----------------|-------------|
-| `user-repository.ts` | `user-stuff.ts` |
-| `order-validator.ts` | `order-helpers.ts` |
-| `payment-gateway.ts` | `payment-utils.ts` |
-| `email-template.ts` | `common.ts` |
-
-### Naming Rules
-
-**File names should:**
-
-- Describe what the file DOES, not what it CONTAINS
-- Be specific enough to predict contents
-- Avoid generic suffixes: `-utils`, `-helpers`, `-common`, `-misc`
-- Match the primary export name
-
-**Red flag names (require splitting):**
-
-- `utils.ts`, `helpers.ts`, `common.ts`, `misc.ts`
-- `*-stuff.ts`, `*-things.ts`
-- `index.ts` with actual logic (not just re-exports)
-- Names with "and" or multiple concepts
-
-### Ports & Adapters Naming Convention
-
-When using hexagonal/ports & adapters architecture, follow these naming patterns:
-
-| Category             | Pattern                 | Examples                                     |
-|----------------------|-------------------------|----------------------------------------------|
-| Ports (abstractions) | Role nouns              | `EmailSender`, `UserRepository`, `Clock`     |
-| Services             | `*Service` / `*UseCase` | `SignupService`, `CreateOrderService`        |
-| Adapters             | Technology prefix       | `SesEmailSender`, `PostgresUserRepository`   |
-| Data shapes          | Descriptive suffixes    | `SignupInput`, `UserDTO`, `CreateUserParams` |
-
-**Key rules:**
-- No `I` prefix for interfaces (`UserRepository`, not `IUserRepository`)
-- No `T` prefix for types (`User`, not `TUser`)
-- Ports named by role, adapters named by technology
-
-See `references/naming-conventions.md` for full details.
+See the **code-style** skill for file naming conventions.
 
 ### Cohesion Check
 
@@ -357,8 +318,54 @@ After:
 | **Circular Dependencies** | A imports B, B imports A | Extract shared to third module |
 | **Deep Nesting** | `src/a/b/c/d/e/f/file.ts` | Flatten, max 3-4 levels |
 | **Flat Structure** | 50 files in one folder | Group by feature/layer |
+| **Backward Compat Hacks** | `_vars`, deprecated wrappers, "removed" comments | Delete completely, see below |
 | **Re-export Wrappers** | Backwards-compat bloat after moving code | See "No Re-exports When Moving Code" below |
 | **Scattered Imports** | Imports inside functions or mid-file | See "Imports at Top of File" below |
+
+### No Backward Compatibility Hacks
+
+When functionality changes or code is removed, **delete it completely**. Never keep artifacts "for backward compatibility" unless explicitly requested.
+
+**Common anti-patterns to avoid:**
+
+```typescript
+// BAD - Renaming unused variable instead of removing
+const _oldConfig = {};  // DON'T DO THIS - delete it
+
+// BAD - Re-exporting moved/removed types
+export type { OldTypeName } from './new-location';  // DON'T DO THIS
+
+// BAD - Leaving comments about removed code
+// REMOVED: export function oldFunction() { ... }  // DON'T DO THIS
+
+// BAD - Creating deprecated wrappers
+/** @deprecated Use newFunction instead */
+export function oldFunction(...args) {
+  return newFunction(...args);  // DON'T DO THIS - update callers directly
+}
+
+// BAD - Keeping unused imports "in case we need them"
+// import { maybeUsefulLater } from './utils';  // DON'T DO THIS
+
+// GOOD - Just delete unused code and update all references
+```
+
+**Why this matters:**
+
+- Dead code accumulates as technical debt
+- `_vars` and deprecated wrappers confuse future maintainers
+- "Removed" comments become stale and misleading
+- Backward-compat shims rarely get cleaned up
+- Makes codebase harder to understand and navigate
+
+**The correct approach when changing functionality:**
+
+1. Identify all usages of the code being changed
+2. Update ALL callers to use the new API/location
+3. Delete the old code entirely - no wrappers, no re-exports, no comments
+4. If you can't update all callers, the change isn't ready yet
+
+**Exception:** Only keep backward compatibility when the user explicitly requests it (e.g., public API with external consumers, phased rollout requirement).
 
 ### No Re-exports When Moving Code
 
@@ -482,16 +489,9 @@ Even in this case, prefer extracting lazy-loaded imports to dedicated loader fun
 - Never import in middle of code
 - Dynamic imports only for intentional code splitting
 
-## Additional Resources
+## Related Skills
 
-For detailed guidance on specific aspects:
-
-- **`references/naming-conventions.md`** - Ports & Adapters naming patterns for interfaces, classes, and data shapes
-- **`references/granularity-decisions.md`** - Extended decision trees and examples
-- **`references/folder-patterns.md`** - Detailed folder structure patterns by project type
-
-### Related Skills
-
+- **code-style** - Naming conventions, type safety, and typing best practices
 - **design-assessment** - Identify code smells that indicate poor organization
 - **design-patterns** - Patterns for structuring code (SRP, DIP, layers)
 - **refactoring-patterns** - Mechanics for reorganizing code (Extract, Move)
