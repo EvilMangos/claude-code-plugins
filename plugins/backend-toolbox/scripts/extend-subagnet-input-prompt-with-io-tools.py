@@ -1,52 +1,104 @@
 #!/usr/bin/env python3
 import json
+import re
 import sys
 
-IO_BLOCK = """
+IO_BLOCK_TEMPLATE = """
 ## Workflow I/O Contract (MANDATORY)
 
-You MUST use these Bash scripts for all workflow persistence and retrieval.
-Scripts are located at: ${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/
+You are part of a multi-agent workflow. Follow these steps exactly.
 
-### Persistence Commands
+### Your Workflow Context
 
-**save-report.sh** - Save your full report content
+- **TASK_ID**: `{task_id}`
+- **Output reportType**: `{report_type}`
+- **Input Reports to fetch**: {input_reports}
+
+### Step 1: Fetch Input Reports
+
+For EACH input report listed above, fetch it FIRST using this command:
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/save-report.sh <taskId> <reportType> <content>
-# Or pipe content:
-echo "<content>" | ${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/save-report.sh <taskId> <reportType>
+${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/get-report.sh {task_id} <reportType>
 ```
-- reportType: requirements | codebase-analysis | plan | tests-design | tests-review | implementation | stabilization | acceptance | performance | security | refactoring | code-review | documentation
 
-**save-signal.sh** - Save status signal (triggers step progression when waited)
+{fetch_commands}
+
+Read the returned content - this is context from previous workflow steps.
+
+### Step 2: Do Your Work
+
+Complete your assigned task using the fetched reports as context.
+
+### Step 3: Save Your Output (MANDATORY - DO NOT SKIP)
+
+When done, you MUST save BOTH report AND signal. The orchestrator is WAITING for your signal.
+
+**Save your full report:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/save-signal.sh <taskId> <signalType> <status> <summary>
+${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/save-report.sh {task_id} {report_type} '<your-full-markdown-report>'
 ```
-- signalType: same as reportType
-- status: "passed" | "failed"
-- summary: one sentence describing outcome
 
-### Retrieval Commands
-
-**get-report.sh** - Retrieve a previously saved report
+**Save completion signal:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh <taskId> <reportType>
+${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/save-signal.sh {task_id} {report_type} <status> '<one-sentence-summary>'
 ```
-Returns: report content (markdown)
+- status: `passed` or `failed`
+- summary: brief outcome (prefix with `ERROR:` if failed)
 
-**get-metadata.sh** - Get task metadata
-```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-metadata.sh <taskId>
-```
-Returns: JSON with taskId, executionSteps, currentStepIndex, startedAt, savedAt, completedAt
+### Critical Rules
 
-### Rules
-
-1. For any "Input Reports" in your prompt, retrieve them via get-report.sh
-2. Do NOT rely on TaskOutput, prior context, or local files as source of truth.
-3. Always save both report AND signal when your step completes.
-4. On failure, save signal with status "failed" and summary starting with "ERROR:"
+1. **ALWAYS save report AND signal** - The orchestrator blocks until your signal arrives. No signal = workflow hangs forever.
+2. **Fetch before working** - Read all input reports before starting your analysis.
+3. **Signal even on failure** - If you encounter errors, save signal with status=`failed`.
+4. **Do this BEFORE responding** - Save report and signal as your final action, not as an afterthought.
 """.strip()
+
+
+def parse_workflow_context(prompt: str) -> dict:
+    """Extract TASK_ID, Input Reports, and Output reportType from prompt."""
+    result = {"task_id": None, "report_type": None, "input_reports": []}
+
+    # Extract TASK_ID (first line usually)
+    task_match = re.search(r'TASK_ID:\s*(\S+)', prompt)
+    if task_match:
+        result["task_id"] = task_match.group(1)
+
+    # Extract Output reportType
+    output_match = re.search(r'##\s*Output\s*\n\s*reportType:\s*(\S+)', prompt)
+    if output_match:
+        result["report_type"] = output_match.group(1)
+
+    # Extract Input Reports (list items after "## Input Reports")
+    input_section = re.search(r'##\s*Input Reports\s*\n((?:\s*(?:Required:|Optional[^:]*:)?\s*\n?(?:\s*-\s*\S+\s*\n?)+)+)', prompt)
+    if input_section:
+        reports = re.findall(r'-\s*(\S+)', input_section.group(1))
+        result["input_reports"] = [r for r in reports if r not in ('Required:', 'Optional')]
+
+    return result
+
+def build_io_block(ctx: dict) -> str:
+    """Build the IO block with extracted context."""
+    if not ctx["task_id"] or not ctx["report_type"]:
+        return None
+
+    input_reports_str = ", ".join(f"`{r}`" for r in ctx["input_reports"]) if ctx["input_reports"] else "(none)"
+
+    fetch_commands = ""
+    if ctx["input_reports"]:
+        fetch_commands = "Run these commands:\n" + "\n".join(
+            f"```bash\n${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/get-report.sh {ctx['task_id']} {r}\n```"
+            for r in ctx["input_reports"]
+        )
+    else:
+        fetch_commands = "(No input reports to fetch - skip this step)"
+
+    return IO_BLOCK_TEMPLATE.format(
+        task_id=ctx["task_id"],
+        report_type=ctx["report_type"],
+        input_reports=input_reports_str,
+        fetch_commands=fetch_commands
+    )
+
 
 data = json.load(sys.stdin)
 tool_input = data.get("tool_input") or {}
@@ -56,9 +108,27 @@ if not subagent_type.startswith("backend-toolbox:"):
     print(json.dumps({}))
     sys.exit(0)
 
-prompt = tool_input.get("prompt")
-if isinstance(prompt, str) and IO_BLOCK not in prompt:
-    tool_input["prompt"] = f"{IO_BLOCK}\n\n{prompt}"
+prompt = tool_input.get("prompt", "")
+if not isinstance(prompt, str):
+    print(json.dumps({}))
+    sys.exit(0)
+
+# Skip if already injected
+if "## Workflow I/O Contract" in prompt:
+    print(json.dumps({}))
+    sys.exit(0)
+
+# Parse and build IO block
+ctx = parse_workflow_context(prompt)
+io_block = build_io_block(ctx)
+
+# Only modify if we have workflow context (TASK_ID + reportType)
+if not io_block:
+    # No workflow context - skip injection, let agent run normally
+    print(json.dumps({}))
+    sys.exit(0)
+
+tool_input["prompt"] = f"{io_block}\n\n---\n\n{prompt}"
 
 print(json.dumps({
     "hookSpecificOutput": {
