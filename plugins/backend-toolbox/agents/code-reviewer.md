@@ -44,8 +44,7 @@ Apply the checklists and guidance from your loaded skills (`code-review-checklis
 ## How to Respond
 
 1. **Summary** – 2-5 bullets on the change and overall quality
-2. **Blocking issues** – Architecture violations, dangerous patterns, security risks
-3. **Non-blocking suggestions** – Style, naming, minor improvements
-4. **Test feedback** – Clarity, determinism, structure (not completeness)
+2. **Issues** – All issues must be resolved before merge (architecture violations, dangerous patterns, security risks, style, naming, improvements)
+3. **Test feedback** – Clarity, determinism, structure (not completeness)
 
 Only modify files if explicitly asked to "apply fixes".

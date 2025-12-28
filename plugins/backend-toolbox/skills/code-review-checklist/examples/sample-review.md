@@ -14,10 +14,10 @@ Example of a well-structured code review following the checklist.
 - Adds PUT /api/users/:id endpoint for profile updates
 - Implements input validation for email and name fields
 - Good test coverage for happy path
-- Missing authorization check is a blocking issue
-- Overall clean implementation with minor suggestions
+- Multiple issues found that must be resolved
+- Overall clean implementation
 
-### Blocking Issues
+### Issues
 
 1. **Missing authorization check** (`src/controllers/userController.ts:45`)
     - **Why:** Any authenticated user can update any other user's profile by changing the ID parameter. This is an IDOR
@@ -39,19 +39,21 @@ Example of a well-structured code review following the checklist.
       }
       ```
 
-### Non-blocking Suggestions
+3. **Verbose validation** (`src/validators/userValidator.ts:12`)
+    - **Why:** Current implementation is verbose and harder to maintain.
+    - **Fix:** Use a validation library like `zod` for cleaner validation logic.
 
-- **[suggestion]** `src/validators/userValidator.ts:12` - Consider using a validation library like `zod` for cleaner
-  validation logic. Current implementation works but is verbose.
+4. **Poor variable naming** (`src/controllers/userController.ts:52`)
+    - **Why:** The variable name `u` is not descriptive.
+    - **Fix:** Rename to `updatedUser`.
 
-- **[nit]** `src/controllers/userController.ts:52` - The variable name `u` could be more descriptive. Maybe
-  `updatedUser`?
+5. **Code duplication** (`src/types/user.ts:8`)
+    - **Why:** The `User` interface and `UserUpdateDto` share many fields.
+    - **Fix:** Use `Pick<User, 'name' | 'email'>` to reduce duplication.
 
-- **[suggestion]** `src/types/user.ts:8` - The `User` interface and `UserUpdateDto` share many fields. Consider using
-  `Pick<User, 'name' | 'email'>` to reduce duplication.
-
-- **[question]** `src/controllers/userController.ts:60` - Is returning the full user object (including password hash)
-  intentional? I'd expect a sanitized response here.
+6. **Potential data leak** (`src/controllers/userController.ts:60`)
+    - **Why:** Returning the full user object may include password hash.
+    - **Fix:** Return a sanitized response without sensitive fields.
 
 ### Test Feedback
 
@@ -66,11 +68,11 @@ Example of a well-structured code review following the checklist.
 | Area         | Status   | Notes                        |
 |--------------|----------|------------------------------|
 | Architecture | Pass     | Clean separation of concerns |
-| Readability  | Pass     | Clear code structure         |
-| Tests        | Partial  | Missing auth tests           |
+| Readability  | **Fail** | Naming and duplication issues|
+| Tests        | **Fail** | Missing auth tests           |
 | Security     | **Fail** | IDOR and SQL injection risks |
 | Performance  | Pass     | No concerns                  |
 
 ---
 
-**Verdict:** Request changes (2 blocking issues)
+**Verdict:** Request changes (6 issues to resolve)

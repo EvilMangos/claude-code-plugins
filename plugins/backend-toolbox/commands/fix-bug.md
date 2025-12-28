@@ -113,9 +113,9 @@ TASK_ID: {TASK_ID}
      - summary: {one sentence describing outcome}
 
    Status mapping:
-   - "passed" = completed successfully, gate passed, no blocking issues
-   - "failed" = needs iteration, has blocking issues, or error occurred
-     (include details in summary: "PARTIAL: ...", "BLOCKING: ...", "ERROR: ...")
+   - "passed" = completed successfully, gate passed, no issues found
+   - "failed" = needs iteration, has issues to resolve, or error occurred
+     (include details in summary: "PARTIAL: ...", "ISSUES: N", "ERROR: ...")
 ```
 
 ---
@@ -443,14 +443,13 @@ prompt: |
   - Test quality (if tests were added)
 
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
-  Classify findings as BLOCKING or NON-BLOCKING.
-  For BLOCKING issues, specify route:
+  For each issue, specify route:
   - "ROUTE: functional" → needs tests + implementation fix
   - "ROUTE: structural" → needs refactoring
 
   Return verdict in signal:
-  - status: "passed" = no blocking issues
-  - status: "failed" = blocking issues found (include "BLOCKING: N functional, M structural" in summary)
+  - status: "passed" = no issues found
+  - status: "failed" = issues found (include "ISSUES: N functional, M structural" in summary)
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):

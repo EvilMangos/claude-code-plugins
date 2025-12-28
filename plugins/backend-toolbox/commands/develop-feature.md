@@ -126,9 +126,9 @@ TASK_ID: {TASK_ID}
      - summary: {one sentence describing outcome}
 
    Status mapping:
-   - "passed" = completed successfully, gate passed, no blocking issues
-   - "failed" = needs iteration, has blocking issues, or error occurred
-     (include details in summary: "PARTIAL: ...", "BLOCKING: ...", "ERROR: ...")
+   - "passed" = completed successfully, gate passed, no issues found
+   - "failed" = needs iteration, has issues to resolve, or error occurred
+     (include details in summary: "PARTIAL: ...", "ISSUES: N", "ERROR: ...")
 ```
 
 ---
@@ -445,11 +445,10 @@ prompt: |
   Analyze the implementation for performance issues.
   Apply your loaded skills (`backend-performance`, `algorithm-efficiency`).
   Consider codebase patterns (caching, connection pooling, etc.) when analyzing.
-  Classify findings as BLOCKING or NON-BLOCKING.
 
   Return verdict in signal:
-  - status: "passed" = no blocking issues
-  - status: "failed" = blocking issues found (include "BLOCKING: ..." in summary)
+  - status: "passed" = no issues found
+  - status: "failed" = issues found (include "ISSUES: N" in summary)
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
@@ -479,11 +478,10 @@ prompt: |
   Analyze the implementation for security vulnerabilities.
   Apply your loaded skill (`web-api-security`).
   Consider codebase security patterns (auth, validation, error handling) when analyzing.
-  Classify findings as BLOCKING or NON-BLOCKING.
 
   Return verdict in signal:
-  - status: "passed" = no blocking issues
-  - status: "failed" = blocking issues found (include "BLOCKING: ..." in summary)
+  - status: "passed" = no issues found
+  - status: "failed" = issues found (include "ISSUES: N" in summary)
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):
@@ -550,15 +548,14 @@ prompt: |
   ## Task
   Review the code for quality issues.
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
-  Classify findings as BLOCKING or NON-BLOCKING.
   Check that implementation follows patterns from codebase-analysis.
-  For each BLOCKING issue, specify route:
+  For each issue, specify route:
   - "ROUTE: functional" → needs tests + implementation fix
   - "ROUTE: structural" → needs refactoring
 
   Return verdict in signal:
-  - status: "passed" = no blocking issues
-  - status: "failed" = blocking issues found (include "BLOCKING: N functional, M structural" in summary)
+  - status: "passed" = no issues found
+  - status: "failed" = issues found (include "ISSUES: N functional, M structural" in summary)
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):

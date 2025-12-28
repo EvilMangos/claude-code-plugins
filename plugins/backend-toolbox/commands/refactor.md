@@ -146,8 +146,8 @@ SCOPE: {scope path or "entire codebase"}
      - summary: {one sentence describing outcome}
 
    Status mapping:
-   - "passed" = completed successfully, gate passed, no blocking issues
-   - "failed" = needs iteration, has blocking issues, or error occurred
+   - "passed" = completed successfully, gate passed, no issues found
+   - "failed" = needs iteration, has issues to resolve, or error occurred
 ```
 
 ---
@@ -304,11 +304,9 @@ prompt: |
   - Code quality improved per stated goals
   - Changes follow codebase patterns
 
-  Classify findings as BLOCKING or NON-BLOCKING.
-
   Return verdict in signal:
-  - status: "passed" = no blocking issues
-  - status: "failed" = blocking issues found (include "BLOCKING: N issues" in summary)
+  - status: "passed" = no issues found
+  - status: "failed" = issues found (include "ISSUES: N" in summary)
 
   ## Input Reports
   Retrieve (taskId={TASK_ID}):

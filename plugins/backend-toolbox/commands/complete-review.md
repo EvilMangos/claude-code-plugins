@@ -95,8 +95,7 @@ Invoke `code-reviewer` with:
 Collect the review output including:
 
 - Summary of findings
-- Blocking issues
-- Non-blocking suggestions
+- Issues to resolve
 
 ### 4) Security Review (delegate to `application-security-specialist`)
 
@@ -136,31 +135,14 @@ Combine all subagent findings into a unified report:
 **Scope**: [path or "git changes"]
 **Files Reviewed**: [count]
 
-## Critical Issues (Must Fix)
+## Issues (All Must Be Resolved)
 
-[List all blocking/critical issues from all reviews]
-
-## Test Quality
-
-[Summarize test review findings - coverage gaps, quality issues, recommendations]
-
-## Security Concerns
-
-[Summarize security findings by severity]
-
-## Performance Observations
-
-[Summarize performance findings]
-
-## Code Quality Suggestions
-
-[Non-blocking improvements from code-reviewer]
+[List all issues from all reviews - code quality, test quality, security, performance]
 
 ## Verdict
 
-- [ ] **APPROVED** - Ready to merge
-- [ ] **NEEDS CHANGES** - Address critical issues first
-- [ ] **NEEDS DISCUSSION** - Architectural decisions to discuss
+- [ ] **APPROVED** - No issues found, ready to merge
+- [ ] **NEEDS CHANGES** - Issues must be addressed first
 ```
 
 Mark the appropriate verdict checkbox based on findings.

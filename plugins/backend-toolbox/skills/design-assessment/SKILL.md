@@ -169,17 +169,12 @@ When reporting design issues:
 ```markdown
 ## Design Assessment Summary
 
-### Critical Issues (blocking)
+a### Issues
 
 1. **[Issue Type]** in `file:line`
     - Problem: [What's wrong]
     - Impact: [Why it matters]
     - Suggestion: [How to fix]
-
-### Design Concerns (non-blocking)
-
-- [Concern 1]
-- [Concern 2]
 
 ### Positive Patterns Observed
 

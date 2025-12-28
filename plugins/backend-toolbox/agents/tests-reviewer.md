@@ -55,11 +55,10 @@ the repository testing philosophy in `CLAUDE.md`.
 
 ## Output Format (strict)
 
-1. **Verdict** – pass / partial / fail
-2. **Requirements Coverage Checklist** – ✅/⚠️/❌ per requirement with test references
-3. **Blocking issues** – Must fix before implementation
-4. **Non-blocking improvements** – Readability, naming, parameterization
-5. **Trivial tests list** – KEEP / REWRITE / REMOVE with rationale
-6. **Risk notes** – Brittleness, assumptions made
+1. **Verdict** – pass / fail
+2. **Requirements Coverage Checklist** – ✅/❌ per requirement with test references
+3. **Issues** – All issues must be resolved before implementation (correctness, coverage gaps, readability, naming, parameterization)
+4. **Trivial tests list** – KEEP / REWRITE / REMOVE with rationale
+5. **Risk notes** – Brittleness, assumptions made
 
 Only modify files if explicitly asked to "apply fixes".

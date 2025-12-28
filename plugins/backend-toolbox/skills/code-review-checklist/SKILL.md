@@ -1,6 +1,6 @@
 ---
 name: code-review-checklist
-description: This skill provides a structured code review framework with checklists for code quality, security vulnerabilities, and performance optimization. This skill should be used when the user asks to "review this code", "review my code", "do a code review", "check this PR", "evaluate PR", "review pull request", "check code quality", "review changes", "give feedback on code", "review this function", "is this code good", "audit this code", "audit for security issues", "find security vulnerabilities", "check for SQL injection", "review for XSS", "check for injection vulnerabilities", "analyze code quality", "check this code before merging", "review my pull request", "what security issues does this code have", "is this code production-ready", "check for OWASP vulnerabilities", "review authentication security", "check input validation", or needs a comprehensive checklist for architecture, readability, tests, and safety.
+description: This skill provides a structured code review framework with checklists for code quality. This skill should be used when the user asks to "review this code", "review my code", "do a code review", "check this PR", "evaluate PR", "review pull request", "check code quality", "review changes", "give feedback on code", "review this function", "is this code good", "audit this code", "analyze code quality", "check this code before merging", "review my pull request", or needs a comprehensive checklist for architecture and readability.
 version: 0.1.0
 ---
 
@@ -10,9 +10,8 @@ Systematic approach to reviewing code changes for quality, correctness, and main
 
 ## Quick vs Deep Review
 
-For time-constrained or small changes, use the **quick-code-review** skill (5 critical items).
-Use the full checklist below for comprehensive reviews of new features, security-sensitive code, or significant
-refactors.
+For time-constrained or small changes, use the **quick-code-review** skill.
+Use the full checklist below for comprehensive reviews of new features or significant refactors.
 
 ## Review Workflow
 
@@ -20,9 +19,7 @@ refactors.
 2. **Scan for scope**: Review file list to understand change boundaries
 3. **Evaluate architecture**: Check design decisions against established patterns
 4. **Assess implementation**: Walk through code for readability, correctness, and edge cases
-5. **Verify testing**: Ensure adequate coverage and test quality
-6. **Check safety**: Look for security, performance, and resource concerns
-7. **Synthesize feedback**: Categorize issues as blocking vs. non-blocking
+5. **Synthesize feedback**: List all issues that must be resolved before merge
 
 ## Quick Checklist
 
@@ -66,72 +63,17 @@ refactors.
 - [ ] Magic numbers/strings are named constants
 - [ ] Complex logic has explanatory comments
 
-### Test Quality
-
-#### Coverage
-
-- [ ] New behavior has corresponding tests
-- [ ] Edge cases and error paths are tested
-- [ ] Tests are in the correct location/file
-
-#### Test Design
-
-- [ ] Tests verify observable behavior, not internals
-- [ ] Assertions are specific and meaningful
-- [ ] Test names describe the scenario and expectation
-
-#### Reliability
-
-- [ ] Tests are deterministic (no flakiness)
-- [ ] No dependencies on test execution order
-- [ ] External dependencies are mocked appropriately
-
-### Performance & Safety
-
-#### Performance
-
-- [ ] No obvious N+1 query patterns
-- [ ] Hot paths avoid unnecessary allocations
-- [ ] Data structures are appropriate for the access patterns
-
-#### Resource Management
-
-- [ ] Resources are properly closed/cleaned up
-- [ ] No memory leaks (event listeners, subscriptions)
-- [ ] Timeouts are set for external calls
-
-#### Error Handling
-
-- [ ] Errors are handled, not swallowed
-- [ ] Error messages are useful for debugging
-- [ ] Failure modes are graceful
-
-#### Security
-
-- [ ] No injection vulnerabilities (SQL, XSS, command)
-- [ ] Auth checks are present where needed
-- [ ] Sensitive data is not logged/exposed
-
 ## Review Verdict Categories
 
-### BLOCKING Issues
+### Issues (All Must Be Resolved)
 
-Must fix before merge:
+All issues must be fixed before merge:
 
 - Architecture violations
-- Security vulnerabilities
 - Data integrity risks
-- Missing critical tests
 - Obvious bugs
-
-### NON-BLOCKING Suggestions
-
-Nice to fix but can merge:
-
 - Style improvements
-- Minor naming suggestions
-- Performance micro-optimizations
-- Additional test coverage
+- Naming issues
 
 ## Review Output Format
 
@@ -140,20 +82,11 @@ Nice to fix but can merge:
 
 - [2-5 bullets describing the change and overall quality]
 
-## Blocking Issues
+## Issues
 
 1. [Issue description]
     - Why: [Explanation]
     - Fix: [Suggested resolution]
-
-## Non-blocking Suggestions
-
-- [Suggestion 1]
-- [Suggestion 2]
-
-## Test Feedback
-
-- [Comments on test quality, coverage, design]
 ```
 
 ## Additional Resources
@@ -161,7 +94,6 @@ Nice to fix but can merge:
 For detailed guidance and examples, consult:
 
 - **`references/review-patterns.md`** - Common review scenarios and how to handle them
-- **`references/security-checklist.md`** - Detailed security review guidance
 - **`examples/sample-review.md`** - Complete example of a well-structured code review
 
 ### Related Skills

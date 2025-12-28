@@ -58,17 +58,12 @@ Fast, focused review for small changes, hotfixes, or time-constrained situations
 ```markdown
 ## Quick Review Summary
 
-**Verdict:** APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION
+**Verdict:** APPROVE / REQUEST_CHANGES
 
-### Critical Issues (if any)
+### Issues (if any)
 
-- [blocking issue 1]
-- [blocking issue 2]
-
-### Suggestions (non-blocking)
-
-- [suggestion 1]
-- [suggestion 2]
+- [issue 1]
+- [issue 2]
 
 ### Notes
 

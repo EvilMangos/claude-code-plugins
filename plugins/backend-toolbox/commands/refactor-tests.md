@@ -282,11 +282,9 @@ prompt: |
   Review the refactored test code for quality issues.
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
 
-  Classify findings as BLOCKING or NON-BLOCKING.
-
   Signal status:
-  - "passed" = no blocking issues
-  - "failed" = blocking issues found (include "BLOCKING: N issues" in summary)
+  - "passed" = no issues found
+  - "failed" = issues found (include "ISSUES: N" in summary)
 
   ## Input Reports
   - plan

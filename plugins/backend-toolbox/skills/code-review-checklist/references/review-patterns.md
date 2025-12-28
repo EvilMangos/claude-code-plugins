@@ -129,31 +129,16 @@ Comment template:
 | "Obviously..."      | (Just state the fact)                 |
 | "Just do X"         | "One option: X, which would..."       |
 
-### Marking Severity
-
-Use prefixes to indicate importance:
-
-- `[blocking]` - Must fix before merge
-- `[suggestion]` - Nice to have, author decides
-- `[question]` - Seeking understanding
-- `[nit]` - Minor style/preference issue
-- `[praise]` - Highlighting good work
-
 ### When to Approve
 
 Approve when:
 
-- All blocking issues are resolved
+- All issues are resolved
 - You understand the change well enough to support it
 - Tests are adequate for the change scope
 - You'd be comfortable debugging this code
 
-Don't block on:
-
-- Style preferences not in team guidelines
-- Hypothetical future issues
-- Personal preferences for different approaches
-- "I would have done it differently"
+All found issues must be resolved before merge - there is no distinction between blocking and non-blocking issues.
 
 ## Review Efficiency Tips
 
@@ -174,7 +159,7 @@ Don't block on:
 ### Final Pass (5 minutes)
 
 1. Re-read your comments for tone
-2. Verify blocking vs non-blocking labels
+2. Verify all issues are clearly listed
 3. Add summary if many comments
 4. Approve or request changes
 
@@ -182,7 +167,6 @@ Don't block on:
 
 ### Gatekeeping
 
-- Blocking on non-issues to assert authority
 - Requiring "your way" when alternatives work
 - Adding unnecessary process
 
