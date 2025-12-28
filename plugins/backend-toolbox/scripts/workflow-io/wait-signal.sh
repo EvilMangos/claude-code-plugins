@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Wait for workflow signal(s) to exist and handle step progression
-# Usage: wait-signal.sh <taskId> <signalType(s)> [timeout_seconds]
+# Usage: wait-signal.sh <taskId> <signalType(s)>
 # signalType(s) can be a single type or comma-separated for parallel steps: "performance,security"
-# Polls until ALL signal files exist or timeout (default: 300s)
+# Polls until ALL signal files exist or timeout (1200s)
 # On success: increments step if all passed, decrements if any failed
 
 set -e
 
 TASK_ID="$1"
 SIGNAL_TYPES_INPUT="$2"
-TIMEOUT="${3:-1200}"
+TIMEOUT=1200
 
 if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPES_INPUT" ]]; then
     echo '{"success":false,"error":"Missing required parameters: taskId and signalType"}' >&2
