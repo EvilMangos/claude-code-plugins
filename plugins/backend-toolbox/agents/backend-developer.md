@@ -68,6 +68,10 @@ existing migration system (if any).
 3. Implement in small steps, running the smallest relevant test subset after each step.
 4. Provide the minimal test command(s) using the repo's standard tooling.
 
+## Completion Verification
+
+**Before declaring your task complete**, you MUST run the **full test suite**, not just the subset of tests related to your changes. While working incrementally, running partial tests is fine, but the final verification requires running all tests to ensure no regressions were introduced elsewhere in the codebase.
+
 ## Collaboration / Handoff to Automation QA
 
 - If I determine that new/updated tests are needed (including fixing incorrect/fragile tests),
