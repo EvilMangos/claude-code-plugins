@@ -124,32 +124,6 @@ END LOOP
    - Background agents communicate ONLY via signals and reports
    - If you need agent results: use get-report script, NOT TaskOutput
 
-## Agent Output Instructions
-
-**Always include these instructions in every agent prompt:**
-```
-## Workflow Context
-TASK_ID: {TASK_ID}
-SCOPE: {scope path or "entire codebase"}
-
-## Output
-1. Save your FULL report:
-   - taskId: {TASK_ID}
-   - reportType: {report-type}
-   - content: <your full report content>
-
-2. Save your signal:
-   - taskId: {TASK_ID}
-   - signalType: {report-type}
-   - content:
-     - status: "passed" or "failed"
-     - summary: {one sentence describing outcome}
-
-   Status mapping:
-   - "passed" = completed successfully, gate passed, no issues found
-   - "failed" = needs iteration, has issues to resolve, or error occurred
-```
-
 ---
 
 ## Step Definitions
@@ -175,7 +149,6 @@ Save report and signal with reportType/signalType: "requirements"
 subagent_type: codebase-analyzer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
   SCOPE: {scope}
 
@@ -190,18 +163,10 @@ prompt: |
   - Existing abstractions and utilities
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
+  - requirements
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "codebase-analysis"
-     - content: <your codebase analysis report>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "codebase-analysis"
-     - content: { status: "passed", summary: "Codebase analysis complete" }
+  reportType: codebase-analysis
 ```
 
 ### Step 3: plan (plan-creator)
@@ -210,7 +175,6 @@ prompt: |
 subagent_type: plan-creator
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
   SCOPE: {scope}
 
@@ -225,19 +189,11 @@ prompt: |
   If scope is the entire codebase: prioritize top 3-10 highest-value refactors.
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
+  - requirements
+  - codebase-analysis
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "plan"
-     - content: <your refactor plan>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "plan"
-     - content: { status: "passed", summary: "Refactor plan created with N steps" }
+  reportType: plan
 ```
 
 ### Step 4: refactoring (refactorer)
@@ -246,7 +202,6 @@ prompt: |
 subagent_type: refactorer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
   SCOPE: {scope}
 
@@ -264,25 +219,15 @@ prompt: |
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
   Required:
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
+  - codebase-analysis
+  - plan
   Optional (contains feedback requiring additional fixes):
-  - reportType: "code-review"
-  - reportType: "acceptance"
+  - code-review
+  - acceptance
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "refactoring"
-     - content: <your refactoring report with steps completed>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "refactoring"
-     - content: { status: "passed" or "failed", summary: "..." }
-       - "passed" = all steps complete, tests green
-       - "failed" = issues encountered (include details)
+  reportType: refactoring
 ```
 
 ### Step 5: code-review (code-reviewer)
@@ -291,7 +236,6 @@ prompt: |
 subagent_type: code-reviewer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -309,20 +253,12 @@ prompt: |
   - status: "failed" = issues found (include "ISSUES: N" in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
-  - reportType: "refactoring"
+  - codebase-analysis
+  - plan
+  - refactoring
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "code-review"
-     - content: <your code review report with verdict>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "code-review"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: code-review
 ```
 
 ### Step 6: acceptance (acceptance-reviewer)
@@ -331,7 +267,6 @@ prompt: |
 subagent_type: acceptance-reviewer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -346,21 +281,13 @@ prompt: |
   - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "plan"
-  - reportType: "refactoring"
-  - reportType: "code-review"
+  - requirements
+  - plan
+  - refactoring
+  - code-review
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "acceptance"
-     - content: <your acceptance review report with verdict>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "acceptance"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: acceptance
 ```
 
 ### Step 7: documentation (documentation-updater)
@@ -369,7 +296,6 @@ prompt: |
 subagent_type: documentation-updater
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -381,20 +307,12 @@ prompt: |
   If doc updates include code changes, re-run tests once afterward.
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "plan"
-  - reportType: "refactoring"
+  - requirements
+  - plan
+  - refactoring
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "documentation"
-     - content: <your documentation update report>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "documentation"
-     - content: { status: "passed", summary: "Documentation updated" }
+  reportType: documentation
 ```
 
 ### Step 8: finalize (workflow-finalizer)
@@ -403,7 +321,6 @@ prompt: |
 subagent_type: workflow-finalizer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -418,14 +335,7 @@ prompt: |
   Keep the summary concise and focused on outcomes.
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "finalize"
-     - content: <your executive summary>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "finalize"
-     - content: { status: "passed", summary: "Refactor complete: <one-sentence outcome>" }
+  reportType: finalize
 ```
 
 After the finalize signal is received, the orchestrator outputs the signal summary to the user and exits.

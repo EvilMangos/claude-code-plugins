@@ -92,32 +92,6 @@ END LOOP
    - Background agents communicate ONLY via signals and reports
    - If you need agent results: use get-report script, NOT TaskOutput
 
-## Agent Output Instructions
-
-**Always include these instructions in every agent prompt:**
-```
-## Workflow Context
-TASK_ID: {TASK_ID}
-
-## Output
-1. Save your FULL report:
-   - taskId: {TASK_ID}
-   - reportType: {report-type}
-   - content: <your full report content>
-
-2. Save your signal:
-   - taskId: {TASK_ID}
-   - signalType: {report-type}
-   - content:
-     - status: "passed" or "failed"
-     - summary: {one sentence describing outcome}
-
-   Status mapping:
-   - "passed" = completed successfully, gate passed, no issues found
-   - "failed" = needs iteration, has issues to resolve, or error occurred
-     (include details in summary: "PARTIAL: ...", "ISSUES: N", "ERROR: ...")
-```
-
 ---
 
 ## Step Definitions
@@ -134,7 +108,6 @@ Create task metadata:
 subagent_type: business-analyst
 run_in_background: false
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -150,14 +123,7 @@ prompt: |
   $ARGUMENTS
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "requirements"
-     - content: Include Bug Understanding, Expected vs Actual, Affected Components, Clarifications, Assumptions
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "requirements"
-     - content: { status: "passed", summary: "Bug requirements clarified" }
+  reportType: requirements
 ```
 
 ### Step 2: codebase-analysis (codebase-analyzer)
@@ -166,7 +132,6 @@ prompt: |
 subagent_type: codebase-analyzer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -186,18 +151,10 @@ prompt: |
   If bug cannot be reproduced, signal "failed" with details requesting more info.
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
+  - requirements
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "codebase-analysis"
-     - content: <reproduction steps, root cause analysis, affected files>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "codebase-analysis"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: codebase-analysis
 ```
 
 ### Step 3: plan (plan-creator)
@@ -206,7 +163,6 @@ prompt: |
 subagent_type: plan-creator
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -217,19 +173,11 @@ prompt: |
   - Test strategy (what tests to add/modify)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
+  - requirements
+  - codebase-analysis
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "plan"
-     - content: <your fix plan>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "plan"
-     - content: { status: "passed", summary: "Fix plan created" }
+  reportType: plan
 ```
 
 ### Step 4: tests-design (automation-qa)
@@ -238,7 +186,6 @@ prompt: |
 subagent_type: automation-qa
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -251,26 +198,18 @@ prompt: |
   If the test passes unexpectedly, signal "failed" - the bug may not be where we think.
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
   Required:
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
+  - requirements
+  - codebase-analysis
+  - plan
   Optional (contains feedback requiring test updates):
-  - reportType: "tests-review"
-  - reportType: "stabilization"
-  - reportType: "acceptance"
-  - reportType: "code-review"
+  - tests-review
+  - stabilization
+  - acceptance
+  - code-review
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "tests-design"
-     - content: <test design report, whether test was created, RED verification>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "tests-design"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: tests-design
 ```
 
 ### Step 5: tests-review (tests-reviewer)
@@ -279,7 +218,6 @@ prompt: |
 subagent_type: tests-reviewer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -295,21 +233,13 @@ prompt: |
   - status: "failed" = test needs improvement (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
-  - reportType: "tests-design"
+  - requirements
+  - codebase-analysis
+  - plan
+  - tests-design
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "tests-review"
-     - content: <your test review report with verdict>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "tests-review"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: tests-review
 ```
 
 ### Step 6: implementation (backend-developer)
@@ -318,7 +248,6 @@ prompt: |
 subagent_type: backend-developer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -329,27 +258,19 @@ prompt: |
   - The bug-catching test (if created) should now PASS (GREEN)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
   Required:
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
-  - reportType: "tests-design"
+  - requirements
+  - codebase-analysis
+  - plan
+  - tests-design
   Optional (contains feedback requiring fixes):
-  - reportType: "tests-review"
-  - reportType: "stabilization"
-  - reportType: "acceptance"
-  - reportType: "code-review"
+  - tests-review
+  - stabilization
+  - acceptance
+  - code-review
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "implementation"
-     - content: <implementation report, what changed, test results>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "implementation"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: implementation
 ```
 
 ### Step 7: stabilization (automation-qa)
@@ -358,7 +279,6 @@ prompt: |
 subagent_type: automation-qa
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -372,20 +292,12 @@ prompt: |
   - status: "failed" = issues found (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "plan"
-  - reportType: "implementation"
+  - requirements
+  - plan
+  - implementation
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "stabilization"
-     - content: <stabilization report with broader test results>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "stabilization"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: stabilization
 ```
 
 ### Step 8: acceptance (acceptance-reviewer)
@@ -394,7 +306,6 @@ prompt: |
 subagent_type: acceptance-reviewer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -408,22 +319,14 @@ prompt: |
   - status: "failed" = gaps found (include "PARTIAL: ..." in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "requirements"
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
-  - reportType: "implementation"
-  - reportType: "stabilization"
+  - requirements
+  - codebase-analysis
+  - plan
+  - implementation
+  - stabilization
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "acceptance"
-     - content: <acceptance review report with verdict>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "acceptance"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: acceptance
 ```
 
 ### Step 9: code-review (code-reviewer)
@@ -432,7 +335,6 @@ prompt: |
 subagent_type: code-reviewer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -452,21 +354,13 @@ prompt: |
   - status: "failed" = issues found (include "ISSUES: N functional, M structural" in summary)
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "codebase-analysis"
-  - reportType: "plan"
-  - reportType: "implementation"
-  - reportType: "stabilization"
+  - codebase-analysis
+  - plan
+  - implementation
+  - stabilization
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "code-review"
-     - content: <code review report with verdict>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "code-review"
-     - content: { status: "passed" or "failed", summary: "..." }
+  reportType: code-review
 ```
 
 ### Step 10: refactoring (refactorer)
@@ -475,7 +369,6 @@ prompt: |
 subagent_type: refactorer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -489,20 +382,12 @@ prompt: |
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`).
 
   ## Input Reports
-  Retrieve (taskId={TASK_ID}):
-  - reportType: "codebase-analysis"
-  - reportType: "implementation"
-  - reportType: "code-review"
+  - codebase-analysis
+  - implementation
+  - code-review
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "refactoring"
-     - content: <refactoring report>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "refactoring"
-     - content: { status: "passed", summary: "Refactoring complete, tests passing" }
+  reportType: refactoring
 ```
 
 ### Step 11: finalize (workflow-finalizer)
@@ -511,7 +396,6 @@ prompt: |
 subagent_type: workflow-finalizer
 run_in_background: true
 prompt: |
-  ## Workflow Context
   TASK_ID: {TASK_ID}
 
   ## Task
@@ -527,14 +411,7 @@ prompt: |
   Keep the summary concise and focused on outcomes.
 
   ## Output
-  1. Save FULL report:
-     - taskId: {TASK_ID}
-     - reportType: "finalize"
-     - content: <your executive summary>
-  2. Save signal:
-     - taskId: {TASK_ID}
-     - signalType: "finalize"
-     - content: { status: "passed", summary: "Bug fix complete: <one-sentence outcome>" }
+  reportType: finalize
 ```
 
 After the finalize signal is received, the orchestrator outputs the signal summary to the user and exits.
