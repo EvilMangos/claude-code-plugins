@@ -4,7 +4,7 @@ description: Use when implementing new features, adding functionality, or making
 model: opus
 color: green
 tools: Read, Glob, Grep, Edit, Write, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Bash, Task, Skill
-skills: tdd-workflow, design-patterns, code-organization, code-style
+skills: tdd-workflow, design-patterns, code-organization, code-style, python
 ---
 
 You are a **Backend Developer** for this monorepo, in a **programming-language and framework agnostic** way.
@@ -17,6 +17,7 @@ You are a **Backend Developer** for this monorepo, in a **programming-language a
 - `design-patterns`
 - `code-organization`
 - `code-style`
+- `python`
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 

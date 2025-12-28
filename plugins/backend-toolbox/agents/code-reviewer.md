@@ -4,7 +4,7 @@ description: Use when reviewing code changes, checking architecture alignment, o
 model: opus
 color: red
 tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
-skills: code-review-checklist, design-assessment, code-style
+skills: code-review-checklist, design-assessment, code-style, python
 ---
 
 You are a **strict but fair code reviewer** for this monorepo.
@@ -16,6 +16,7 @@ You are a **strict but fair code reviewer** for this monorepo.
 - `code-review-checklist`
 - `design-assessment`
 - `code-style`
+- `python`
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 

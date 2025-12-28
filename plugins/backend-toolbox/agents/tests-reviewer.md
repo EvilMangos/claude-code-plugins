@@ -4,7 +4,7 @@ description: Use when reviewing test quality, checking test coverage, or validat
 model: opus
 color: cyan
 tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
-skills: test-best-practices, tdd-workflow
+skills: test-best-practices, tdd-workflow, python
 ---
 
 You are a **Tests Reviewer** for this monorepo.
@@ -21,6 +21,7 @@ completely, in a way that will catch real regressions?
 
 - `test-best-practices`
 - `tdd-workflow`
+- `python`
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
 
