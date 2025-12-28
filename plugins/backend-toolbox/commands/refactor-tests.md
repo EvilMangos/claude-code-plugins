@@ -34,7 +34,7 @@ All orchestrator operations use scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/workfl
 |-----------|--------|-------|
 | Create metadata | `create-metadata.sh <taskId> '<stepsJson>'` | Initialize task with execution steps |
 | Get next step | `get-next-step.sh <taskId>` | Returns current step to execute |
-| Wait for signal | `wait-signal.sh <taskId> <signalType(s)> [timeout]` | Waits for signal(s), advances workflow |
+| Wait for signal | `wait-signal.sh <taskId> <signalType(s)>` | Waits for signal(s), advances workflow |
 | Get report | `get-report.sh <taskId> <reportType>` | Retrieves full report content |
 
 Notes:
