@@ -5,6 +5,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 
 if [[ -z "$TASK_ID" ]]; then
@@ -12,7 +16,7 @@ if [[ -z "$TASK_ID" ]]; then
     exit 1
 fi
 
-METADATA_FILE=".task-reports/${TASK_ID}/metadata.json"
+METADATA_FILE="${TASK_REPORTS_BASE}/${TASK_ID}/metadata.json"
 
 if [[ ! -f "$METADATA_FILE" ]]; then
     echo "{\"success\":false,\"error\":\"Metadata not found for taskId: $TASK_ID\"}" >&2

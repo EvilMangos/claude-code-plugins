@@ -5,6 +5,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 REPORT_TYPE="$2"
 CONTENT="$3"
@@ -27,7 +31,7 @@ if [[ -z "$CONTENT" ]]; then
 fi
 
 # Create directory structure
-REPORTS_DIR=".task-reports/${TASK_ID}/reports"
+REPORTS_DIR="${TASK_REPORTS_BASE}/${TASK_ID}/reports"
 mkdir -p "$REPORTS_DIR"
 
 # Save report

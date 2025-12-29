@@ -6,6 +6,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 SIGNAL_TYPE="$2"
 STATUS="$3"
@@ -30,7 +34,7 @@ if [[ "$STATUS" != "passed" && "$STATUS" != "failed" ]]; then
 fi
 
 # Create directory structure
-SIGNALS_DIR=".task-reports/${TASK_ID}/signals"
+SIGNALS_DIR="${TASK_REPORTS_BASE}/${TASK_ID}/signals"
 mkdir -p "$SIGNALS_DIR"
 
 # Save signal as JSON

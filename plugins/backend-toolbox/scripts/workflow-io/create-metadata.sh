@@ -6,6 +6,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 EXECUTION_STEPS="$2"
 
@@ -21,7 +25,7 @@ if ! echo "$EXECUTION_STEPS" | jq -e 'type == "array"' > /dev/null 2>&1; then
 fi
 
 # Create directory structure
-TASK_DIR=".task-reports/${TASK_ID}"
+TASK_DIR="${TASK_REPORTS_BASE}/${TASK_ID}"
 mkdir -p "$TASK_DIR/reports" "$TASK_DIR/signals"
 
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)

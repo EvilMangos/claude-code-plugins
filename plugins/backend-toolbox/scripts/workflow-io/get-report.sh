@@ -4,6 +4,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 REPORT_TYPE="$2"
 
@@ -19,7 +23,7 @@ if [[ ! " $VALID_TYPES " =~ " $REPORT_TYPE " ]]; then
     exit 1
 fi
 
-REPORT_FILE=".task-reports/${TASK_ID}/reports/${REPORT_TYPE}.md"
+REPORT_FILE="${TASK_REPORTS_BASE}/${TASK_ID}/reports/${REPORT_TYPE}.md"
 
 if [[ ! -f "$REPORT_FILE" ]]; then
     echo "{\"success\":false,\"error\":\"Report not found: $REPORT_FILE\"}" >&2

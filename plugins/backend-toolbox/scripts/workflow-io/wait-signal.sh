@@ -7,6 +7,10 @@
 
 set -e
 
+# Source shared base directory helper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/_base-dir.sh"
+
 TASK_ID="$1"
 SIGNAL_TYPES_INPUT="$2"
 TIMEOUT=1200
@@ -30,8 +34,8 @@ for TYPE in "${SIGNAL_TYPES[@]}"; do
     fi
 done
 
-SIGNALS_DIR=".task-reports/${TASK_ID}/signals"
-METADATA_FILE=".task-reports/${TASK_ID}/metadata.json"
+SIGNALS_DIR="${TASK_REPORTS_BASE}/${TASK_ID}/signals"
+METADATA_FILE="${TASK_REPORTS_BASE}/${TASK_ID}/metadata.json"
 POLL_INTERVAL=2
 START_TIME=$(date +%s)
 
