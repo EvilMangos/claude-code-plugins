@@ -1,6 +1,6 @@
 ---
 description: Refactor tests within an optional path (file or folder). If no path is provided, scope is the entire test suite. Never modify non-test production code.
-argument-hint: [ path ]
+argument-hint: [ path ] [ instructions ]
 allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(find:*), Task, Skill, MCP
 ---
 
@@ -8,11 +8,18 @@ allowed-tools: Read, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(find:*), Ta
 
 You are orchestrating a **tests-refactor-only** workflow for this repository.
 
-The user request is:
+## Arguments
 
-> $ARGUMENTS
+| Arg | Value | Description |
+|-----|-------|-------------|
+| `$1` | `$1` | Path to test file or folder. If empty or `-`, scope is **entire test suite**. |
+| `$2` | `$2` | Specific refactoring instructions/focus areas. |
 
-The argument is an optional **path** to a test file or test folder. If no argument is provided, the scope is the **entire test suite**.
+Examples:
+- `/refactor-tests` → scope: entire test suite, no instructions
+- `/refactor-tests tests/unit` → scope: tests/unit, no instructions
+- `/refactor-tests - "reduce duplication using shared fixtures"` → entire test suite, with instructions
+- `/refactor-tests tests/unit "consolidate similar test cases"` → tests/unit, with instructions
 
 ## Architecture: Workflow
 
@@ -90,9 +97,10 @@ If a required improvement would need production code changes, STOP and tell the 
 
 Before initializing the workflow, the main agent must:
 
-1) Determine scope:
-   - If `$ARGUMENTS` is empty: scope = "entire test suite".
-   - Else: scope = `$ARGUMENTS`.
+1) Determine scope and instructions:
+   - If `$1` is empty or `-`: scope = "entire test suite".
+   - Else: scope = `$1`.
+   - Set instructions to `$2` (may be empty).
 
 2) Validate scope path (if provided):
    - Use Glob to confirm the path exists.
@@ -149,8 +157,10 @@ Create task metadata:
 
 The main agent (not a subagent) captures:
 - Scope (path or entire test suite)
+- Instructions (user-provided refactoring focus, if any)
 - Success criteria: tests remain green, no production code changed, improved readability/structure/determinism
 - Refactor goals: reduce duplication, simplify setup/teardown, clarify naming, remove flakiness, improve fixtures
+  - If instructions provided: prioritize user's specified focus areas
 
 Save report and signal with reportType/signalType: "requirements"
 
@@ -189,6 +199,7 @@ run_in_background: true
 prompt: |
   TASK_ID: {TASK_ID}
   SCOPE: {scope}
+  INSTRUCTIONS: {instructions}
 
   ## Task
   Create a small-step refactor plan (each step independently testable).
@@ -199,6 +210,9 @@ prompt: |
 
   If scope is the entire test suite: prioritize top 3-10 highest-value refactors.
   Add a "file-safety" section explaining how the plan avoids production code edits.
+
+  **If INSTRUCTIONS provided**: Use them to guide priorities and focus areas.
+  The plan should directly address the user's specified refactoring goals.
 
   ## Input Reports
   - requirements

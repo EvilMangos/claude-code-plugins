@@ -1,6 +1,6 @@
 ---
 description: Refactor code in a given path (file or folder) with tests after each step; never modify test files. If no path is provided, scope is the entire codebase.
-argument-hint: [ path ]
+argument-hint: [ path ] [ instructions ]
 allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), Task, Skill, MCP
 ---
 
@@ -8,11 +8,18 @@ allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), Task, Skill, MCP
 
 You are orchestrating a **refactor-only** workflow for this repository.
 
-The user request is:
+## Arguments
 
-> $ARGUMENTS
+| Arg | Value | Description |
+|-----|-------|-------------|
+| `$1` | `$1` | Path to file or folder. If empty or `-`, scope is **entire codebase**. |
+| `$2` | `$2` | Specific refactoring instructions/focus areas. |
 
-The argument is an optional **path** to a file or folder. If no argument is provided, the scope is the **entire codebase**.
+Examples:
+- `/refactor` → scope: entire codebase, no instructions
+- `/refactor src/utils` → scope: src/utils, no instructions
+- `/refactor - "reduce duplication in helper functions"` → entire codebase, with instructions
+- `/refactor src/utils "extract common patterns"` → src/utils, with instructions
 
 ## Architecture: Workflow
 
@@ -78,9 +85,10 @@ Example: `refactor-src-utils-helpers-1702834567`
 
 Before initializing the workflow, the main agent must:
 
-1) Determine scope:
-   - If `$ARGUMENTS` is empty: set scope to the repo root (`.`).
-   - Else: set scope to `$ARGUMENTS`.
+1) Determine scope and instructions:
+   - If `$1` is empty or `-`: set scope to the repo root (`.`).
+   - Else: set scope to `$1`.
+   - Set instructions to `$2` (may be empty).
 
 2) Verify the scope exists:
    - Use Glob on the chosen scope.
@@ -138,8 +146,10 @@ Create task metadata:
 
 The main agent (not a subagent) captures:
 - Scope (path or entire codebase)
+- Instructions (user-provided refactoring focus, if any)
 - Success criteria: behavior preserved, tests remain green, no test files changed
 - Refactor goals: readability, structure, coupling, naming, duplication, error-handling hygiene
+  - If instructions provided: prioritize user's specified focus areas
 
 Save report and signal with reportType/signalType: "requirements"
 
@@ -177,6 +187,7 @@ run_in_background: true
 prompt: |
   TASK_ID: {TASK_ID}
   SCOPE: {scope}
+  INSTRUCTIONS: {instructions}
 
   ## Task
   Create a small-step refactor plan (steps should be independently testable).
@@ -187,6 +198,9 @@ prompt: |
 
   Include a "test-file safety" note: how the plan avoids touching tests.
   If scope is the entire codebase: prioritize top 3-10 highest-value refactors.
+
+  **If INSTRUCTIONS provided**: Use them to guide priorities and focus areas.
+  The plan should directly address the user's specified refactoring goals.
 
   ## Input Reports
   - requirements
