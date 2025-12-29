@@ -19,6 +19,8 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 LOG_FILE = "/tmp/claude-hooks.log"
+DEBOUNCE_FILE = "/tmp/claude-telegram-notify-last"
+DEBOUNCE_SECONDS = 5  # Skip notifications within this window
 MAX_MESSAGE_LENGTH = 3500
 MAX_PROMPT_DISPLAY_LENGTH = 200
 
@@ -28,6 +30,32 @@ def log(message: str) -> None:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"[{timestamp}] {message}\n")
+
+
+def should_debounce(session_id: str, message_type: str) -> bool:
+    """
+    Check if we should skip this notification due to recent activity.
+    Uses per-session, per-type debouncing to avoid duplicate notifications.
+    """
+    debounce_key = f"{session_id}:{message_type}"
+    debounce_path = Path(f"{DEBOUNCE_FILE}-{hash(debounce_key) % 10000}")
+
+    try:
+        if debounce_path.exists():
+            last_time = float(debounce_path.read_text().strip())
+            if datetime.now().timestamp() - last_time < DEBOUNCE_SECONDS:
+                log(f"Debouncing notification for {debounce_key}")
+                return True
+    except (ValueError, OSError):
+        pass
+
+    # Update debounce timestamp
+    try:
+        debounce_path.write_text(str(datetime.now().timestamp()))
+    except OSError:
+        pass
+
+    return False
 
 
 def send_telegram_message(token: str, chat_id: str, text: str) -> None:
@@ -230,6 +258,10 @@ def main() -> None:
     project = Path(cwd).name if cwd else "unknown"
     transcript_path = input_data.get("transcript_path", "")
     session_id = input_data.get("session_id", "unknown")
+
+    # Skip duplicate notifications (e.g., from subagent stops)
+    if should_debounce(session_id, message_type):
+        sys.exit(0)
 
     if transcript_path and Path(transcript_path).is_file():
         last_prompt = extract_last_user_prompt(transcript_path)
