@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "backend-toolbox:*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/auto-save-signal-on-stop.py\""
+          }
+        ]
+      }
     ]
   }
 }
