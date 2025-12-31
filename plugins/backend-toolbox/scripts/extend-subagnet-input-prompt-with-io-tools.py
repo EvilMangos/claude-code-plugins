@@ -6,51 +6,55 @@ import sys
 IO_BLOCK_TEMPLATE = """
 ## Workflow I/O Contract (MANDATORY)
 
-You are part of a multi-agent workflow. Follow these steps exactly.
+You are part of a multi-agent workflow. Follow these requirements exactly.
 
 ### Your Workflow Context
 
 - **TASK_ID**: `{task_id}`
 - **Output reportType**: `{report_type}`
-- **Input Reports to fetch**: {input_reports}
+- **Input Reports available**: {input_reports}
 
-### Step 1: Fetch Input Reports
-
-For EACH input report listed above, fetch it FIRST using this command:
-```bash
-${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/get-report.sh {task_id} <reportType>
-```
+### Step 1: Fetch Input Reports (if needed)
 
 {fetch_commands}
 
 Read the returned content - this is context from previous workflow steps.
 
-### Step 2: Do Your Work
+### Step 2: Complete Your Work
 
 Complete your assigned task using the fetched reports as context.
 
-### Step 3: Save Your Output (MANDATORY - DO NOT SKIP)
+### Step 3: Structure Your Output (MANDATORY)
 
-When done, you MUST save BOTH report AND signal. The orchestrator is WAITING for your signal.
+Your response will be automatically captured and saved as the workflow report.
 
-**Save your full report:**
-```bash
-${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/save-report.sh {task_id} {report_type} '<your-full-markdown-report>'
+**Required format:**
+1. Structure your report using markdown sections with ## headings
+2. Include all analysis, findings, decisions, and recommendations
+3. End your response with a clear status declaration:
+   - `STATUS: PASSED` if you successfully completed your task
+   - `STATUS: FAILED` if you encountered blocking issues
+
+**Example structure:**
+```markdown
+## Summary
+[Brief overview of what you did]
+
+## Analysis
+[Your detailed analysis]
+
+## Recommendations
+[Your recommendations or next steps]
+
+STATUS: PASSED
 ```
-
-**Save completion signal:**
-```bash
-${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/save-signal.sh {task_id} {report_type} <status> '<one-sentence-summary>'
-```
-- status: `passed` or `failed`
-- summary: brief outcome (prefix with `ERROR:` if failed)
 
 ### Critical Rules
 
-1. **ALWAYS save report AND signal** - The orchestrator blocks until your signal arrives. No signal = workflow hangs forever.
-2. **Fetch before working** - Read all input reports before starting your analysis.
-3. **Signal even on failure** - If you encounter errors, save signal with status=`failed`.
-4. **Do this BEFORE responding** - Save report and signal as your final action, not as an afterthought.
+1. **Structure with markdown headings** - Use ## for all major sections so they can be properly captured
+2. **Always end with STATUS** - The orchestrator needs to know if you succeeded or failed
+3. **Fetch before working** - Read all input reports before starting your analysis
+4. **STATUS: FAILED on errors** - If you encounter blocking issues, declare failure explicitly
 """.strip()
 
 

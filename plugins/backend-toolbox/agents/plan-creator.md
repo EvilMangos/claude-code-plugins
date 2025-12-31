@@ -3,7 +3,7 @@ name: plan-creator
 description: Use when starting a new feature, planning implementation steps, or breaking down complex tasks. Planning specialist that turns high-level requests into concrete, step-by-step implementation and testing plans. Triggers - "plan", "design", "break down", "how should we implement".
 model: opus
 color: magenta
-tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
+tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Task, Skill
 skills: code-organization
 ---
 

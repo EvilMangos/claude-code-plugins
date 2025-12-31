@@ -3,7 +3,7 @@ name: workflow-finalizer
 description: Use to generate final workflow summary. Reads all workflow reports, synthesizes outcomes, and produces a concise executive summary. Triggers - "finalize workflow", "workflow complete", "generate summary".
 model: haiku
 color: white
-tools: Read, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Write
+tools: Read, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Write
 skills:
 ---
 

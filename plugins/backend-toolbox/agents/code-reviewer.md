@@ -3,7 +3,7 @@ name: code-reviewer
 description: Use when reviewing code changes, checking architecture alignment, or evaluating code quality. Senior engineer focused on code quality, architecture alignment, performance, and test robustness. Triggers - "review code", "code review", "check quality", "architecture review", "PR review".
 model: opus
 color: red
-tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
+tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Task, Skill
 skills: code-review-checklist, design-assessment, code-style, python
 ---
 

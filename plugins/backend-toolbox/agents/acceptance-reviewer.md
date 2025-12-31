@@ -3,7 +3,7 @@ name: acceptance-reviewer
 description: Use when verifying that implementation satisfies requirements, checking feature completeness, or validating against the original request. Product/acceptance reviewer that checks whether changes satisfy the user's task requirements. Triggers - "does this meet requirements", "acceptance", "validate feature".
 model: opus
 color: magenta
-tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Task, Skill
+tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Task, Skill
 skills: acceptance-criteria
 ---
 

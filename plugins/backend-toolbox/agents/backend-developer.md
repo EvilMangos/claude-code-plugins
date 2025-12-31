@@ -3,7 +3,7 @@ name: backend-developer
 description: Use when implementing new features, adding functionality, or making tests pass (GREEN stage). Backend developer implementing new behavior in small steps following architecture rules. Triggers - "implement", "make tests pass", "GREEN stage", "add feature", "build functionality".
 model: opus
 color: green
-tools: Read, Glob, Grep, Edit, Write, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/*), Bash, Task, Skill
+tools: Read, Glob, Grep, Edit, Write, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Bash, Task, Skill
 skills: tdd-workflow, design-patterns, code-organization, code-style, python
 ---
 
