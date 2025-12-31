@@ -202,6 +202,88 @@ const fullName = (user: User) => `${user.firstName} ${user.lastName}`;
 // - Used in tested code (covered indirectly)
 ```
 
+### Configuration and Environment Loading
+
+Never write tests that simply verify environment variables are loaded into config objects, or that framework features like immutability work correctly:
+
+```python
+# SKIP - Simple environment variable loading
+def test_loads_api_key_from_environment():
+    """Don't test: reading env var and storing in config field is pass-through."""
+    os.environ['API_KEY'] = 'test_key'
+    config = load_config()
+    assert config.api_key == 'test_key'  # No logic to verify
+
+# SKIP - Default value application
+def test_uses_default_timeout_when_not_provided():
+    """Don't test: simple default value logic is trivial."""
+    config = load_config()
+    assert config.timeout == 30  # Just checking a default constant
+
+# SKIP - Testing framework features
+def test_config_is_immutable():
+    """Don't test: @dataclass(frozen=True) immutability is Python's responsibility."""
+    config = Config(api_key='key')
+    with pytest.raises(AttributeError):
+        config.api_key = 'new_key'  # Testing Python, not your code
+
+def test_config_stores_all_fields():
+    """Don't test: field storage is guaranteed by the language/framework."""
+    config = Config(api_key='key', timeout=60)
+    assert config.api_key == 'key'  # Testing basic object construction
+    assert config.timeout == 60
+```
+
+```typescript
+// SKIP - Environment loading without logic
+describe('Config', () => {
+  it('loads PORT from environment', () => {
+    process.env.PORT = '3000';
+    const config = loadConfig();
+    expect(config.port).toBe(3000);  // No logic, just pass-through
+  });
+
+  it('uses default port when not set', () => {
+    const config = loadConfig();
+    expect(config.port).toBe(8080);  // Testing a simple default
+  });
+});
+
+// SKIP - Testing DTO/class features
+it('config object is readonly', () => {
+  const config = new Config({ apiKey: 'key' });
+  expect(() => config.apiKey = 'new').toThrow();  // Testing readonly modifier
+});
+```
+
+**Why skip configuration loading tests:**
+
+- Loading env vars into fields is pass-through logic with no behavior to verify
+- Default values are static constants, obvious from code
+- Framework features (immutability, readonly, field storage) are language-guaranteed
+- These tests break on every refactor without catching real bugs
+- High maintenance cost, zero bug prevention value
+
+**What to DO test for configuration:**
+
+- **Validation logic** - missing required fields, invalid formats (see "Input Validation" section)
+- **Complex transformations** - parsing, normalization, computed values with business logic
+- **Configuration-driven behavior** - how your code behaves differently based on config values
+
+```python
+# DO TEST - Validation at system boundary
+def test_raises_error_when_required_api_key_missing():
+    """DO test: validation is real logic that prevents invalid states."""
+    with pytest.raises(ConfigurationError, match="API_KEY is required"):
+        load_config()  # Missing required env var
+
+def test_raises_error_when_port_not_numeric():
+    """DO test: format validation catches configuration mistakes."""
+    os.environ['PORT'] = 'not_a_number'
+    with pytest.raises(ConfigurationError, match="PORT must be numeric"):
+        load_config()
+```
+
 ### Interfaces and Abstractions
 
 Never write tests for interfaces, abstract classes, protocols, or pure contracts:
@@ -429,6 +511,7 @@ Should I write a test for this code?
 │
 ├─ Is it a simple getter/setter? → NO, skip
 ├─ Is it a pass-through method? → NO, skip
+├─ Is it simple config/env loading? → NO, skip
 ├─ Is it framework code? → NO, skip
 ├─ Is it a constant? → NO, skip
 │

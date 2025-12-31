@@ -44,6 +44,8 @@ Focus tests on what the code does, not how it does it:
 - Third-party library internals
 - Trivial one-liner pass-through methods
 - Configuration constants
+- **Simple configuration/environment loading** – loading env vars into config objects without validation logic
+- **Framework features** – dataclass immutability, readonly modifiers, field storage (language-guaranteed behavior)
 - **Interfaces, abstract classes, and protocols** – test concrete implementations, not the abstractions themselves
 - **Module exports and re-exports** – don't test that a file exports certain symbols; test behavior instead
 
