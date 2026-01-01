@@ -26,8 +26,12 @@ fi
 REPORT_FILE="${TASK_REPORTS_BASE}/${TASK_ID}/reports/${REPORT_TYPE}.md"
 
 if [[ ! -f "$REPORT_FILE" ]]; then
-    echo "{\"success\":false,\"error\":\"Report not found: $REPORT_FILE\"}" >&2
-    exit 1
+    # Not an error - report may not exist yet in early workflow steps
+    echo "---"
+    echo "Report '$REPORT_TYPE' not available yet for task '$TASK_ID'."
+    echo "This is expected for early workflow steps - proceed without this context."
+    echo "---"
+    exit 0
 fi
 
 # Output the report content

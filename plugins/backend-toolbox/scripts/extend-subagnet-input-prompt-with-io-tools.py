@@ -19,6 +19,7 @@ You are part of a multi-agent workflow. Follow these requirements exactly.
 {fetch_commands}
 
 Read the returned content - this is context from previous workflow steps.
+**NOTE**: If a report doesn't exist yet (file not found error), that's expected for early workflow steps - skip that report and continue.
 
 ### Step 2: Complete Your Work
 
@@ -53,7 +54,7 @@ STATUS: PASSED
 
 1. **Structure with markdown headings** - Use ## for all major sections so they can be properly captured
 2. **Always end with STATUS** - The orchestrator needs to know if you succeeded or failed
-3. **Fetch before working** - Read all input reports before starting your analysis
+3. **Fetch before working** - Read all input reports before starting your analysis (skip missing ones)
 4. **STATUS: FAILED on errors** - If you encounter blocking issues, declare failure explicitly
 """.strip()
 
