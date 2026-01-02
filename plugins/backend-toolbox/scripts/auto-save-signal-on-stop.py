@@ -40,10 +40,16 @@ def parse_workflow_context(prompt: str) -> dict:
     if task_match:
         result["task_id"] = task_match.group(1).strip('`"')
 
-    # Extract Output reportType
+    # Extract Output reportType - try multiple formats
+    # Format 1: ## Output\nreportType: xxx
     output_match = re.search(r'##\s*Output\s*\n\s*reportType:\s*(\S+)', prompt)
     if output_match:
         result["report_type"] = output_match.group(1)
+    else:
+        # Format 2: reportType: xxx (anywhere in prompt)
+        inline_match = re.search(r'reportType:\s*(\S+)', prompt)
+        if inline_match:
+            result["report_type"] = inline_match.group(1)
 
     return result
 
@@ -181,19 +187,95 @@ def save_signal(task_id: str, report_type: str, status: str, summary: str) -> bo
         return False
 
 
-def parse_transcript_jsonl(transcript_path: str) -> dict:
-    """
-    Parse a transcript JSONL file to extract subagent_type, prompt, and transcript.
-    Returns dict with keys: subagent_type, prompt, transcript
+def extract_text_from_content(content) -> str:
+    """Extract text from various content formats."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        texts = []
+        for item in content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                texts.append(item.get("text", ""))
+            elif isinstance(item, str):
+                texts.append(item)
+        return "\n".join(texts)
+    return ""
 
-    The subagent's transcript contains:
-    - System/user messages with the original task prompt (contains TASK_ID and reportType)
-    - Assistant messages with the agent's work
+
+def find_task_call_for_agent(parent_transcript_path: str, agent_id: str) -> dict:
     """
-    result = {"subagent_type": "", "prompt": "", "transcript": ""}
+    Parse parent's transcript to find the Task tool call that spawned this agent.
+    Returns dict with subagent_type and prompt.
+
+    The transcript format is:
+    {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Task", ...}]}}
+    """
+    result = {"subagent_type": "", "prompt": ""}
 
     try:
-        path = Path(transcript_path).expanduser()
+        path = Path(parent_transcript_path).expanduser()
+        if not path.exists():
+            return result
+
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+
+                    # Check for tool_use in message.content array (assistant messages)
+                    message = entry.get("message", {})
+                    content = message.get("content", [])
+                    if isinstance(content, list):
+                        for item in content:
+                            if isinstance(item, dict) and item.get("type") == "tool_use" and item.get("name") == "Task":
+                                tool_input = item.get("input", {})
+                                subagent_type = tool_input.get("subagent_type", "")
+                                prompt = tool_input.get("prompt", "")
+
+                                # Check if this is a backend-toolbox Task call with workflow context
+                                if subagent_type.startswith("backend-toolbox:"):
+                                    if "TASK_ID:" in prompt and "reportType:" in prompt:
+                                        result["subagent_type"] = subagent_type
+                                        result["prompt"] = prompt
+                                        # Keep searching - later calls may be for our specific agent
+
+                    # Also check direct tool_use entries (fallback for other formats)
+                    if entry.get("type") == "tool_use" and entry.get("name") == "Task":
+                        tool_input = entry.get("input", {})
+                        subagent_type = tool_input.get("subagent_type", "")
+                        prompt = tool_input.get("prompt", "")
+
+                        if subagent_type.startswith("backend-toolbox:"):
+                            if "TASK_ID:" in prompt and "reportType:" in prompt:
+                                result["subagent_type"] = subagent_type
+                                result["prompt"] = prompt
+
+                except json.JSONDecodeError:
+                    continue
+
+    except Exception as e:
+        print(f"Error parsing parent transcript: {e}", file=sys.stderr)
+
+    return result
+
+
+def parse_agent_transcript(agent_transcript_path: str) -> dict:
+    """
+    Parse the agent's own transcript to extract its output and prompt.
+    Returns dict with prompt and transcript content.
+
+    The transcript format is:
+    {"type": "assistant|user|system", "message": {"content": [...]}}
+    or
+    {"type": "assistant|user|system", "content": "..."}
+    """
+    result = {"prompt": "", "transcript": ""}
+
+    try:
+        path = Path(agent_transcript_path).expanduser()
         if not path.exists():
             return result
 
@@ -208,32 +290,31 @@ def parse_transcript_jsonl(transcript_path: str) -> dict:
                 try:
                     entry = json.loads(line)
                     entry_type = entry.get("type", "")
-                    role = entry.get("role", "")
 
-                    # Extract content helper
-                    def extract_text(content):
-                        if isinstance(content, str):
-                            return content
-                        if isinstance(content, list):
-                            texts = []
-                            for item in content:
-                                if isinstance(item, dict) and item.get("type") == "text":
-                                    texts.append(item.get("text", ""))
-                                elif isinstance(item, str):
-                                    texts.append(item)
-                            return "\n".join(texts)
-                        return ""
+                    # Try to get content from message.content or direct content
+                    message = entry.get("message", {})
+                    content = message.get("content") if message else entry.get("content", "")
 
-                    content = entry.get("content", "")
-                    text = extract_text(content)
+                    # Extract text from content
+                    text = ""
+                    if isinstance(content, str):
+                        text = content
+                    elif isinstance(content, list):
+                        for item in content:
+                            if isinstance(item, dict):
+                                if item.get("type") == "text":
+                                    text += item.get("text", "") + "\n"
+                            elif isinstance(item, str):
+                                text += item + "\n"
+                    text = text.strip()
 
                     # Look for TASK_ID in system/user messages to find the original prompt
-                    if (entry_type in ("system", "user") or role in ("system", "user")):
+                    if entry_type in ("system", "user"):
                         if "TASK_ID:" in text and "reportType:" in text:
                             prompt_parts.append(text)
 
                     # Collect assistant messages for transcript
-                    if entry_type == "assistant" or role == "assistant":
+                    if entry_type == "assistant":
                         if text:
                             transcript_lines.append(text)
 
@@ -252,7 +333,7 @@ def parse_transcript_jsonl(transcript_path: str) -> dict:
         result["transcript"] = "\n".join(transcript_lines)
 
     except Exception as e:
-        print(f"Error parsing transcript: {e}", file=sys.stderr)
+        print(f"Error parsing agent transcript: {e}", file=sys.stderr)
 
     return result
 
@@ -274,17 +355,24 @@ def main():
     except Exception:
         pass
 
-    # SubagentStop provides transcript_path, not direct fields
-    transcript_path = data.get("transcript_path", "")
-    if not transcript_path:
+    # SubagentStop provides transcript_path (parent) and agent_transcript_path (agent)
+    parent_transcript_path = data.get("transcript_path", "")
+    agent_transcript_path = data.get("agent_transcript_path", "")
+    agent_id = data.get("agent_id", "")
+
+    if not parent_transcript_path and not agent_transcript_path:
+        try:
+            with open(debug_path, "a") as f:
+                f.write("Skipping: no transcript paths provided\n\n")
+        except Exception:
+            pass
         print(json.dumps({}))
         return
 
-    # Parse the JSONL transcript file
-    parsed = parse_transcript_jsonl(transcript_path)
+    # Parse the parent transcript to find the Task call that spawned this agent
+    task_info = find_task_call_for_agent(parent_transcript_path, agent_id)
+    subagent_type = task_info["subagent_type"]
 
-    # Try to get subagent_type from hook input first (may be provided for matching)
-    subagent_type = data.get("subagent_type", "")
     if not subagent_type.startswith("backend-toolbox:"):
         # Debug: log why we're exiting
         try:
@@ -295,12 +383,16 @@ def main():
         print(json.dumps({}))
         return
 
-    prompt = parsed["prompt"]
+    # Parse the agent's transcript to get its output
+    agent_data = parse_agent_transcript(agent_transcript_path)
+
+    # Get prompt from task_info (parent) or agent_data (agent's context)
+    prompt = task_info["prompt"] or agent_data["prompt"]
     if not isinstance(prompt, str) or not prompt:
         # Debug: log why we're exiting
         try:
             with open(debug_path, "a") as f:
-                f.write(f"Skipping: prompt not found in transcript\n\n")
+                f.write(f"Skipping: prompt not found in transcripts\n\n")
         except Exception:
             pass
         print(json.dumps({}))
@@ -323,8 +415,8 @@ def main():
     task_id = ctx["task_id"]
     report_type = ctx["report_type"]
 
-    # Get transcript from parsed data
-    transcript = parsed["transcript"]
+    # Get transcript from agent's output
+    transcript = agent_data["transcript"]
 
     # Check if report and signal already exist
     base = get_task_reports_base()
