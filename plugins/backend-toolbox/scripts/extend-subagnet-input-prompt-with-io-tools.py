@@ -4,58 +4,41 @@ import re
 import sys
 
 IO_BLOCK_TEMPLATE = """
-## Workflow I/O Contract (MANDATORY)
+## Workflow I/O Contract
 
-You are part of a multi-agent workflow. Follow these requirements exactly.
+You are part of a multi-agent workflow. TASK_ID: `{task_id}`
 
-### Your Workflow Context
+### Available Script
 
-- **TASK_ID**: `{task_id}`
-- **Output reportType**: `{report_type}`
-- **Input Reports available**: {input_reports}
+You have access to `get-report.sh` (via your Bash tool allowlist):
+```
+get-report.sh <taskId> <reportType>
+```
+Returns markdown content of a previous agent's report. If report doesn't exist yet, returns a "not available" message - skip and continue.
 
-### Step 1: Fetch Input Reports (if needed)
+### Input: Fetch These Reports
 
 {fetch_commands}
 
-Read the returned content - this is context from previous workflow steps.
-**NOTE**: If a report doesn't exist yet (file not found error), that's expected for early workflow steps - skip that report and continue.
+**⚠️ Reports contain summaries from previous agents, NOT current file content.**
+Always verify by reading actual files with Read/Glob/Grep before making judgments.
 
-### Step 2: Complete Your Work
+### Output: `{report_type}`
 
-Complete your assigned task using the fetched reports as context.
+Your response is auto-captured as the workflow report. Required format:
+1. Use `## Heading` sections for structure
+2. End with `STATUS: PASSED` or `STATUS: FAILED`
 
-### Step 3: Structure Your Output (MANDATORY)
-
-Your response will be automatically captured and saved as the workflow report.
-
-**Required format:**
-1. Structure your report using markdown sections with ## headings
-2. Include all analysis, findings, decisions, and recommendations
-3. End your response with a clear status declaration:
-   - `STATUS: PASSED` if you successfully completed your task
-   - `STATUS: FAILED` if you encountered blocking issues
-
-**Example structure:**
+Example:
 ```markdown
 ## Summary
-[Brief overview of what you did]
+[What you did]
 
-## Analysis
-[Your detailed analysis]
-
-## Recommendations
-[Your recommendations or next steps]
+## Findings
+[Details]
 
 STATUS: PASSED
 ```
-
-### Critical Rules
-
-1. **Structure with markdown headings** - Use ## for all major sections so they can be properly captured
-2. **Always end with STATUS** - The orchestrator needs to know if you succeeded or failed
-3. **Fetch before working** - Read all input reports before starting your analysis (skip missing ones)
-4. **STATUS: FAILED on errors** - If you encounter blocking issues, declare failure explicitly
 """.strip()
 
 
@@ -86,21 +69,16 @@ def build_io_block(ctx: dict) -> str:
     if not ctx["task_id"] or not ctx["report_type"]:
         return None
 
-    input_reports_str = ", ".join(f"`{r}`" for r in ctx["input_reports"]) if ctx["input_reports"] else "(none)"
-
     fetch_commands = ""
     if ctx["input_reports"]:
-        fetch_commands = "Run these commands:\n" + "\n".join(
-            f"```bash\n${{CLAUDE_PLUGIN_ROOT}}/scripts/workflow-io/get-report.sh {ctx['task_id']} {r}\n```"
-            for r in ctx["input_reports"]
-        )
+        reports_list = "\n".join(f"get-report.sh {ctx['task_id']} {r}" for r in ctx["input_reports"])
+        fetch_commands = f"```bash\n{reports_list}\n```"
     else:
-        fetch_commands = "(No input reports to fetch - skip this step)"
+        fetch_commands = "(none - skip this step)"
 
     return IO_BLOCK_TEMPLATE.format(
         task_id=ctx["task_id"],
         report_type=ctx["report_type"],
-        input_reports=input_reports_str,
         fetch_commands=fetch_commands
     )
 

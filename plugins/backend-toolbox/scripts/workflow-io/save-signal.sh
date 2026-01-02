@@ -12,10 +12,10 @@ source "${SCRIPT_DIR}/_base-dir.sh"
 
 TASK_ID="$1"
 SIGNAL_TYPE="$2"
-STATUS="$3"
-SUMMARY="$4"
+ARG3="$3"
+ARG4="$4"
 
-if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPE" || -z "$STATUS" ]]; then
+if [[ -z "$TASK_ID" || -z "$SIGNAL_TYPE" || -z "$ARG3" ]]; then
     echo '{"success":false,"error":"Missing required parameters: taskId, signalType, and status"}' >&2
     exit 1
 fi
@@ -25,6 +25,27 @@ VALID_TYPES="requirements codebase-analysis plan tests-design tests-review imple
 if [[ ! " $VALID_TYPES " =~ " $SIGNAL_TYPE " ]]; then
     echo "{\"success\":false,\"error\":\"Invalid signalType: $SIGNAL_TYPE\"}" >&2
     exit 1
+fi
+
+# Parse status and summary - support both formats:
+# Format 1: save-signal.sh taskId type passed "summary"
+# Format 2: save-signal.sh taskId type '{"status": "passed", "summary": "..."}'
+if [[ "$ARG3" == "passed" || "$ARG3" == "failed" ]]; then
+    STATUS="$ARG3"
+    SUMMARY="$ARG4"
+elif [[ "$ARG3" == \{* ]]; then
+    # JSON format - parse with jq
+    if command -v jq &> /dev/null; then
+        STATUS=$(echo "$ARG3" | jq -r '.status // empty')
+        SUMMARY=$(echo "$ARG3" | jq -r '.summary // empty')
+    else
+        # Fallback: simple regex extraction
+        STATUS=$(echo "$ARG3" | grep -o '"status"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
+        SUMMARY=$(echo "$ARG3" | grep -o '"summary"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
+    fi
+else
+    STATUS="$ARG3"
+    SUMMARY="$ARG4"
 fi
 
 # Valid statuses
