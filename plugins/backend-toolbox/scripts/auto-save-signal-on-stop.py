@@ -181,6 +181,82 @@ def save_signal(task_id: str, report_type: str, status: str, summary: str) -> bo
         return False
 
 
+def parse_transcript_jsonl(transcript_path: str) -> dict:
+    """
+    Parse a transcript JSONL file to extract subagent_type, prompt, and transcript.
+    Returns dict with keys: subagent_type, prompt, transcript
+
+    The subagent's transcript contains:
+    - System/user messages with the original task prompt (contains TASK_ID and reportType)
+    - Assistant messages with the agent's work
+    """
+    result = {"subagent_type": "", "prompt": "", "transcript": ""}
+
+    try:
+        path = Path(transcript_path).expanduser()
+        if not path.exists():
+            return result
+
+        transcript_lines = []
+        prompt_parts = []
+
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    entry_type = entry.get("type", "")
+                    role = entry.get("role", "")
+
+                    # Extract content helper
+                    def extract_text(content):
+                        if isinstance(content, str):
+                            return content
+                        if isinstance(content, list):
+                            texts = []
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "text":
+                                    texts.append(item.get("text", ""))
+                                elif isinstance(item, str):
+                                    texts.append(item)
+                            return "\n".join(texts)
+                        return ""
+
+                    content = entry.get("content", "")
+                    text = extract_text(content)
+
+                    # Look for TASK_ID in system/user messages to find the original prompt
+                    if (entry_type in ("system", "user") or role in ("system", "user")):
+                        if "TASK_ID:" in text and "reportType:" in text:
+                            prompt_parts.append(text)
+
+                    # Collect assistant messages for transcript
+                    if entry_type == "assistant" or role == "assistant":
+                        if text:
+                            transcript_lines.append(text)
+
+                    # Also check for text content in tool results
+                    if entry_type == "tool_result":
+                        if text:
+                            transcript_lines.append(text)
+
+                except json.JSONDecodeError:
+                    continue
+
+        # Use the first prompt part that contains workflow context
+        if prompt_parts:
+            result["prompt"] = prompt_parts[0]
+
+        result["transcript"] = "\n".join(transcript_lines)
+
+    except Exception as e:
+        print(f"Error parsing transcript: {e}", file=sys.stderr)
+
+    return result
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -188,29 +264,67 @@ def main():
         print(json.dumps({}))
         return
 
-    subagent_type = data.get("subagent_type", "")
-    if not subagent_type.startswith("backend-toolbox:"):
+    # Debug: Log all received fields to understand the actual input
+    debug_path = Path("/tmp/subagent-stop-debug.log")
+    try:
+        with open(debug_path, "a") as f:
+            f.write(f"--- SubagentStop hook received ---\n")
+            f.write(json.dumps(data, indent=2, default=str))
+            f.write("\n\n")
+    except Exception:
+        pass
+
+    # SubagentStop provides transcript_path, not direct fields
+    transcript_path = data.get("transcript_path", "")
+    if not transcript_path:
         print(json.dumps({}))
         return
 
-    prompt = data.get("prompt", "")
-    if not isinstance(prompt, str):
+    # Parse the JSONL transcript file
+    parsed = parse_transcript_jsonl(transcript_path)
+
+    # Try to get subagent_type from hook input first (may be provided for matching)
+    subagent_type = data.get("subagent_type", "")
+    if not subagent_type.startswith("backend-toolbox:"):
+        # Debug: log why we're exiting
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"Skipping: subagent_type='{subagent_type}' (not backend-toolbox)\n\n")
+        except Exception:
+            pass
+        print(json.dumps({}))
+        return
+
+    prompt = parsed["prompt"]
+    if not isinstance(prompt, str) or not prompt:
+        # Debug: log why we're exiting
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"Skipping: prompt not found in transcript\n\n")
+        except Exception:
+            pass
         print(json.dumps({}))
         return
 
     # Parse workflow context
     ctx = parse_workflow_context(prompt)
     if not ctx["task_id"] or not ctx["report_type"]:
+        # Debug: log why we're exiting
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"Skipping: couldn't parse workflow context from prompt\n")
+                f.write(f"  task_id={ctx['task_id']}, report_type={ctx['report_type']}\n")
+                f.write(f"  prompt preview: {prompt[:200]}...\n\n")
+        except Exception:
+            pass
         print(json.dumps({}))
         return
 
     task_id = ctx["task_id"]
     report_type = ctx["report_type"]
 
-    # Get transcript
-    transcript = data.get("transcript", "")
-    if not transcript:
-        transcript = data.get("response", "")
+    # Get transcript from parsed data
+    transcript = parsed["transcript"]
 
     # Check if report and signal already exist
     base = get_task_reports_base()
@@ -231,6 +345,12 @@ def main():
     # Report results
     if report_saved and signal_saved:
         action = "Updated" if (report_existed or signal_existed) else "Auto-saved"
+        # Debug: log success
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"SUCCESS: {action} report and signal for {task_id}/{report_type} (status={status})\n\n")
+        except Exception:
+            pass
         print(json.dumps({
             "message": f"{action} report and signal for {report_type} (status={status})"
         }))
@@ -240,6 +360,12 @@ def main():
             errors.append("report")
         if not signal_saved:
             errors.append("signal")
+        # Debug: log failure
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"FAILED: couldn't save {' and '.join(errors)} for {task_id}/{report_type}\n\n")
+        except Exception:
+            pass
         print(json.dumps({
             "error": f"Failed to auto-save {' and '.join(errors)} for {report_type}"
         }))
