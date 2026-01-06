@@ -1,6 +1,6 @@
 ---
 name: refactoring-patterns
-description: This skill should be used when the user asks to "refactor code", "improve design", "restructure without changing behavior", "extract function", "rename variable", "simplify code", "clean up this code", "make this more readable", "reduce duplication", "apply SOLID principles", or needs guidance on safe transformation techniques. Also triggered by requests to reduce complexity, improve maintainability, or apply specific refactoring patterns like extract method, inline variable, move function, or replace conditional with polymorphism.
+description: This skill should be used when the user asks to "refactor code", "improve design", "restructure without changing behavior", "extract function", "rename variable", "simplify code", "clean up this code", "make this more readable", "reduce duplication", "apply SOLID principles", "convert function to class", "function has dependencies", or needs guidance on safe transformation techniques. Also triggered by requests to reduce complexity, improve maintainability, or apply specific refactoring patterns like extract method, inline variable, move function, replace conditional with polymorphism, or convert functions with dependencies to classes.
 version: 0.1.0
 ---
 
@@ -144,6 +144,40 @@ Steps:
 2. Create interface with those signatures
 3. Have implementations declare interface
 4. Update consumers to use interface type
+
+### Convert Function to Class
+
+**When:** Function has external dependencies (repositories, services, APIs)
+
+```
+Before:
+  function createOrder(order: Order, repo: OrderRepository): void {
+    repo.save(order);
+  }
+  // Every caller must pass repository
+  createOrder(order1, repo);
+  createOrder(order2, repo);
+
+After:
+  class OrderService {
+    constructor(private repo: OrderRepository) {}
+    createOrder(order: Order): void {
+      this.repo.save(order);
+    }
+  }
+  // Dependency injected once
+  const service = new OrderService(repo);
+  service.createOrder(order1);
+  service.createOrder(order2);
+```
+
+Steps:
+
+1. Identify parameters that are dependencies (not data)
+2. Create class with descriptive name (`*Service`, `*Handler`, `*Processor`)
+3. Move dependencies to constructor
+4. Convert function to method with only data parameters
+5. Update all call sites
 
 ### Decompose Conditional
 

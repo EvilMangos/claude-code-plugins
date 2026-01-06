@@ -224,6 +224,7 @@ class MySQLOrderRepository implements OrderRepository { /* ... */ }
 3. **Inject what you need** - Not the container itself
 4. **Keep constructors simple** - Assignment only, no logic
 5. **Avoid circular dependencies** - Break with interfaces or events
+6. **Convert functions with dependencies to classes** - See rule below
 
 ```typescript
 // Good: Clear dependencies
@@ -242,6 +243,77 @@ class OrderService {
 }
 ```
 
+### Functions with Dependencies → Classes
+
+> **Rule:** When a function requires external dependencies (repositories, services, APIs, infrastructure), convert it to a class with constructor injection.
+
+**Why this matters:**
+
+- **Explicit dependencies** - Constructor signature documents what the code needs
+- **Testability** - Easy to inject mocks/stubs via constructor
+- **Single declaration** - Dependencies declared once, not passed to every call
+- **DI container support** - Classes integrate with dependency injection frameworks
+- **Consistency** - Uniform pattern for all code that has dependencies
+
+**When to convert:**
+
+| Scenario | Action |
+|----------|--------|
+| Function takes repository/service as parameter | Convert to class |
+| Function creates its own dependencies internally | Convert to class with injection |
+| Function calls external APIs or infrastructure | Convert to class |
+| Pure function with only data parameters | Keep as function |
+| Simple utility (string manipulation, math) | Keep as function |
+
+**Examples:**
+
+```typescript
+// BAD: Function with dependency parameter - converts every call site
+function createOrder(order: Order, repository: OrderRepository): void {
+  repository.save(order);
+}
+// Caller must know about and pass repository every time
+createOrder(order, repository);
+createOrder(order2, repository);
+
+// BAD: Function creates its own dependency - hidden, untestable
+function createOrder(order: Order): void {
+  const repository = new PostgresOrderRepository();  // Hidden!
+  repository.save(order);
+}
+
+// GOOD: Class with constructor injection
+class OrderService {
+  constructor(private repository: OrderRepository) {}
+
+  createOrder(order: Order): void {
+    this.repository.save(order);
+  }
+}
+// Dependency injected once, used for all operations
+const service = new OrderService(repository);
+service.createOrder(order);
+service.createOrder(order2);
+
+// GOOD: Keep as function - pure, no dependencies
+function calculateTotal(items: LineItem[]): number {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+// GOOD: Keep as function - simple utility
+function formatCurrency(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+```
+
+**Refactoring steps:**
+
+1. Identify function parameters that are dependencies (not data)
+2. Create a class with a descriptive name (often ends in `Service`, `Handler`, `Processor`)
+3. Move dependencies to constructor parameters
+4. Convert the function to a method, keeping only data parameters
+5. Update all call sites to use the injected instance
+
 ### Lifetimes
 
 | Lifetime      | When to Use                                  |
@@ -252,20 +324,21 @@ class OrderService {
 
 ## Pattern Selection Guide
 
-| Problem                            | Consider Pattern      |
-|------------------------------------|-----------------------|
-| Object creation is complex         | Factory, Builder      |
-| Need single instance               | Singleton (prefer DI) |
-| Incompatible interfaces            | Adapter               |
-| Add responsibilities dynamically   | Decorator             |
-| Simplify complex subsystem         | Facade                |
-| Tree/hierarchy structures          | Composite             |
-| Swappable algorithms               | Strategy              |
-| Notify multiple objects of changes | Observer              |
-| Undo/redo, queuing operations      | Command               |
-| Behavior varies by state           | State                 |
-| Complex domain logic               | DDD Tactical Patterns |
-| Large system with multiple teams   | Bounded Contexts      |
+| Problem                            | Consider Pattern                  |
+|------------------------------------|-----------------------------------|
+| Object creation is complex         | Factory, Builder                  |
+| Need single instance               | Singleton (prefer DI)             |
+| Incompatible interfaces            | Adapter                           |
+| Add responsibilities dynamically   | Decorator                         |
+| Simplify complex subsystem         | Facade                            |
+| Tree/hierarchy structures          | Composite                         |
+| Swappable algorithms               | Strategy                          |
+| Notify multiple objects of changes | Observer                          |
+| Undo/redo, queuing operations      | Command                           |
+| Behavior varies by state           | State                             |
+| Complex domain logic               | DDD Tactical Patterns             |
+| Large system with multiple teams   | Bounded Contexts                  |
+| Function has external dependencies | Convert to class with constructor injection |
 
 ## Additional Resources
 
