@@ -1,5 +1,5 @@
 ---
-description: Refactor code in a given path (file or folder) with tests after each step; never modify test files. If no path is provided, scope is the entire codebase.
+description: Refactor code in a given path (file or folder) with tests updated to match. If no path is provided, scope is the entire codebase.
 argument-hint: [ path ] [ instructions ]
 allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git:*), Task, Skill, MCP
 ---
@@ -67,19 +67,21 @@ Example: `refactor-src-utils-helpers-1702834567`
 
 ## Hard constraints (non-negotiable)
 
-1) **Do not modify test files** (read-only is fine).
-   - You must NOT edit, create, delete, rename, or move any test file.
-   - If a change would require updating tests, STOP and report that tests must be handled via the separate tests command.
-
-   See `skills/test-best-practices/references/test-file-patterns.md` for complete test file identification patterns.
-   Default patterns include: `/test/`, `/tests/`, `/__tests__/`, files containing `.spec.` or `.test.`, etc.
+1) **No backward compatibility hacks**
+   - Do NOT create shims, re-exports, aliases, or wrapper functions to maintain old interfaces
+   - Do NOT rename unused variables with `_` prefix just to suppress warnings
+   - Do NOT add `// removed` or `// deprecated` comments for deleted code
+   - When you rename/move/delete something, update all usages directly—never create a compatibility layer
+   - If something is unused after refactoring, delete it completely
 
 2) **Behavior-preserving refactor**
    - Do not change external behavior intentionally.
    - Prefer small, reversible steps.
 
-3) **Tests after each step**
-   - After **every refactor step** (each plan item that changes code), run tests with the smallest relevant scope.
+3) **Separation of concerns**
+   - The **refactorer** modifies production code only (no test files)
+   - The **automation-qa** updates tests to match the refactored code
+   - This ensures clean separation and proper test expertise
 
 ## Preflight (main agent)
 
@@ -140,14 +142,14 @@ END LOOP
 
 Create task metadata:
 - taskId: {TASK_ID}
-- executionSteps: `["requirements", "codebase-analysis", "plan", "refactoring", "code-review", "acceptance", "documentation", "finalize"]`
+- executionSteps: `["requirements", "codebase-analysis", "plan", "refactoring", "test-refactoring", "code-review", "acceptance", "documentation", "finalize"]`
 
 ### Step 1: requirements (main agent captures scope)
 
 The main agent (not a subagent) captures:
 - Scope (path or entire codebase)
 - Instructions (user-provided refactoring focus, if any)
-- Success criteria: behavior preserved, tests remain green, no test files changed
+- Success criteria: behavior preserved, tests updated and green, no backward compatibility code
 - Refactor goals: readability, structure, coupling, naming, duplication, error-handling hygiene
   - If instructions provided: prioritize user's specified focus areas
 
@@ -192,15 +194,17 @@ prompt: |
   ## Task
   Create a small-step refactor plan (steps should be independently testable).
   For each step, include:
-  - files to change (must exclude test files)
+  - production files to change (test updates handled separately by automation-qa)
   - expected outcome
-  - the smallest relevant test scope to use after that step
+  - anticipated test impacts (what tests may need updating)
 
-  Include a "test-file safety" note: how the plan avoids touching tests.
   If scope is the entire codebase: prioritize top 3-10 highest-value refactors.
 
   **If INSTRUCTIONS provided**: Use them to guide priorities and focus areas.
   The plan should directly address the user's specified refactoring goals.
+
+  **Important**: Plan for clean refactoring without backward compatibility hacks.
+  If renaming/moving/deleting, plan to update all usages directly.
 
   ## Input Reports
   - requirements
@@ -222,13 +226,18 @@ prompt: |
   ## Task
   Execute the refactor plan step-by-step.
   For each plan step:
-  1) Make minimal behavior-preserving changes
+  1) Make clean, behavior-preserving changes to production code
   2) State what changed (files/functions) and why
-  3) Run tests with the smallest relevant scope
-  4) Check changed files with `git diff --name-only`
-     - If any touched file matches test file patterns: revert and STOP
+  3) Do NOT modify test files—automation-qa handles that next
 
-  If tests fail: fix the refactor (or revert) with minimal changes, re-run tests.
+  **Critical: No backward compatibility hacks!**
+  - Do NOT create shims, re-exports, or aliases for old names
+  - Do NOT rename unused vars with `_` prefix to suppress warnings
+  - When renaming/moving/deleting, update all production code usages directly
+  - If something becomes unused, delete it completely
+
+  Tests may fail after your changes—that's expected. The automation-qa step
+  will update tests to match your refactored code.
 
   Apply your loaded skills (`refactoring-patterns`, `design-assessment`, `design-patterns`).
 
@@ -244,7 +253,41 @@ prompt: |
   reportType: refactoring
 ```
 
-### Step 5: code-review (code-reviewer)
+### Step 5: test-refactoring (automation-qa)
+
+```
+subagent_type: automation-qa
+run_in_background: true
+prompt: |
+  TASK_ID: {TASK_ID}
+  SCOPE: {scope}
+
+  ## Task
+  Update tests to match the refactored production code.
+
+  1) Run tests to identify failures caused by refactoring
+  2) For each failing test:
+     - Update imports, function names, paths to match refactored code
+     - Adjust test assertions if internal structure changed
+     - Preserve test intent and coverage—only adapt to new structure
+  3) Run tests again to verify all pass
+  4) If new code paths were added, consider adding minimal test coverage
+
+  **Important**:
+  - Do NOT change test logic or reduce coverage
+  - Only adapt tests to the new code structure
+  - Apply your loaded skills (`test-best-practices`)
+
+  ## Input Reports
+  Required:
+  - plan
+  - refactoring
+
+  ## Output
+  reportType: test-refactoring
+```
+
+### Step 6: code-review (code-reviewer)
 
 ```
 subagent_type: code-reviewer
@@ -253,14 +296,15 @@ prompt: |
   TASK_ID: {TASK_ID}
 
   ## Task
-  Review the refactored code for quality issues.
+  Review the refactored code and updated tests for quality issues.
   Apply your loaded skills (`code-review-checklist`, `design-assessment`).
 
   Verify:
-  - No test files were modified
+  - No backward compatibility hacks (shims, re-exports, aliases)
   - Behavior is preserved
   - Code quality improved per stated goals
   - Changes follow codebase patterns
+  - Tests properly updated to match refactored code
 
   Return verdict in signal:
   - status: "passed" = no issues found
@@ -270,12 +314,13 @@ prompt: |
   - codebase-analysis
   - plan
   - refactoring
+  - test-refactoring
 
   ## Output
   reportType: code-review
 ```
 
-### Step 6: acceptance (acceptance-reviewer)
+### Step 7: acceptance (acceptance-reviewer)
 
 ```
 subagent_type: acceptance-reviewer
@@ -285,8 +330,9 @@ prompt: |
 
   ## Task
   Verify acceptance criteria for refactor work:
-  - Behavior preserved (as evidenced by tests)
-  - No test files changed
+  - Behavior preserved (as evidenced by tests passing)
+  - No backward compatibility hacks in production code
+  - Tests properly updated to match refactored code
   - Scope is reasonable for the provided scope
   - Code quality improved per stated goals
 
@@ -298,13 +344,14 @@ prompt: |
   - requirements
   - plan
   - refactoring
+  - test-refactoring
   - code-review
 
   ## Output
   reportType: acceptance
 ```
 
-### Step 7: documentation (documentation-updater)
+### Step 8: documentation (documentation-updater)
 
 ```
 subagent_type: documentation-updater
@@ -314,7 +361,6 @@ prompt: |
 
   ## Task
   Update documentation impacted by the refactor:
-  - Do not modify test files
   - Keep doc changes minimal and accurate
   - Update only what is now misleading (paths, module names, usage examples, architecture notes)
 
@@ -324,12 +370,13 @@ prompt: |
   - requirements
   - plan
   - refactoring
+  - test-refactoring
 
   ## Output
   reportType: documentation
 ```
 
-### Step 8: finalize (workflow-finalizer)
+### Step 9: finalize (workflow-finalizer)
 
 ```
 subagent_type: workflow-finalizer
