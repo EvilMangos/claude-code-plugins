@@ -386,8 +386,11 @@ def main():
     # Parse the agent's transcript to get its output
     agent_data = parse_agent_transcript(agent_transcript_path)
 
-    # Get prompt from task_info (parent) or agent_data (agent's context)
-    prompt = task_info["prompt"] or agent_data["prompt"]
+    # Get prompt from agent's own transcript (preferred - always correct)
+    # Fall back to parent transcript only if agent transcript is empty
+    # Note: Parent transcript may have NEWER Task calls from subsequent steps
+    # if the orchestrator moved on while this agent was still finishing
+    prompt = agent_data["prompt"] or task_info["prompt"]
     if not isinstance(prompt, str) or not prompt:
         # Debug: log why we're exiting
         try:

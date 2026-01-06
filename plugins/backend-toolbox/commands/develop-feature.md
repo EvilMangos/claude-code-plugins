@@ -130,15 +130,35 @@ prompt: |
   - Restate the feature in your own words
   - Identify affected domains/packages
   - List ALL ambiguous points, unclear terms, or missing details
-  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
-  - Review answers; if unclear or introduce new ambiguities, ask follow-ups
-  - Derive behavioral requirements (REQ-1, REQ-2, etc.)
+  - If ambiguities exist: output BLOCKED status with questions (do NOT make assumptions)
+  - If no ambiguities (or clarifications provided below): derive behavioral requirements (REQ-1, REQ-2, etc.)
 
   ## Feature Request
   $ARGUMENTS
 
+  {CLARIFICATIONS_BLOCK}
+
   ## Output
   reportType: requirements
+```
+
+**Handling BLOCKED status:**
+
+After invoking business-analyst, check the signal status:
+1. If signal status is `blocked`:
+   - Read the requirements report to get the questions
+   - Use `AskUserQuestion` tool to ask the user ALL questions at once
+   - Re-invoke business-analyst with the same prompt, but add a `## Clarifications Provided` section containing the user's answers
+   - Replace `{CLARIFICATIONS_BLOCK}` with the clarifications section
+   - Repeat until signal status is `passed`
+2. If signal status is `passed`:
+   - Proceed to next step
+
+Example clarifications block:
+```
+## Clarifications Provided
+1. Q: What user roles should have access? A: Admin and Manager roles only.
+2. Q: Should we support bulk operations? A: Yes, up to 100 items at once.
 ```
 
 ### Step 2: codebase-analysis (codebase-analyzer)

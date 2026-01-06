@@ -116,15 +116,29 @@ prompt: |
   - Identify the expected behavior vs actual behavior
   - Identify affected domains/packages/components
   - List ALL ambiguous points or missing details
-  - If ambiguities exist: ask ALL questions using AskUserQuestion tool
-  - Document assumptions explicitly
+  - If ambiguities exist: output BLOCKED status with questions (do NOT make assumptions)
+  - If no ambiguities (or clarifications provided below): document clear requirements
 
   ## Bug Report
   $ARGUMENTS
 
+  {CLARIFICATIONS_BLOCK}
+
   ## Output
   reportType: requirements
 ```
+
+**Handling BLOCKED status:**
+
+After invoking business-analyst, check the signal status:
+1. If signal status is `blocked`:
+   - Read the requirements report to get the questions
+   - Use `AskUserQuestion` tool to ask the user ALL questions at once
+   - Re-invoke business-analyst with the same prompt, but add a `## Clarifications Provided` section containing the user's answers
+   - Replace `{CLARIFICATIONS_BLOCK}` with the clarifications section
+   - Repeat until signal status is `passed`
+2. If signal status is `passed`:
+   - Proceed to next step
 
 ### Step 2: codebase-analysis (codebase-analyzer)
 
