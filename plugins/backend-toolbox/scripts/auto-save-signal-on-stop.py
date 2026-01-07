@@ -207,8 +207,14 @@ def find_task_call_for_agent(parent_transcript_path: str, agent_id: str) -> dict
     Parse parent's transcript to find the Task tool call that spawned this agent.
     Returns dict with subagent_type and prompt.
 
+    Strategy:
+    1. Collect all Task tool calls (with their tool_use id, subagent_type, prompt)
+    2. Find tool_result entries that contain our agent_id
+    3. Match the tool_use_id to get the correct prompt
+
     The transcript format is:
-    {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Task", ...}]}}
+    {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu_xxx", "name": "Task", ...}]}}
+    {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "toolu_xxx", ...}]}}
     """
     result = {"subagent_type": "", "prompt": ""}
 
@@ -217,6 +223,11 @@ def find_task_call_for_agent(parent_transcript_path: str, agent_id: str) -> dict
         if not path.exists():
             return result
 
+        # First pass: collect all Task calls indexed by tool_use id
+        task_calls = {}  # tool_use_id -> {subagent_type, prompt}
+        # Also collect tool_result entries that might contain agent_id
+        tool_results = {}  # tool_use_id -> content text
+
         with open(path, 'r') as f:
             for line in f:
                 line = line.strip()
@@ -224,37 +235,108 @@ def find_task_call_for_agent(parent_transcript_path: str, agent_id: str) -> dict
                     continue
                 try:
                     entry = json.loads(line)
-
-                    # Check for tool_use in message.content array (assistant messages)
                     message = entry.get("message", {})
                     content = message.get("content", [])
+
                     if isinstance(content, list):
                         for item in content:
-                            if isinstance(item, dict) and item.get("type") == "tool_use" and item.get("name") == "Task":
+                            if not isinstance(item, dict):
+                                continue
+
+                            # Collect Task tool_use entries
+                            if item.get("type") == "tool_use" and item.get("name") == "Task":
+                                tool_use_id = item.get("id", "")
                                 tool_input = item.get("input", {})
                                 subagent_type = tool_input.get("subagent_type", "")
                                 prompt = tool_input.get("prompt", "")
 
-                                # Check if this is a backend-toolbox Task call with workflow context
                                 if subagent_type.startswith("backend-toolbox:"):
                                     if "TASK_ID:" in prompt and "reportType:" in prompt:
-                                        result["subagent_type"] = subagent_type
-                                        result["prompt"] = prompt
-                                        # Keep searching - later calls may be for our specific agent
+                                        task_calls[tool_use_id] = {
+                                            "subagent_type": subagent_type,
+                                            "prompt": prompt
+                                        }
 
-                    # Also check direct tool_use entries (fallback for other formats)
-                    if entry.get("type") == "tool_use" and entry.get("name") == "Task":
-                        tool_input = entry.get("input", {})
-                        subagent_type = tool_input.get("subagent_type", "")
-                        prompt = tool_input.get("prompt", "")
+                            # Collect tool_result entries
+                            if item.get("type") == "tool_result":
+                                tool_use_id = item.get("tool_use_id", "")
+                                result_content = item.get("content", "")
+                                # Handle both string and list content
+                                if isinstance(result_content, list):
+                                    texts = []
+                                    for c in result_content:
+                                        if isinstance(c, dict) and c.get("type") == "text":
+                                            texts.append(c.get("text", ""))
+                                        elif isinstance(c, str):
+                                            texts.append(c)
+                                    result_content = "\n".join(texts)
+                                if tool_use_id:
+                                    tool_results[tool_use_id] = str(result_content)
 
-                        if subagent_type.startswith("backend-toolbox:"):
-                            if "TASK_ID:" in prompt and "reportType:" in prompt:
-                                result["subagent_type"] = subagent_type
-                                result["prompt"] = prompt
+                    # Also check toolUseResult field (alternative format)
+                    tool_use_result = entry.get("toolUseResult", {})
+                    if isinstance(tool_use_result, dict) and tool_use_result.get("agentId"):
+                        # Find the corresponding tool_use_id from the parent entry
+                        parent_uuid = entry.get("parentUuid", "")
+                        # The agentId is stored directly in toolUseResult
+                        result_agent_id = tool_use_result.get("agentId", "")
+                        if result_agent_id and content:
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "tool_result":
+                                    tool_use_id = item.get("tool_use_id", "")
+                                    if tool_use_id:
+                                        tool_results[tool_use_id] = f"agentId: {result_agent_id}"
 
                 except json.JSONDecodeError:
                     continue
+
+        # Debug: log what we found
+        debug_path = Path("/tmp/subagent-stop-debug.log")
+        try:
+            with open(debug_path, "a") as f:
+                f.write(f"  find_task_call: searching for agent_id={agent_id}\n")
+                f.write(f"  find_task_call: found {len(task_calls)} Task calls\n")
+                for tid, tc in task_calls.items():
+                    # Extract reportType from prompt for logging
+                    rt_match = re.search(r'reportType:\s*(\S+)', tc["prompt"])
+                    rt = rt_match.group(1) if rt_match else "unknown"
+                    f.write(f"    - {tid[:20]}... -> reportType={rt}\n")
+                f.write(f"  find_task_call: found {len(tool_results)} tool_results\n")
+        except Exception:
+            pass
+
+        # Now find which tool_use_id corresponds to our agent_id
+        matched_tool_use_id = None
+        for tool_use_id, result_text in tool_results.items():
+            # Check if this result contains our agent_id
+            if agent_id and agent_id in result_text:
+                matched_tool_use_id = tool_use_id
+                break
+
+        # If we found a match, get the corresponding Task call
+        if matched_tool_use_id and matched_tool_use_id in task_calls:
+            result = task_calls[matched_tool_use_id]
+            # Debug: log the match
+            try:
+                with open(debug_path, "a") as f:
+                    rt_match = re.search(r'reportType:\s*(\S+)', result["prompt"])
+                    rt = rt_match.group(1) if rt_match else "unknown"
+                    f.write(f"  find_task_call: MATCHED agent_id={agent_id} to reportType={rt}\n")
+            except Exception:
+                pass
+        elif task_calls:
+            # Fallback: if no match found but we have task calls,
+            # return the last one (original behavior for single-agent case)
+            last_tool_use_id = list(task_calls.keys())[-1]
+            result = task_calls[last_tool_use_id]
+            # Debug: log the fallback
+            try:
+                with open(debug_path, "a") as f:
+                    rt_match = re.search(r'reportType:\s*(\S+)', result["prompt"])
+                    rt = rt_match.group(1) if rt_match else "unknown"
+                    f.write(f"  find_task_call: FALLBACK (no agent_id match) -> reportType={rt}\n")
+            except Exception:
+                pass
 
     except Exception as e:
         print(f"Error parsing parent transcript: {e}", file=sys.stderr)
