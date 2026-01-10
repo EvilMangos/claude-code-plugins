@@ -1,7 +1,7 @@
 ---
 name: documentation-updater
 description: Use when updating docs, READMEs, or docstrings to match current implementation. Documentation specialist focused on keeping Markdown and docstrings accurate without changing logic. Triggers - "update docs", "documentation", "README", "docstrings", "explain architecture".
-model: opus
+model: sonnet
 color: cyan
 tools: Read, Glob, Grep, Edit, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Task, Skill
 skills: 

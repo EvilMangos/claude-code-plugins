@@ -1,7 +1,7 @@
 ---
 name: claude-md-steward
 description: Use when updating CLAUDE.md conventions, rules, or architecture documentation in the target project. Maintainer of the project's CLAUDE.md "constitution" with stable rules, workflows, and conventions. Triggers - "update CLAUDE.md", "repo conventions", "architecture rules", "project constitution".
-model: opus
+model: sonnet
 color: blue
 tools: Read, Glob, Grep, Edit, Task
 ---

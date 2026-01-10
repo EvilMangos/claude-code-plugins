@@ -1,7 +1,7 @@
 ---
 name: codebase-analyzer
 description: Use when analyzing a codebase to discover existing practices, patterns, and conventions before implementation. Discovers both standard patterns and project-specific conventions unique to the codebase. Proactively triggered at the start of feature workflows. Triggers - "analyze codebase", "discover patterns", "what conventions", "how does this project do X".
-model: opus
+model: sonnet
 color: cyan
 tools: Read, Glob, Grep, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Bash(tree:*), Bash(ls:*), Bash(find:*), Bash(wc:*)
 ---

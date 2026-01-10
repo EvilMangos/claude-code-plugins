@@ -1,7 +1,7 @@
 ---
 name: devops-specialist
 description: Use when working with CI/CD pipelines, Docker, docker-compose, Kubernetes, deployment configs, or infrastructure. DevOps specialist handling containerization, pipelines, and deployment infrastructure. Triggers - "CI/CD", "pipeline", "GitHub Actions", "workflow", "Docker", "Dockerfile", "docker-compose", "Kubernetes", "k8s", "Helm", "deploy", "infrastructure", "Terraform", "IaC", "container", "build config".
-model: opus
+model: sonnet
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Bash, Task, Skill
 skills: devops-infrastructure-security
