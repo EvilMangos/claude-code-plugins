@@ -183,10 +183,12 @@ a### Issues
 
 ## Additional Resources
 
+### Reference Files
+
 For detailed explanations and examples:
 
-- **`references/coupling-cohesion.md`** - Detailed coupling/cohesion types with code examples
-- **`references/code-smells.md`** - Extended code smell catalog with refactoring suggestions
+- **`references/coupling-cohesion.md`** - When assessing dependencies: coupling types from worst (content) to best (message), cohesion types from worst (coincidental) to best (functional), with metrics and refactoring guidance
+- **`references/code-smells.md`** - When identifying issues: extended catalog of Bloaters, Couplers, Change Preventers, and Dispensables with detection signals and recommended refactorings
 
 ### Related Skills
 

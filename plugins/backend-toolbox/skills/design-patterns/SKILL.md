@@ -342,12 +342,14 @@ function formatCurrency(amount: number): string {
 
 ## Additional Resources
 
+### Reference Files
+
 For detailed explanations and code examples:
 
-- **`references/solid-principles.md`** - Full SOLID with multi-language examples
-- **`references/design-patterns.md`** - Complete GoF patterns catalog
-- **`references/domain-driven-design.md`** - DDD strategic & tactical patterns
-- **`references/dependency-injection.md`** - DI containers, testing strategies
+- **`references/solid-principles.md`** - When applying SOLID: violation signals, refactoring approaches, and multi-language examples for each principle
+- **`references/design-patterns.md`** - When choosing patterns: complete GoF catalog (Factory, Strategy, Observer, Decorator, etc.) with selection criteria and implementation examples
+- **`references/domain-driven-design.md`** - When modeling complex domains: strategic patterns (bounded contexts, context mapping), tactical patterns (entities, value objects, aggregates, repositories)
+- **`references/dependency-injection.md`** - When setting up DI: container configuration, injection types, lifetime management, and testing strategies
 
 ### Related Skills
 

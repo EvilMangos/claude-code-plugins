@@ -91,9 +91,15 @@ All issues must be fixed before merge:
 
 ## Additional Resources
 
-For detailed guidance and examples, consult:
+### Reference Files
 
-- **`references/review-patterns.md`** - Common review scenarios and how to handle them
+For detailed guidance, consult:
+
+- **`references/review-patterns.md`** - When reviewing specific change types: strategies for bug fixes, feature additions, refactoring, and hotfixes with focused review questions for each
+- **`references/security-checklist.md`** - When checking security: OWASP Top 10 mapped checklist covering input validation, authentication, authorization, injection prevention, and data protection
+
+### Examples
+
 - **`examples/sample-review.md`** - Complete example of a well-structured code review
 
 ### Related Skills

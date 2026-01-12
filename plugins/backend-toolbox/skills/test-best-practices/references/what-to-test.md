@@ -362,6 +362,155 @@ describe('public API', () => {
 - Write tests that use the exported functionality (which implicitly verifies the export works)
 - Use integration tests that exercise the public API
 
+### Private and Protected Methods
+
+Never write tests that directly call private or protected methods:
+
+```typescript
+// SKIP - Testing private methods directly
+class OrderProcessor {
+  private calculateTax(amount: number): number {
+    return amount * 0.1;
+  }
+
+  protected validateOrder(order: Order): boolean {
+    return order.items.length > 0 && order.total > 0;
+  }
+
+  public processOrder(order: Order): ProcessedOrder {
+    if (!this.validateOrder(order)) throw new Error('Invalid order');
+    const tax = this.calculateTax(order.total);
+    return { ...order, tax, grandTotal: order.total + tax };
+  }
+}
+
+// DON'T DO THIS - Accessing private methods for testing
+describe('OrderProcessor internals', () => {
+  it('calculates tax correctly', () => {
+    const processor = new OrderProcessor();
+    // Bypassing access modifiers to test internals
+    expect((processor as any).calculateTax(100)).toBe(10);
+  });
+
+  it('validates order structure', () => {
+    const processor = new OrderProcessor();
+    // Testing protected method directly
+    expect((processor as any).validateOrder(invalidOrder)).toBe(false);
+  });
+});
+
+// DO THIS - Test through the public interface
+describe('OrderProcessor', () => {
+  it('includes correct tax in processed order', () => {
+    const processor = new OrderProcessor();
+    const result = processor.processOrder({ items: [item], total: 100 });
+    expect(result.tax).toBe(10);
+    expect(result.grandTotal).toBe(110);
+  });
+
+  it('rejects invalid orders', () => {
+    const processor = new OrderProcessor();
+    expect(() => processor.processOrder({ items: [], total: 0 }))
+      .toThrow('Invalid order');
+  });
+});
+```
+
+```python
+# SKIP - Testing private/protected methods in Python
+class PaymentService:
+    def _validate_card(self, card_number: str) -> bool:
+        """Private method - single underscore convention."""
+        return len(card_number) == 16 and card_number.isdigit()
+
+    def __calculate_fee(self, amount: float) -> float:
+        """Name-mangled method - double underscore."""
+        return amount * 0.029
+
+    def process_payment(self, card_number: str, amount: float) -> dict:
+        if not self._validate_card(card_number):
+            raise ValueError("Invalid card number")
+        fee = self.__calculate_fee(amount)
+        return {"amount": amount, "fee": fee, "total": amount + fee}
+
+# DON'T DO THIS
+def test_validate_card_directly():
+    service = PaymentService()
+    assert service._validate_card("1234567890123456") == True  # Accessing private
+
+def test_calculate_fee_directly():
+    service = PaymentService()
+    # Accessing name-mangled method
+    assert service._PaymentService__calculate_fee(100) == 2.9
+
+# DO THIS - Test through public interface
+def test_rejects_invalid_card_numbers():
+    service = PaymentService()
+    with pytest.raises(ValueError, match="Invalid card number"):
+        service.process_payment("invalid", 100.0)
+
+def test_includes_correct_fee_in_payment():
+    service = PaymentService()
+    result = service.process_payment("1234567890123456", 100.0)
+    assert result["fee"] == 2.9
+    assert result["total"] == 102.9
+```
+
+**Why skip private/protected method testing:**
+
+- **Encapsulation violation** - Private methods are implementation details; testing them couples tests to internal structure
+- **Refactoring friction** - Tests break when you reorganize internals, even if behavior is unchanged
+- **False confidence** - Private method tests can pass while public behavior is broken
+- **Code smell indicator** - Needing to test a private method often signals it should be extracted to a separate, testable class
+- **Language intent** - Access modifiers exist to define API boundaries; tests should respect them
+
+**What to do instead:**
+
+- Test private behavior through public methods that use it
+- If a private method is complex enough to need its own tests, extract it to a separate class/module with a public interface
+- Use characterization tests on public methods to ensure private logic works correctly
+- Consider if the private method's complexity indicates a missing abstraction
+
+**When private methods seem "too complex" to test indirectly:**
+
+```typescript
+// If you feel you NEED to test this private method...
+class ReportGenerator {
+  private parseComplexFormat(data: string): ParsedData {
+    // 50 lines of complex parsing logic
+  }
+
+  public generateReport(rawData: string): Report {
+    const parsed = this.parseComplexFormat(rawData);
+    return this.formatReport(parsed);
+  }
+}
+
+// ...it's a sign to extract it
+class ComplexFormatParser {
+  public parse(data: string): ParsedData {
+    // Same logic, now testable through public interface
+  }
+}
+
+class ReportGenerator {
+  constructor(private parser: ComplexFormatParser) {}
+
+  public generateReport(rawData: string): Report {
+    const parsed = this.parser.parse(rawData);
+    return this.formatReport(parsed);
+  }
+}
+
+// Now you can test the parser directly
+describe('ComplexFormatParser', () => {
+  it('parses valid format correctly', () => {
+    const parser = new ComplexFormatParser();
+    expect(parser.parse(validInput)).toEqual(expectedOutput);
+  });
+});
+```
+
 ## Edge Cases: The 80/20 Rule
 
 Focus on edge cases most likely to cause bugs:
@@ -514,6 +663,7 @@ Should I write a test for this code?
 ├─ Is it simple config/env loading? → NO, skip
 ├─ Is it framework code? → NO, skip
 ├─ Is it a constant? → NO, skip
+├─ Is it a private/protected method? → NO, test via public interface
 │
 └─ Still unsure?
    ├─ Would a bug here be caught elsewhere? → Maybe skip

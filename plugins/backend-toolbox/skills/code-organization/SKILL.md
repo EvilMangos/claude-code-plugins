@@ -1,6 +1,6 @@
 ---
 name: code-organization
-description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", "import at top", "imports inside function", "import placement", "import organization", or needs guidance on file size limits, when to split vs merge code, folder/package organization patterns, and import placement rules. For naming conventions and type safety, see the code-style skill.
+description: This skill should be used when the user asks about code organization, file structure, granularity, module boundaries, "how to split this file", "file is too large", "too many things in one file", "folder structure", "project structure", "organize code", "modular code", "break down this module", "single file has too much", "where should this code live", "import at top", "imports inside function", "import placement", "import organization", "dependency direction", "module dependencies", "who should depend on whom", "interface location", "where to put contracts", "ports and adapters", "domain imports infrastructure", "circular dependency", or needs guidance on file size limits, when to split vs merge code, folder/package organization patterns, import placement rules, and dependency direction between modules. For naming conventions and type safety, see the code-style skill.
 version: 0.1.0
 ---
 
@@ -196,6 +196,53 @@ packages/
 ```
 
 **Best for:** Large systems, multiple teams, shared code
+
+## Dependency Direction
+
+> **Modules must never depend on implementation details of other modules. Dependencies must flow toward abstractions.**
+
+### The Two Allowed Patterns
+
+**Pattern 1: Shared Contracts Layer**
+```
+domain/order-service.ts      → imports → contracts/order-repository.ts  ✓
+infrastructure/postgres-*.ts → imports → contracts/order-repository.ts  ✓
+domain/order-service.ts      → imports → infrastructure/postgres-*.ts   ✗ FORBIDDEN
+```
+
+**Pattern 2: Hexagonal (Domain Owns Ports)**
+```
+adapters/postgres-*.ts       → imports → domain/ports/order-repository.ts  ✓
+adapters/rest-controller.ts  → imports → domain/order-service.ts           ✓
+domain/*                     → imports → adapters/*                        ✗ FORBIDDEN
+```
+
+### Key Rules
+
+1. **Business logic must NOT import from infrastructure** - No database, HTTP client, or external service imports in domain/application layers
+2. **Contracts belong in neutral territory** - Never let the provider (infrastructure) own the interface that consumers depend on
+3. **Infrastructure adapts to domain** - Infrastructure implements interfaces defined elsewhere, it doesn't define them
+
+### What Violates These Rules
+
+```typescript
+// VIOLATION: Domain imports infrastructure
+import { PostgresOrderRepository } from '../infrastructure/postgres-order-repository';
+
+// VIOLATION: Provider owns its contract (domain would import from infrastructure)
+// infrastructure/postgres-order-repository.ts
+export interface OrderRepository { ... }  // Interface in wrong place
+export class PostgresOrderRepository implements OrderRepository { ... }
+
+// VIOLATION: Direct instantiation of infrastructure in domain
+class OrderService {
+  private repo = new PostgresOrderRepository();  // Wrong!
+}
+```
+
+See `references/dependency-direction.md` for comprehensive rules, examples, and refactoring guidance.
+
+---
 
 ## What Goes Where
 
@@ -488,6 +535,24 @@ Even in this case, prefer extracting lazy-loaded imports to dedicated loader fun
 - Never import inside functions
 - Never import in middle of code
 - Dynamic imports only for intentional code splitting
+
+### Dependency Direction Rules
+
+- Business logic must NOT import from infrastructure
+- Contracts (interfaces) belong in neutral location, never with provider
+- Infrastructure depends on domain through ports, not reverse
+- See `references/dependency-direction.md` for full rules
+
+## Additional Resources
+
+### Reference Files
+
+For detailed guidance on specific topics, consult:
+
+- **`references/granularity-decisions.md`** - When deciding file size: detailed decision trees, decision matrix with thresholds, and real-world examples for when to split or merge code
+- **`references/folder-patterns.md`** - When structuring project folders: layer-based, feature-based, hexagonal, and monorepo patterns with selection criteria by project size
+- **`references/dependency-direction.md`** - When setting up module dependencies: allowed import patterns, contract placement rules, violation examples, and refactoring steps
+- **`references/naming-conventions.md`** - When naming modules and files: ports & adapters naming scheme for ports, services, adapters, and data shapes (works for TypeScript and Python)
 
 ## Related Skills
 

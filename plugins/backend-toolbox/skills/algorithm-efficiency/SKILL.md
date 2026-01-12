@@ -311,8 +311,8 @@ High-impact optimizations to check first:
 
 For detailed patterns and techniques, consult:
 
-- **`references/complexity-analysis.md`** - Deep dive on Big O analysis, amortized complexity, and analysis techniques
-- **`references/data-structures.md`** - Comprehensive guide to data structure selection and implementation tradeoffs
+- **`references/complexity-analysis.md`** - When analyzing algorithm performance: Big O notation rules, practical size limits, loop analysis techniques, amortized complexity, and worst/average/best case analysis
+- **`references/data-structures.md`** - When choosing data structures: detailed comparison of arrays, hash maps, sets, trees, heaps, and graphs with operation complexities and use case guidance
 
 ### Examples
 

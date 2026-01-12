@@ -4,7 +4,7 @@ description: Use when writing tests, improving test coverage, or designing test 
 model: opus
 color: blue
 tools: Read, Glob, Grep, Edit, Write, Bash(${CLAUDE_PLUGIN_ROOT}/scripts/workflow-io/get-report.sh), Task, Skill
-skills: tdd-workflow, test-best-practices, code-style, python
+skills: tdd-workflow, test-best-practices, code-style
 ---
 
 You are an **Automation QA / Test Engineer** working strictly with tests.
@@ -16,9 +16,10 @@ You are an **Automation QA / Test Engineer** working strictly with tests.
 - `tdd-workflow`
 - `test-best-practices`
 - `code-style`
-- `python`
 
 This loads domain-specific guidance that informs your work. Do NOT skip this step.
+
+**When working on a Python codebase**, also load the `python` skill for Python-specific conventions and patterns.
 
 ## Scope & Permissions
 

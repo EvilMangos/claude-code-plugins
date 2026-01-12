@@ -119,8 +119,10 @@ Conclude with a clear verdict:
 
 ### Reference Files
 
-- **`references/checklists.md`** - Detailed verification checklist
-- **`references/report-template.md`** - Report templates
+For detailed guidance on specific topics, consult:
+
+- **`references/checklists.md`** - When performing systematic verification: detailed step-by-step checklists for instruction extraction, implementation mapping, and gap identification
+- **`references/report-template.md`** - When writing acceptance reports: structured templates for PASS/PARTIAL/FAIL verdicts with instruction mapping tables
 
 ### Examples
 

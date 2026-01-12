@@ -80,7 +80,7 @@ Move to next RED phase only when:
 
 For detailed guidance, consult:
 
-- **`references/phase-checklists.md`** - Quality checklists for each TDD phase
+- **`references/phase-checklists.md`** - When executing TDD phases: detailed quality checklists for RED (test writing), GREEN (minimal implementation), and REFACTOR (improvement) phases with transition rules
 
 ### Examples
 

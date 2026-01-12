@@ -215,10 +215,15 @@ Avoid these frequent security anti-patterns:
 
 ## Additional Resources
 
+### Reference Files
+
 For detailed patterns and examples, consult:
 
-- **`references/owasp-top-10.md`** - Complete OWASP Top 10 breakdown with examples
-- **`references/injection-patterns.md`** - Deep dive into injection attack vectors and prevention
+- **`references/owasp-top-10.md`** - When understanding vulnerabilities: complete OWASP Top 10 (2021) breakdown with attack vectors, examples, and prevention techniques for each category
+- **`references/injection-patterns.md`** - When preventing injection attacks: deep dive into SQL, NoSQL, command, XSS injection vectors with detection patterns and secure coding examples
+
+### Examples
+
 - **`examples/secure-vs-vulnerable.md`** - Side-by-side vulnerable vs secure code patterns
 
 ### Related Skills

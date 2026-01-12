@@ -285,8 +285,9 @@ it('handles concurrent updates', async () => {
 
 For detailed patterns and techniques, consult:
 
-- **`references/testing-patterns.md`** - Test doubles, fixtures, factories, async testing patterns
-- **`references/what-to-test.md`** - Detailed guidance on coverage decisions and edge cases
+- **`references/what-to-test.md`** - When deciding what deserves tests: coverage decisions, edge case prioritization, and what to skip (config loading, interfaces, exports, private methods)
+- **`references/testing-patterns.md`** - When implementing tests: test doubles (stubs/mocks/fakes/spies), fixtures, factories, async patterns, error testing, and isolation techniques
+- **`references/test-file-patterns.md`** - When identifying or organizing test files: naming conventions, directory patterns, and language-specific test file locations
 
 ### Examples
 

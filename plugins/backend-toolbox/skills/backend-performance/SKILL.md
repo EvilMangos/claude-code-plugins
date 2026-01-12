@@ -243,9 +243,8 @@ Common optimizations with high impact:
 
 For detailed patterns and techniques, consult:
 
-- **`references/database-optimization.md`** - Deep dive on query optimization, indexing strategies, and
-  database-specific tuning
-- **`references/caching-patterns.md`** - Detailed caching strategies, invalidation patterns, and cache architecture
+- **`references/database-optimization.md`** - When fixing slow queries: EXPLAIN analysis, indexing strategies, N+1 resolution, connection pooling, and database-specific tuning (PostgreSQL, MySQL)
+- **`references/caching-patterns.md`** - When implementing caching: cache-aside, write-through, write-behind patterns, cache hierarchy design, invalidation strategies, and technology selection (Redis, Memcached, CDN)
 
 ### Examples
 

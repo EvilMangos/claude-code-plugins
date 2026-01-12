@@ -237,10 +237,8 @@ After:
 
 For detailed patterns and techniques, consult:
 
-- **`references/patterns-catalog.md`** - Extended catalog of refactoring patterns with mechanics and multi-language
-  examples (Extract Function, Move Method, Replace Conditional with Polymorphism, etc.)
-- **`references/code-smells.md`** - Comprehensive guide to identifying code smells (Bloaters, Couplers, Change
-  Preventers) and their refactoring solutions
+- **`references/patterns-catalog.md`** - When applying specific refactorings: extended catalog with step-by-step mechanics for Extract Function, Move Method, Replace Conditional with Polymorphism, and multi-language examples (TypeScript, Python)
+- **`references/code-smells.md`** - When identifying what to refactor: comprehensive guide to Bloaters (Long Method, Large Class), Couplers (Feature Envy, Message Chains), and Change Preventers with recommended fixes
 
 ### Working Examples
 

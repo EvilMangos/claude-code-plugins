@@ -307,8 +307,8 @@ steps:
 
 For in-depth guidance on specific topics, consult these reference documents:
 
-- **`references/secrets-management.md`** - In-depth secrets management patterns and tools
-- **`references/container-hardening.md`** - Comprehensive container security guide
+- **`references/secrets-management.md`** - When securing secrets: detailed patterns for API keys, database credentials, encryption keys, and secrets managers (Vault, AWS Secrets Manager) across development, CI/CD, and production
+- **`references/container-hardening.md`** - When building or deploying containers: base image selection, Dockerfile security, runtime hardening, and Kubernetes security contexts
 
 ### Related Skills
 
